@@ -8,6 +8,8 @@ the API, and test the real editor journey through the browser.
 
 ```
 playwright.config.ts        # setup + anonymous + Chromium projects, serial to start
+eslint.config.mjs           # minimal linting: Playwright rules + TypeScript
+.prettierrc.json            # formatting (single quotes, trailing commas)
 tests/
   auth.setup.ts             # one-time login via `drush uli`, saved as storageState
   helpers/test-data.ts      # create/delete articles via JSON:API, delete by nid
@@ -36,6 +38,21 @@ BASE_URL=https://staging.example.com npx playwright test
 # Best way to watch and debug a test:
 BASE_URL=https://staging.example.com npx playwright test --ui
 ```
+
+## Linting and typecheck (optional, recommended)
+
+```bash
+npm run lint        # ESLint: Playwright rules + TypeScript recommendations
+npm run lint:fix    # fix what can be fixed automatically
+npm run typecheck   # tsc --noEmit
+npm run format      # Prettier (TypeScript and Markdown files)
+```
+
+Linting is a review aid, not a test runner: `npx playwright test` still
+works even if lint is unhappy. The rules kept on purpose are the ones that
+catch flaky-test patterns: no `waitForTimeout`, no `page.pause` left in
+committed code, web-first assertions preferred, and no focused/skipped
+tests left behind. No heavy style preset is included.
 
 ## Before the first run, adapt these 5 things
 
