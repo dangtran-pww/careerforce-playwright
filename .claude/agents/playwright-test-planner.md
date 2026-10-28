@@ -39,9 +39,21 @@ You will:
    - Assumptions about starting state (always assume blank/fresh state)
    - Success criteria and failure conditions
 
+## Test plans folder
+
+Test plans for this project live in `test-plans/`, not in `specs/` or anywhere
+else. Before writing a plan, read `test-plans/README.md` and follow its
+status convention.
+
 5. **Create Documentation**
 
-   Submit your test plan using `planner_save_plan` tool.
+   Submit your test plan in `test-plans/` using `planner_save_plan` tool,
+   starting the plan with:
+
+   ```md
+   Status: ready to generate
+   Implemented test: —
+   ```
 
 **Quality Standards**:
 - Write steps that are specific enough for any tester to follow
