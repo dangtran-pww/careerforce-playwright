@@ -1,5 +1,5 @@
 {
-    "description": "Starter Playwright end-to-end tests for Dang's CareerForce Drupal (staging only for destructive tests)",
+    "description": "Playwright end-to-end tests for CareerForce Drupal",
     "devDependencies": {
         "@playwright/test": "^1.55.0",
         "dotenv": "^18.0.9",
@@ -10,7 +10,7 @@
         "prettier": "^3.0.0",
         "typescript-eslint": "^8.0.0"
     },
-    "name": "careerforce-drupal-playwright-starter",
+    "name": "careerforce-playwright",
     "private": true,
     "scripts": {
         "install:browsers": "playwright install chromium",

@@ -1,4 +1,4 @@
-# Playwright starter — Dang's CareerForce Drupal
+# CareerForce Drupal Playwright 
 
 A small, working starter for end-to-end tests on a Drupal site. It is built
 for staging first: log in once, reuse the session, create test data through
@@ -33,10 +33,10 @@ cp .env.example .env   # fill in BASIC_AUTH_USER/PASSWORD for QA's Basic Auth ga
 npx playwright test --project=anonymous
 
 # Point at staging, not production, for the create/delete tests.
-BASE_URL=https://staging.example.com npx playwright test
+BASE_URL=https://qa.careerforce.link npx playwright test
 
 # Best way to watch and debug a test:
-BASE_URL=https://staging.example.com npx playwright test --ui
+BASE_URL=https://qa.careerforce.link npx playwright test --ui
 ```
 
 ## Linting and typecheck (optional, recommended)
