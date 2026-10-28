@@ -42,7 +42,7 @@ export default defineConfig({
     // Phase 1 smoke suite (tests/smoke/**): fully anonymous, read-only, and
     // prod-safe. No storageState, no dependency on the login setup project —
     // it must be runnable with none of that auth infra in place.
-    // See docs/phase1-read-only-smoke-test-plan.md.
+    // See docs/specs/phase1-read-only-smoke-test-plan.md.
     {
       name: 'anonymous',
       testDir: './tests/smoke',

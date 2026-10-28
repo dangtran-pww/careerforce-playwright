@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { LocationPage } from '../pages/location.page';
 
 // Phase 1 — Read-Only Smoke Test Plan, LV-1.
-// See docs/phase1-read-only-smoke-test-plan.md.
+// See docs/specs/phase1-read-only-smoke-test-plan.md.
 
 const PHYSICAL_LOCATIONS = [
   { name: 'Aitkin', path: '/careerforce-location/careerforce-aitkin' },

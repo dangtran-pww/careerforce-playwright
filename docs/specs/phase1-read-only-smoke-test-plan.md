@@ -5,7 +5,7 @@ see `tests/smoke/*.spec.ts` and `tests/pages/*.page.ts`. This doc now
 doubles as the as-built reference; corrections made while implementing are
 called out inline and in "Implementation notes" below.
 
-Split out from [deed-smoke-test-plan.md](deed-smoke-test-plan.md). This is the
+Split out from [deed-smoke-test-plan.md](../deed-smoke-test-plan.md). This is the
 first slice to actually build: everything here is safe to run against
 **production**, requires no new test-inbox or third-party IdP integration,
 and creates or deletes nothing. It's the direct automation of the checklist
@@ -48,7 +48,7 @@ login. `BASE_URL` defaults to `https://qa.careerforce.link`.
 
 | ID | Title | Persona | Steps | Assertions | Notes |
 |---|---|---|---|---|---|
-| HP-1 | Homepage loads | Anonymous | `goto('/')` | `main` landmark visible | |
+| HP-1 | Homepage loads | Anonymous | `goto('/')` | `main` landmark visible; all 8 homepage section headings visible: "Job Search", "What brings you here today?", "Upcoming Events", "Explore Careers", "Upcoming Training Programs", "Get the most out of CareerForce, create an account" (CTA), "Connect to our Services", "CareerForce Blog" | Each heading is asserted via `getByRole('heading', { name: ... })` — all render as plain `<h2>`s with stable text, no content-dependent sections involved (unlike LV-1's Events block) |
 | HP-2 | Login page offers LoginMN | Anonymous | `goto('/user/login')` | "Log In or Register with LoginMN" button visible | **Correction:** this site has no inline username/password form — login is a hand-off to LoginMN (the state's shared IdP). The generic starter template assumed `getByLabel('Username')`; that does not apply here. |
 | HP-3 | GTM container present | Anonymous | `goto('/')` | Rendered HTML contains the GTM ID expected for this env (`GTM-P8D2THV` lower, `GTM-WL36T6M` prod) | GTM is self-hosted (`/modules/contrib/google_tag/js/gtm.js`), not loaded from googletagmanager.com, so scanning rendered HTML is more reliable than watching for a specific network request. Confirmed both IDs directly against prod and QA. |
 | HP-4 | Decision Tree widget works | Anonymous | `goto('/')`, open the widget, click the first option | A second step's "Reset selections" control becomes visible | **Correction:** the options sit inside a native `<details>/<summary>` disclosure ("Choose a path") that's collapsed at the 1280×720 viewport Playwright uses — the options are in the DOM but not visible until the `<summary>` is clicked open first. Confirmed it's pure GET-navigation (`?decision-tree-to=N`), nothing written. |

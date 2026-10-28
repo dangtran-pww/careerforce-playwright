@@ -19,7 +19,7 @@ tests/
   pages/                    # Page objects for the CareerForce smoke suite below
   smoke/                    # Phase 1 read-only smoke suite — fully anonymous,
                              # prod-safe, no login required. See
-                             # docs/phase1-read-only-smoke-test-plan.md.
+                             # docs/specs/phase1-read-only-smoke-test-plan.md.
 ```
 
 ## Quick start

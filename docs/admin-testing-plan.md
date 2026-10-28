@@ -1,7 +1,7 @@
 # Admin Testing Plan
 
 Split out from [deed-smoke-test-plan.md](deed-smoke-test-plan.md) /
-[phase1-read-only-smoke-test-plan.md](phase1-read-only-smoke-test-plan.md).
+[phase1-read-only-smoke-test-plan.md](specs/phase1-read-only-smoke-test-plan.md).
 Covers checks that need a logged-in admin/reports-viewer session, as opposed
 to Phase 1's fully-anonymous suite.
 

@@ -3,10 +3,38 @@ import { type Locator, type Page } from '@playwright/test';
 export class HomePage {
   readonly page: Page;
   readonly main: Locator;
+  readonly jobSearchHeading: Locator;
+  readonly whatBringsYouHereHeading: Locator;
+  readonly upcomingEventsHeading: Locator;
+  readonly exploreCareersHeading: Locator;
+  readonly upcomingTrainingProgramsHeading: Locator;
+  readonly createAccountCta: Locator;
+  readonly connectToServicesHeading: Locator;
+  readonly blogHeading: Locator;
 
   constructor(page: Page) {
     this.page = page;
     this.main = page.locator('main');
+    this.jobSearchHeading = page.getByRole('heading', { name: 'Job Search' });
+    this.whatBringsYouHereHeading = page.getByRole('heading', {
+      name: 'What brings you here today?',
+    });
+    this.upcomingEventsHeading = page.getByRole('heading', {
+      name: 'Upcoming Events',
+    });
+    this.exploreCareersHeading = page.getByRole('heading', {
+      name: 'Explore Careers',
+    });
+    this.upcomingTrainingProgramsHeading = page.getByRole('heading', {
+      name: 'Upcoming Training Programs',
+    });
+    this.createAccountCta = page.getByRole('heading', {
+      name: 'Get the most out of CareerForce, create an account',
+    });
+    this.connectToServicesHeading = page.getByRole('heading', {
+      name: 'Connect to our Services',
+    });
+    this.blogHeading = page.getByRole('heading', { name: 'CareerForce Blog' });
   }
 
   async goto() {
