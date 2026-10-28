@@ -5,7 +5,7 @@ see `tests/smoke/*.spec.ts` and `tests/pages/*.page.ts`. This doc now
 doubles as the as-built reference; corrections made while implementing are
 called out inline and in "Implementation notes" below.
 
-Split out from [deed-smoke-test-plan.md](../deed-smoke-test-plan.md). This is the
+Split out from [deed-smoke-test-plan.md](../docs/deed-smoke-test-plan.md). This is the
 first slice to actually build: everything here is safe to run against
 **production**, requires no new test-inbox or third-party IdP integration,
 and creates or deletes nothing. It's the direct automation of the checklist
