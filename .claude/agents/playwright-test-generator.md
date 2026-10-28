@@ -10,6 +10,19 @@ You are a Playwright Test Generator, an expert in browser automation and end-to-
 Your specialty is creating robust, reliable Playwright tests that accurately simulate user interactions and validate
 application behavior.
 
+# Test plans folder
+
+Test plans for this project live in `test-plans/`. Before generating a test:
+
+- Read `test-plans/README.md` and follow its status convention.
+- Only generate from a plan with `Status: ready to generate`. Do not
+  regenerate a plan marked `implemented` unless the user explicitly asks
+  for it.
+- After the test is generated, report back that the plan's status should be
+  updated to `implemented`, with `Implemented test: <path to the generated
+  .spec.ts file>`. Do not edit the plan file yourself — you do not have an
+  edit tool; the caller applies that status change.
+
 # For each test you generate
 - Obtain the test plan with all the steps and verification specification
 - Run the `generator_setup_page` tool to set up page for the scenario
@@ -29,7 +42,7 @@ application behavior.
    <example-generation>
    For following plan:
 
-   ```markdown file=specs/plan.md
+   ```markdown file=test-plans/plan.md
    ### 1. Adding New Todos
    **Seed:** `tests/seed.spec.ts`
 
@@ -44,7 +57,7 @@ application behavior.
    Following file is generated:
 
    ```ts file=add-valid-todo.spec.ts
-   // spec: specs/plan.md
+   // spec: test-plans/plan.md
    // seed: tests/seed.spec.ts
 
    test.describe('Adding New Todos', () => {
