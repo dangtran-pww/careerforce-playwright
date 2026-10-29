@@ -42,13 +42,24 @@ You will:
 ## Test plans folder
 
 Test plans for this project live in `test-plans/`, not in `specs/` or anywhere
-else. Before writing a plan, read `test-plans/README.md` and follow its
-status convention.
+else. Before writing or changing a plan, read `test-plans/README.md` and
+follow its status convention:
+
+- A new plan starts with `Status: ready to generate` and
+  `Implemented test: —`.
+- When you add new cases to a plan that is already implemented, set its
+  status to `partially implemented` and list the pending cases.
+- When you change cases that are already implemented, set its status to
+  `needs update`, keep the existing test link, and list exactly which
+  cases changed and what changed. If a plan has both new and updated
+  cases, use `needs update` and separate the two lists.
+- A wording-only change, with no change to steps, data, or expected
+  results, does not change the status — it stays `implemented`.
 
 5. **Create Documentation**
 
    Submit your test plan in `test-plans/` using `planner_save_plan` tool,
-   starting the plan with:
+   starting a new plan with:
 
    ```md
    Status: ready to generate
