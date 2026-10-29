@@ -15,7 +15,7 @@ items the source Confluence doc already calls out as prod-appropriate.
 
 ```bash
 cp .env.example .env   # fill in BASIC_AUTH_USER / BASIC_AUTH_PASSWORD for QA
-npx playwright test --project=anonymous
+npx playwright test --project=smoke
 ```
 
 QA/stage sit behind an HTTP Basic Auth gate in front of Drupal — that's
@@ -28,7 +28,7 @@ login. `BASE_URL` defaults to `https://qa.careerforce.link`.
 - No email assertions, no LoginMN round trip, no multi-day/long-running waits.
 - Runs against any single environment via `BASE_URL` — prod, stage, or QA.
 - All cases are fully anonymous — no login required. They run under their
-  own `anonymous` Playwright project (`testDir: tests/smoke`), with no
+  own `smoke` Playwright project (`testDir: tests/smoke`), with no
   `storageState` and no dependency on the `setup` project — this suite must
   work with none of the editor-login auth infra in place, and now does. The
   admin-report checks (status report, translations warning, search index
@@ -108,7 +108,7 @@ tests/
     tools.spec.ts        # CT-1, CT-2, CT-3
 ```
 
-`tests/smoke/**` is its own Playwright project (`anonymous` in
+`tests/smoke/**` is its own Playwright project (`smoke` in
 `playwright.config.ts`) — no `storageState`, no dependency on the `setup`
 project, runs standalone.
 

@@ -44,7 +44,7 @@ export default defineConfig({
     // it must be runnable with none of that auth infra in place.
     // See test-plans/phase1-read-only-smoke-test-plan.md.
     {
-      name: 'anonymous',
+      name: 'smoke',
       testDir: './tests/smoke',
       use: { ...devices['Desktop Chrome'] },
     },

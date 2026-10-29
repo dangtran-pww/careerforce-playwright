@@ -7,7 +7,7 @@ the API, and test the real editor journey through the browser.
 ## What is inside
 
 ```
-playwright.config.ts        # setup + anonymous + Chromium projects, serial to start
+playwright.config.ts        # setup + smoke + Chromium projects, serial to start
 eslint.config.mjs           # minimal linting: Playwright rules + TypeScript
 .prettierrc.json            # formatting (single quotes, trailing commas)
 tests/
@@ -30,7 +30,7 @@ npx playwright install chromium
 
 # Phase 1 smoke suite — fully anonymous, prod-safe, no login required:
 cp .env.example .env   # fill in BASIC_AUTH_USER/PASSWORD for QA's Basic Auth gate
-npx playwright test --project=anonymous
+npx playwright test --project=smoke
 
 # Point at staging, not production, for the create/delete tests.
 BASE_URL=https://qa.careerforce.link npx playwright test
