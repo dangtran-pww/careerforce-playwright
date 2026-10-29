@@ -14,14 +14,22 @@ application behavior.
 
 Test plans for this project live in `test-plans/`. Before generating a test:
 
-- Read `test-plans/README.md` and follow its status convention.
-- Only generate from a plan with `Status: ready to generate`. Do not
-  regenerate a plan marked `implemented` unless the user explicitly asks
-  for it.
-- After the test is generated, report back that the plan's status should be
-  updated to `implemented`, with `Implemented test: <path to the generated
-  .spec.ts file>`. Do not edit the plan file yourself — you do not have an
-  edit tool; the caller applies that status change.
+- Read `test-plans/README.md` and follow its status convention. The status
+  tells you what kind of work is needed, and what not to duplicate.
+- `ready to generate`: generate all cases in the plan.
+- `partially implemented`: generate only the cases listed as pending.
+  Do not regenerate cases that are already implemented.
+- `needs update`: update the existing test file for the cases listed as
+  updated. Do not create a second, duplicate test file. If the plan also
+  lists pending new cases, generate those as well, in the same existing
+  file where they belong.
+- `implemented`: do not regenerate unless the user explicitly asks for it.
+- After the work is done, report back the status change needed, with
+  `Implemented test: <path to the .spec.ts file>`: back to `implemented`
+  if all pending and updated cases are done, otherwise the remaining
+  `partially implemented` or `needs update` status with its remaining
+  list. Do not edit the plan file yourself — you do not have an edit
+  tool; the caller applies that status change.
 
 # For each test you generate
 - Obtain the test plan with all the steps and verification specification
