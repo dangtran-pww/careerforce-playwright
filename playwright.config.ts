@@ -1,7 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
-import 'dotenv/config';
+import { getBaseURL, getHttpCredentials } from './tests/helpers/playwright-env';
 
 // How to run:
+//   npm run auth   # once per machine / when the session expires (manual SSO)
 //   BASE_URL=https://qa.careerforce.link npx playwright test
 //   BASE_URL=https://qa.careerforce.link npx playwright test --ui
 //
@@ -11,12 +12,7 @@ import 'dotenv/config';
 // Destructive tests (create/edit/delete) must point at staging, never production.
 // Read-only smoke tests are the only ones suitable for a post-deploy prod check.
 
-const httpCredentials = process.env.BASIC_AUTH_USER
-  ? {
-      username: process.env.BASIC_AUTH_USER,
-      password: process.env.BASIC_AUTH_PASSWORD ?? '',
-    }
-  : undefined;
+const httpCredentials = getHttpCredentials();
 
 export default defineConfig({
   testDir: './tests',
@@ -30,14 +26,14 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'html',
   use: {
-    baseURL: process.env.BASE_URL ?? 'https://qa.careerforce.link',
+    baseURL: getBaseURL(),
     httpCredentials,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
   projects: [
-    // Logs in once and saves the session. See tests/auth.setup.ts.
+    // Verifies the session saved by `npm run auth`. See tests/auth.setup.ts.
     { name: 'setup', testMatch: /.*\.setup\.ts/ },
     // Phase 1 smoke suite (tests/smoke/**): fully anonymous, read-only, and
     // prod-safe. No storageState, no dependency on the login setup project —

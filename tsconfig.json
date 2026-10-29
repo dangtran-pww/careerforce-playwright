@@ -1,1 +1,1 @@
-{"compilerOptions":{"lib":["ES2022","DOM"],"module":"CommonJS","moduleResolution":"bundler","skipLibCheck":true,"strict":true,"target":"ES2022","types":["node"]},"include":["playwright.config.ts","tests/**/*.ts"]}
+{"compilerOptions":{"lib":["ES2022","DOM"],"module":"CommonJS","moduleResolution":"node","skipLibCheck":true,"strict":true,"target":"ES2022","types":["node"]},"include":["playwright.config.ts","scripts/**/*.ts","tests/**/*.ts"]}

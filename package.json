@@ -5,14 +5,17 @@
         "dotenv": "^18.0.9",
         "typescript": "^5.6.0",
         "@eslint/js": "^9.0.0",
+        "@types/node": "^22.0.0",
         "eslint": "^9.0.0",
         "eslint-plugin-playwright": "^2.0.0",
         "prettier": "^3.0.0",
+        "tsx": "^4.19.0",
         "typescript-eslint": "^8.0.0"
     },
     "name": "careerforce-playwright",
     "private": true,
     "scripts": {
+        "auth": "tsx scripts/save-auth.ts",
         "install:browsers": "playwright install chromium",
         "test": "playwright test",
         "test:debug": "playwright test --debug",

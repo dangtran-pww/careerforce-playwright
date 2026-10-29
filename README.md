@@ -1,17 +1,18 @@
-# CareerForce Drupal Playwright 
+# CareerForce Drupal Playwright
 
 A small, working starter for end-to-end tests on a Drupal site. It is built
-for staging first: log in once, reuse the session, create test data through
-the API, and test the real editor journey through the browser.
+for staging first: log in once (by hand), reuse the session, create test data
+through the API, and test the real editor journey through the browser.
 
 ## What is inside
 
 ```
 playwright.config.ts        # setup + smoke + Chromium projects, serial to start
+scripts/save-auth.ts        # headed browser: you complete SSO, session is saved
 eslint.config.mjs           # minimal linting: Playwright rules + TypeScript
 .prettierrc.json            # formatting (single quotes, trailing commas)
 tests/
-  auth.setup.ts             # one-time login via `drush uli`, saved as storageState
+  auth.setup.ts             # verifies saved storageState before editor tests run
   helpers/test-data.ts      # create/delete articles via JSON:API, delete by nid
   smoke.spec.ts             # read-only critical-path checks (safe starting point)
   article.spec.ts           # API-created article is visible in the browser
@@ -32,12 +33,21 @@ npx playwright install chromium
 cp .env.example .env   # fill in BASIC_AUTH_USER/PASSWORD for QA's Basic Auth gate
 npx playwright test --project=smoke
 
+# Editor / destructive tests need a saved session (manual SSO — not automatable):
+cp .env.example .env   # if you have not already
+npm run auth           # complete SSO in the headed browser; saves playwright/.auth/editor.json
+
 # Point at staging, not production, for the create/delete tests.
 BASE_URL=https://qa.careerforce.link npx playwright test
 
 # Best way to watch and debug a test:
 BASE_URL=https://qa.careerforce.link npx playwright test --ui
 ```
+
+`npm run auth` requires a human at the keyboard. It is meant for local (or
+manual) use before running editor tests. CI will fail the setup project until
+you add a different way to supply `playwright/.auth/editor.json` (for example
+a protected secret), or restrict CI to the anonymous smoke project only.
 
 ## Linting and typecheck (optional, recommended)
 
@@ -57,12 +67,12 @@ tests left behind. No heavy style preset is included.
 ## Before the first run, adapt these 5 things
 
 1. **BASE_URL** — your staging URL. Keep destructive tests on staging only.
-2. **Test user** — create a dedicated `test-editor` user on staging. Do not
+2. **Test user** — use a dedicated editor account on staging (via SSO). Do not
    reuse a real person's account. It needs permission to create/publish
    articles and to use JSON:API.
-3. **Drush command** — set `DRUSH_CMD` if Drush runs inside DDEV/Lando,
-   e.g. `DRUSH_CMD="ddev drush"`. If Drush is unavailable where Playwright
-   runs, use the UI-login fallback in `tests/auth.setup.ts` (commented there).
+3. **Saved session** — run `npm run auth` when `playwright/.auth/editor.json`
+   is missing or tests report an expired session. Re-run after SSO/session
+   timeouts.
 4. **Content type** — the examples use `node--article` with a `body` field.
    Change the type and fields in `tests/helpers/test-data.ts` and
    `tests/editor-create.spec.ts` to match the real content type you want to
@@ -74,8 +84,9 @@ tests left behind. No heavy style preset is included.
 ## Rules baked into this starter
 
 - **Login once, reuse the session.** Tests do not log in through the UI
-  every time. `auth.setup.ts` runs first and saves
-  `playwright/.auth/editor.json`, which is gitignored.
+  every time. You run `npm run auth` locally to save
+  `playwright/.auth/editor.json` (gitignored). `auth.setup.ts` only checks
+  that file still works before editor tests run.
 - **API for setup, browser for the journey.** Test data is created and
   deleted via JSON:API (with a CSRF token from `/session/token`). The
   browser is used for what you are actually testing: viewing, editing,
@@ -100,8 +111,9 @@ tests left behind. No heavy style preset is included.
 
 ## Troubleshooting
 
-- **Login setup fails:** check `BASE_URL`, that `test-editor` exists on that
-  environment, and that `drush uli` works there by hand first.
+- **Setup fails with “run npm run auth”:** run `npm run auth`, complete SSO in
+  the browser, and confirm `/admin/content` loads as an editor.
+- **Setup fails with “session expired”:** run `npm run auth` again.
 - **JSON:API 403/404:** the JSON:API module must be enabled on staging and
   the test role must have the matching node permissions.
 - **CKEditor step fails:** click the `.ck-editor__editable` area before
