@@ -21,14 +21,14 @@ Legend: 🤖 automatable now · ✉️ needs a test inbox · 👁 visual/manual 
 
 Many checklist items are explicitly "do not test on prod" (search-api
 reindex, permissions rebuild, event/appointment registration, resume builder,
-groups). Those become stage/QA-only suites, same as `article.spec.ts` and
-`editor-create.spec.ts` in this repo today — prod only ever gets the
-read-only suites, same rule the starter's `smoke.spec.ts` already follows.
+groups). Those become stage/QA-only suites, same as `admin.spec.ts` in this
+repo today — prod only ever gets the read-only suites, same rule the
+`tests/smoke/` suite already follows.
 
 ## Personas / fixtures needed
 
-Mirrors the `test-editor` pattern in `auth.setup.ts`, one storage state per
-role:
+Mirrors the by-hand `login:manual -- <role>` pattern (see README), one
+storage state per role:
 
 - **Anonymous** — no login
 - **Job seeker** — plain account, plus a variant with Tier 2 registration
@@ -214,10 +214,10 @@ auto-population, use synthetic values only — never real identifiers.
 
 ## Proposed phasing
 
-1. **Phase 1 — prod-safe read-only smoke** (extends `smoke.spec.ts`):
-   platform health, search comparisons, location/view pages, GTM tag
-   presence, Decision Tree, anonymous custom-tools usage. No new
-   infrastructure needed; ship first.
+1. **Phase 1 — prod-safe read-only smoke** (already underway in
+   `tests/smoke/`): platform health, search comparisons, location/view
+   pages, GTM tag presence, Decision Tree, anonymous custom-tools usage. No
+   new infrastructure needed; ship first.
 2. **Phase 2 — stage/QA interactive flows, no email dependency**: CKEditor,
    media browser, revisioning, block placement, translation, publish/
    unpublish, profile edit, job search, resume builder, skills
@@ -253,7 +253,7 @@ tests/
     staff.setup.ts
     admin.setup.ts
     partner.setup.ts
-  smoke.spec.ts                # extend: platform health, search, GTM, views
+  smoke/                        # already underway: platform health, search, GTM, views
   search-api.spec.ts           # 🚫 stage/QA
   homepage.spec.ts             # decision tree + GTM + (later) visual baseline
   auto-logout.spec.ts          # long-running, separate CI job
@@ -274,7 +274,7 @@ tests/
   auto-population.spec.ts      # 🚫, synthetic data only
   helpers/
     email.ts                  # test-inbox client, once chosen
-    test-data.ts               # existing — extend per content type
+    test-data.ts               # rebuild as a JSON:API helper if/when a role needs it again
 ```
 
 Each suite should open with the manual Given/When/Then this repo's README

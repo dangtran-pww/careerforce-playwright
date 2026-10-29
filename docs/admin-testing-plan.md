@@ -21,10 +21,10 @@ anonymous smoke suite.
 
 ## Open questions before writing code
 
-1. **Reports-viewer account**: should these reuse the existing `editor`
+1. **Reports-viewer account**: should these reuse the existing `admin`
    session, or is it worth creating a dedicated low-privilege role that can
    only view `/admin/reports/*` and `/admin/config/search/search-api` —
-   least-privilege, and safe to run on prod without carrying an editor's
+   least-privilege, and safe to run on prod without carrying an admin's
    write permissions into a prod test run?
 2. **Known-issues allowlist**: who owns updating it when a new "known, ok to
    ignore" error shows up (Solr Content error today)? Needs a clear owner so

@@ -1,14 +1,14 @@
 import { test, expect } from '@playwright/test';
-import { deleteTestArticleByNid, uniqueTitle } from './helpers/test-data';
 
-// The real editor journey: create through the UI, publish, and check the
-// published page. Cleanup still goes through the API so the test does not
-// depend on the delete UI working to leave a clean database.
+// Admin UI journeys. First case: create and publish an article, then clean
+// up through Drupal's own delete form — no JSON:API dependency, so this
+// file has no setup/teardown infra beyond what's below. Add further admin
+// journeys to this file as they come up.
 
-test('editor can create and publish an article through the UI', async ({
-  page,
-}) => {
-  const title = uniqueTitle();
+test.use({ storageState: 'playwright/.auth/admin.json' });
+
+test('admin can create and publish an article through the UI', async ({ page }) => {
+  const title = `Playwright test ${Date.now()}`;
   let nid: number | undefined;
 
   try {
@@ -31,7 +31,8 @@ test('editor can create and publish an article through the UI', async ({
     expect(nid, 'expected a /node/<nid> URL after saving').toBeDefined();
   } finally {
     if (nid) {
-      await deleteTestArticleByNid(nid);
+      await page.goto(`/node/${nid}/delete`);
+      await page.getByRole('button', { name: 'Delete' }).click();
     }
   }
 });

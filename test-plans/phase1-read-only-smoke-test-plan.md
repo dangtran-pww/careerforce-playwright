@@ -30,7 +30,7 @@ login. `BASE_URL` defaults to `https://qa.careerforce.link`.
 - All cases are fully anonymous — no login required. They run under their
   own `smoke` Playwright project (`testDir: tests/smoke`), with no
   `storageState` and no dependency on the `setup` project — this suite must
-  work with none of the editor-login auth infra in place, and now does. The
+  work with none of the login auth infra in place, and now does. The
   admin-report checks (status report, translations warning, search index
   counts) moved to the admin testing plan, since they need a logged-in
   reports-viewer session and a different ownership model (the known-issues
