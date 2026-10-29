@@ -10,5 +10,11 @@
         ]
       }
     ]
+  },
+  "sandbox": {
+    "network": {
+      "allowedDomains": ["*.careerforce.link"]
+    }
   }
 }
+
