@@ -37,10 +37,8 @@ export default defineConfig({
     video: 'retain-on-failure',
   },
   projects: [
-    // Logs in once and saves the session. See tests/auth.setup.ts.
-    { name: 'setup', testMatch: /.*\.setup\.ts/ },
     // Phase 1 smoke suite (tests/smoke/**): fully anonymous, read-only, and
-    // prod-safe. No storageState, no dependency on the login setup project —
+    // prod-safe. No storageState, no dependency on a login setup project —
     // it must be runnable with none of that auth infra in place.
     // See test-plans/phase1-read-only-smoke-test-plan.md.
     {
@@ -48,10 +46,14 @@ export default defineConfig({
       testDir: './tests/smoke',
       use: { ...devices['Desktop Chrome'] },
     },
+    // Logged-in tests reuse a session saved by hand: run `npm run
+    // login:manual` once, complete the real login (SSO today) in the
+    // browser window that opens, then close it. No `setup` project/
+    // dependency here — login isn't automated while auth is SSO. See
+    // tests/auth.setup.ts for the old drush-based flow, kept for reference.
     {
       name: 'chromium',
       testIgnore: '**/smoke/**',
-      dependencies: ['setup'],
       use: {
         ...devices['Desktop Chrome'],
         storageState: 'playwright/.auth/editor.json',

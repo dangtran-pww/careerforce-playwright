@@ -3,8 +3,11 @@ import { execSync } from 'node:child_process';
 
 const authFile = 'playwright/.auth/editor.json';
 
-// Runs once before the Chromium project (see playwright.config.ts).
-// It saves the editor session so later tests never log in through the UI.
+// Not currently wired into playwright.config.ts: auth is moving to SSO,
+// which can't be automated with real credentials, so the session is
+// captured by hand instead (see scripts/login-manual.mjs / `npm run
+// login:manual`). Kept here for a future environment with Drush access, or
+// as a reference for the UI-login fallback below.
 
 setup('authenticate as editor', async ({ page }) => {
   const baseURL = process.env.BASE_URL ?? 'https://staging.example.com';

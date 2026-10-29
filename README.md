@@ -7,11 +7,13 @@ the API, and test the real editor journey through the browser.
 ## What is inside
 
 ```
-playwright.config.ts        # setup + smoke + Chromium projects, serial to start
+playwright.config.ts        # smoke + Chromium projects, serial to start
 eslint.config.mjs           # minimal linting: Playwright rules + TypeScript
 .prettierrc.json            # formatting (single quotes, trailing commas)
+scripts/
+  login-manual.mjs          # `npm run login:manual` — by-hand login (SSO), saves storageState
 tests/
-  auth.setup.ts             # one-time login via `drush uli`, saved as storageState
+  auth.setup.ts             # drush-based login, not currently wired in (see login-manual.mjs)
   helpers/test-data.ts      # create/delete articles via JSON:API, delete by nid
   smoke.spec.ts             # read-only critical-path checks (safe starting point)
   article.spec.ts           # API-created article is visible in the browser
@@ -32,8 +34,12 @@ npx playwright install chromium
 cp .env.example .env   # fill in BASIC_AUTH_USER/PASSWORD for QA's Basic Auth gate
 npx playwright test --project=smoke
 
+# Logged-in tests: log in by hand once (auth is SSO, so this step can't be
+# automated), then the session is reused by the `chromium` project below.
+npm run login:manual   # opens a real browser — log in, then close the window
+
 # Point at staging, not production, for the create/delete tests.
-BASE_URL=https://qa.careerforce.link npx playwright test
+BASE_URL=https://qa.careerforce.link npx playwright test --project=chromium
 
 # Best way to watch and debug a test:
 BASE_URL=https://qa.careerforce.link npx playwright test --ui
@@ -54,27 +60,32 @@ catch flaky-test patterns: no `waitForTimeout`, no `page.pause` left in
 committed code, web-first assertions preferred, and no focused/skipped
 tests left behind. No heavy style preset is included.
 
-## Before the first run, adapt these 5 things
+## Before the first run, adapt these 4 things
 
 1. **BASE_URL** — your staging URL. Keep destructive tests on staging only.
-2. **Test user** — create a dedicated `test-editor` user on staging. Do not
-   reuse a real person's account. It needs permission to create/publish
-   articles and to use JSON:API.
-3. **Drush command** — set `DRUSH_CMD` if Drush runs inside DDEV/Lando,
-   e.g. `DRUSH_CMD="ddev drush"`. If Drush is unavailable where Playwright
-   runs, use the UI-login fallback in `tests/auth.setup.ts` (commented there).
-4. **Content type** — the examples use `node--article` with a `body` field.
+2. **Logged-in session** — auth is moving to SSO, which Playwright can't
+   drive with real credentials, so run `npm run login:manual` by hand
+   (see "Quick start") to produce `playwright/.auth/editor.json`. The
+   account you log in as needs permission to create/publish articles and to
+   use JSON:API. The session isn't automated and isn't committed — it will
+   need refreshing locally whenever it expires, and CI will need its own
+   strategy (a service account, a CI-friendly SSO flow, or a session
+   injected as a secret) before these tests can run unattended. If/when a
+   non-SSO environment is available, `tests/auth.setup.ts` has a drush-based
+   flow (and a UI-login fallback, commented there) that can be wired back
+   into `playwright.config.ts`.
+3. **Content type** — the examples use `node--article` with a `body` field.
    Change the type and fields in `tests/helpers/test-data.ts` and
    `tests/editor-create.spec.ts` to match the real content type you want to
    smoke-test first.
-5. **Labels** — if your site's Title field, Save button, or search form uses
+4. **Labels** — if your site's Title field, Save button, or search form uses
    different labels, update the `getByLabel` / `getByRole` calls. Prefer role
    and label locators over CSS classes: Drupal theme classes change often.
 
 ## Rules baked into this starter
 
 - **Login once, reuse the session.** Tests do not log in through the UI
-  every time. `auth.setup.ts` runs first and saves
+  every time. `npm run login:manual` captures the session by hand into
   `playwright/.auth/editor.json`, which is gitignored.
 - **API for setup, browser for the journey.** Test data is created and
   deleted via JSON:API (with a CSRF token from `/session/token`). The
@@ -100,8 +111,9 @@ tests left behind. No heavy style preset is included.
 
 ## Troubleshooting
 
-- **Login setup fails:** check `BASE_URL`, that `test-editor` exists on that
-  environment, and that `drush uli` works there by hand first.
+- **Logged-in tests fail with a storage state / ENOENT error:** run `npm run
+  login:manual` to (re)create `playwright/.auth/editor.json` — the session
+  likely never existed yet or has expired.
 - **JSON:API 403/404:** the JSON:API module must be enabled on staging and
   the test role must have the matching node permissions.
 - **CKEditor step fails:** click the `.ck-editor__editable` area before
