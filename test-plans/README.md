@@ -71,7 +71,7 @@ here. See the phase-1 plan below for a worked example.
 ## Smoke plans
 
 Smoke tests run after every deploy, including on production. A smoke run
-means every case in every `smoke-*-test-plan.md`, and one command runs them
+means every case in every `smoke-*.md`, and one command runs them
 all:
 
 ```bash
@@ -81,7 +81,7 @@ npx playwright test tests/smoke/admin-reports   # one plan
 
 Conventions:
 
-- **Naming:** `test-plans/smoke-<area>-test-plan.md` ↔ `tests/smoke/<area>/`.
+- **Naming:** `test-plans/smoke-<area>.md` ↔ `tests/smoke/<area>/`.
   Every spec from a smoke plan lives under `tests/smoke/`, and nothing else
   does. The `smoke` Playwright project runs that folder.
 - **Read-only and prod-safe:** no creating, editing, or deleting. Tests that
@@ -92,14 +92,57 @@ Conventions:
 
 Adding a new smoke plan:
 
-1. Write `test-plans/smoke-<area>-test-plan.md` with `Status: ready to generate`.
+1. Write `test-plans/smoke-<area>.md` with `Status: ready to generate`.
 2. Generate its specs into `tests/smoke/<area>/`, with
    `tests/seed.spec.ts` as the seed.
 3. Update the status and the list below. No config change is needed.
 
+## Stage plans
+
+Stage plans are Phase 2 of `docs/deed-smoke-test-plan.md`: interactive
+flows that create, edit, or delete data. They need no test inbox and no
+LoginMN.
+
+```bash
+npm run test:stage                                 # all stage plans
+npx playwright test tests/stage/content-lifecycle  # one plan
+```
+
+Conventions:
+
+- **Naming:** `test-plans/smoke-<area>.md` ↔ `tests/stage/<area>/`.
+  A `stage` Playwright project runs that folder.
+- **Clean up in `finally`:** every test deletes or reverts what it created,
+  even when an assertion fails. Created content is titled
+  `Playwright test <timestamp>`.
+- **Serial:** tests share accounts (especially the job seeker), so keep
+  `workers: 1`.
+- **Synthetic data only:** fixture files live in `tests/fixtures/`; no real
+  names, contact details, DOBs, or SSNs.
+- **Login is per spec:** same as smoke — `test.use({ storageState })` with
+  the `jobseeker`, `content-manager`, or `admin` session from
+  `npm run login:manual -- <role>`.
+
+The `stage` project, `test:stage` script, and fixtures are
+added with the first stage spec that is generated.
+
 ## Plans
 
-- `smoke-anonymous-test-plan.md` — Status: implemented.
+- `smoke-anonymous.md` — Status: implemented.
   Implemented tests: `tests/smoke/anonymous/*.spec.ts`.
-- `smoke-admin-reports-test-plan.md` — Status: implemented.
+- `smoke-admin-reports.md` — Status: implemented.
   Implemented test: `tests/smoke/admin-reports/admin-reports.spec.ts`.
+- `smoke-admin-maintenance.md` — Status: ready to generate.
+  Permissions rebuild, search-api rebuild tracking and reindex.
+- `smoke-content-lifecycle.md` — Status: ready to generate.
+  Publish/unpublish, revisions, translation.
+- `smoke-ckeditor.md` — Status: ready to generate.
+- `smoke-media.md` — Status: ready to generate.
+- `smoke-block-placement.md` — Status: ready to generate.
+- `smoke-job-search.md` — Status: ready to generate.
+  Filters, saved searches, dashboard management.
+- `smoke-jobseeker-tools.md` — Status: ready to generate.
+  Skills Matcher / Interest Profiler / Employment Readiness as a job seeker.
+- `smoke-resume-builder.md` — Status: ready to generate.
+- `smoke-profile.md` — Status: ready to generate.
+  Job seeker and admin profile edits.

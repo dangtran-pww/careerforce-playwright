@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { SearchPage } from '../../pages/search.page';
 
 // [Smoke] - Anonymous - Test Plan, SR-1/SR-2.
-// See test-plans/smoke-anonymous-test-plan.md.
+// See test-plans/smoke-anonymous.md.
 
 test.describe('site search', () => {
   test('empty keyword returns the full index', async ({ page }) => {

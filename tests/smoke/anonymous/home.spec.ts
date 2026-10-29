@@ -3,7 +3,7 @@ import { HomePage } from '../../pages/home.page';
 import { expectedGtmId } from '../../helpers/environment';
 
 // [Smoke] - Anonymous - Test Plan, HP-1/HP-3/HP-4.
-// See test-plans/smoke-anonymous-test-plan.md.
+// See test-plans/smoke-anonymous.md.
 
 test.describe('homepage', () => {
   test('HP-1: loads for an anonymous visitor', async ({ page }) => {

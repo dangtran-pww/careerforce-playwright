@@ -17,7 +17,7 @@ scripts/
 tests/
   pages/                    # Page objects for the CareerForce smoke suite below
   smoke/                    # Post-deploy smoke suite: read-only, prod-safe.
-    anonymous/              #   one folder per test-plans/smoke-<area>-test-plan.md
+    anonymous/              #   one folder per test-plans/smoke-<area>.md
     admin-reports/          #   (see test-plans/README.md, "Smoke plans")
 test-plans/                 # human-readable plans that specs are generated from
 ```

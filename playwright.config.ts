@@ -45,7 +45,7 @@ export default defineConfig({
       testMatch: 'seed.spec.ts',
       use: { ...devices['Desktop Chrome'] },
     },
-    // Post-deploy smoke suite: every spec from a test-plans/smoke-*-test-plan.md,
+    // Post-deploy smoke suite: every spec from a test-plans/smoke-*.md,
     // one folder per plan (tests/smoke/<area>/). Must stay read-only and
     // prod-safe. No default storageState — specs that need a role set it via
     // `test.use({ storageState: 'playwright/.auth/<role>.json' })`, which needs

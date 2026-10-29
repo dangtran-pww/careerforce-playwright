@@ -3,7 +3,7 @@ import { isProd, isStage } from '../../helpers/environment';
 import { isKnownIssue } from '../../helpers/known-issues';
 
 // [Smoke] - Admin Reports - Test Plan — AR-1..AR-3. See
-// test-plans/smoke-admin-reports-test-plan.md.
+// test-plans/smoke-admin-reports.md.
 //
 // Read-only admin report checks. All cases need the `admin` storageState
 // (write-capable, but every assertion here is read-only — see open

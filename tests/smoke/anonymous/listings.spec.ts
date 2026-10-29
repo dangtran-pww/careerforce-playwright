@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { ListingPage } from '../../pages/listing.page';
 
 // [Smoke] - Anonymous - Test Plan, LV-2/LV-3.
-// See test-plans/smoke-anonymous-test-plan.md.
+// See test-plans/smoke-anonymous.md.
 
 test('/events view page loads', async ({ page }) => {
   const events = new ListingPage(page, '/events', 'Events');

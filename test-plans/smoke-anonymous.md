@@ -28,7 +28,7 @@ npm run test:smoke                          # every smoke plan
   `storageState` — this plan must work with none of the login auth infra in
   place, and does. The
   admin-report checks (status report, translations warning, search index
-  counts) moved to the [admin reports test plan](smoke-admin-reports-test-plan.md), since
+  counts) moved to the [admin reports test plan](smoke-admin-reports.md), since
   they need a logged-in reports-viewer session and a different ownership
   model (the known-issues allowlist).
 

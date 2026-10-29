@@ -9,7 +9,7 @@ bug in the test.
 Implemented test: `tests/smoke/admin-reports/admin-reports.spec.ts`
 
 Split out from [deed-smoke-test-plan.md](../docs/deed-smoke-test-plan.md) /
-[smoke-anonymous-test-plan.md](smoke-anonymous-test-plan.md).
+[smoke-anonymous.md](smoke-anonymous.md).
 Covers read-only admin report checks that need a logged-in admin session, as
 opposed to the anonymous plan's fully-anonymous suite.
 

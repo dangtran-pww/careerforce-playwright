@@ -4,7 +4,7 @@
 // report row's heading (e.g. the Search API index label), case-insensitive.
 //
 // Ownership of keeping this current is an open question — see
-// test-plans/smoke-admin-reports-test-plan.md, open question 1. Whoever notices a new
+// test-plans/smoke-admin-reports.md, open question 1. Whoever notices a new
 // accepted error/warning should add it here with a short reason, not widen
 // the match to something vaguer.
 export type KnownIssue = {

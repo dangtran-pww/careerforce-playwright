@@ -222,7 +222,10 @@ auto-population, use synthetic values only — never real identifiers.
    media browser, revisioning, block placement, translation, publish/
    unpublish, profile edit, job search, resume builder, skills
    matcher/interest profiler as a logged-in job seeker, permissions
-   rebuild, search-api reindex.
+   rebuild, search-api reindex. Planned in
+   `test-plans/smoke-<area>.md` (see
+   [test-plans/README.md](../test-plans/README.md#stage-plans)), specs go
+   in `tests/stage/<area>/`.
 3. **Phase 3 — email- and third-party-dependent flows**: everything gated
    ✉️ above (system emails, LoginMN registration, event/appointment
    registration & cancellation, groups/connections, location events).

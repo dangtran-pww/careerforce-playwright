@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { LoginPage } from '../../pages/login.page';
 
 // [Smoke] - Anonymous - Test Plan, HP-2.
-// See test-plans/smoke-anonymous-test-plan.md.
+// See test-plans/smoke-anonymous.md.
 //
 // Given: an anonymous visitor
 // When: they open the login page
