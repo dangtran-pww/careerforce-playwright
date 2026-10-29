@@ -16,6 +16,7 @@
         "install:browsers": "playwright install chromium",
         "login:manual": "node scripts/login-manual.mjs",
         "test": "playwright test",
+        "test:smoke": "playwright test --project=smoke",
         "test:debug": "playwright test --debug",
         "test:report": "playwright show-report",
         "test:ui": "playwright test --ui",

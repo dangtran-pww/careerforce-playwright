@@ -33,7 +33,7 @@ plan? If not, what kind of work is needed to make it match again?
 
   ```md
   Status: partially implemented
-  Implemented test: tests/smoke/listings-search.spec.ts
+  Implemented test: tests/smoke/anonymous/listings.spec.ts
   Pending cases: LV-4, LV-5 — ready to generate
   ```
 
@@ -45,7 +45,7 @@ plan? If not, what kind of work is needed to make it match again?
 
   ```md
   Status: needs update
-  Implemented test: tests/smoke/home.spec.ts
+  Implemented test: tests/smoke/anonymous/home.spec.ts
   Updated cases: HP-1 — homepage headings changed from 8 to 7
   Pending cases: HP-5 — ready to generate
   ```
@@ -68,7 +68,38 @@ starting URL, GIVEN / WHEN / THEN with a visible result, any unique test
 data needed, and cleanup. Keep it in plain language — no code is needed
 here. See the phase-1 plan below for a worked example.
 
+## Smoke plans
+
+Smoke tests run after every deploy, including on production. A smoke run
+means every case in every `smoke-*-test-plan.md`, and one command runs them
+all:
+
+```bash
+npm run test:smoke                              # all smoke plans
+npx playwright test tests/smoke/admin-reports   # one plan
+```
+
+Conventions:
+
+- **Naming:** `test-plans/smoke-<area>-test-plan.md` ↔ `tests/smoke/<area>/`.
+  Every spec from a smoke plan lives under `tests/smoke/`, and nothing else
+  does. The `smoke` Playwright project runs that folder.
+- **Read-only and prod-safe:** no creating, editing, or deleting. Tests that
+  write data belong outside `tests/smoke/`.
+- **Login is per spec, not per project:** a plan that needs a logged-in role
+  sets `test.use({ storageState: 'playwright/.auth/<role>.json' })` on each
+  `describe` block. Run `npm run login:manual -- <role>` first.
+
+Adding a new smoke plan:
+
+1. Write `test-plans/smoke-<area>-test-plan.md` with `Status: ready to generate`.
+2. Generate its specs into `tests/smoke/<area>/`, with
+   `tests/seed.spec.ts` as the seed.
+3. Update the status and the list below. No config change is needed.
+
 ## Plans
 
-- `phase1-read-only-smoke-test-plan.md` — Status: implemented.
-  Implemented tests: `tests/smoke/*.spec.ts`.
+- `smoke-anonymous-test-plan.md` — Status: implemented.
+  Implemented tests: `tests/smoke/anonymous/*.spec.ts`.
+- `smoke-admin-reports-test-plan.md` — Status: implemented.
+  Implemented test: `tests/smoke/admin-reports/admin-reports.spec.ts`.

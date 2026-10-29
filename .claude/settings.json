@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ -n \"$CLAUDE_ENV_FILE\" ] && [ -s \"$HOME/.nvm/nvm.sh\" ] || exit 0; . \"$HOME/.nvm/nvm.sh\" >/dev/null 2>&1; nvm use --silent >/dev/null 2>&1; printf 'export PATH=%q\\n' \"$PATH\" >> \"$CLAUDE_ENV_FILE\"; exit 0"
+          }
+        ]
+      }
+    ]
+  }
+}

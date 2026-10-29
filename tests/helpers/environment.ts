@@ -6,9 +6,14 @@ const PROD_GTM_ID = 'GTM-WL36T6M';
 const LOWER_ENV_GTM_ID = 'GTM-P8D2THV';
 
 const PROD_HOSTS = ['careerforce.mn.gov', 'careerforcemn.com'];
+const STAGE_HOSTS = ['stage.careerforce.link'];
 
 export function isProd(baseUrl: string): boolean {
   return PROD_HOSTS.some((host) => new URL(baseUrl).hostname.endsWith(host));
+}
+
+export function isStage(baseUrl: string): boolean {
+  return STAGE_HOSTS.some((host) => new URL(baseUrl).hostname.endsWith(host));
 }
 
 export function expectedGtmId(baseUrl: string): string {

@@ -21,8 +21,8 @@ Legend: 🤖 automatable now · ✉️ needs a test inbox · 👁 visual/manual 
 
 Many checklist items are explicitly "do not test on prod" (search-api
 reindex, permissions rebuild, event/appointment registration, resume builder,
-groups). Those become stage/QA-only suites, same as `admin.spec.ts` in this
-repo today — prod only ever gets the read-only suites, same rule the
+groups). Those become stage/QA-only suites outside `tests/smoke/` — prod
+only ever gets the read-only suites, same rule the
 `tests/smoke/` suite already follows.
 
 ## Personas / fixtures needed

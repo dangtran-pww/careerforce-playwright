@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
-import { LoginPage } from '../pages/login.page';
+import { LoginPage } from '../../pages/login.page';
 
-// Phase 1 — Read-Only Smoke Test Plan, HP-2.
-// See docs/specs/phase1-read-only-smoke-test-plan.md.
+// [Smoke] - Anonymous - Test Plan, HP-2.
+// See test-plans/smoke-anonymous-test-plan.md.
 //
 // Given: an anonymous visitor
 // When: they open the login page

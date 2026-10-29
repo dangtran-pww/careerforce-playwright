@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
-import { SearchPage } from '../pages/search.page';
+import { SearchPage } from '../../pages/search.page';
 
-// Phase 1 — Read-Only Smoke Test Plan, SR-1/SR-2.
-// See docs/specs/phase1-read-only-smoke-test-plan.md.
+// [Smoke] - Anonymous - Test Plan, SR-1/SR-2.
+// See test-plans/smoke-anonymous-test-plan.md.
 
 test.describe('site search', () => {
   test('empty keyword returns the full index', async ({ page }) => {

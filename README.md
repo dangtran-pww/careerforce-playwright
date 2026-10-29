@@ -7,7 +7,7 @@ needed, and test real user journeys through the browser.
 ## What is inside
 
 ```
-playwright.config.ts        # smoke project (anonymous), serial to start
+playwright.config.ts        # `smoke` project, serial to start
 eslint.config.mjs           # minimal linting: Playwright rules + TypeScript
 .prettierrc.json            # formatting (single quotes, trailing commas)
 scripts/
@@ -15,12 +15,11 @@ scripts/
                              # login, then attaches over CDP to save storageState (Google
                              # blocks sign-in from Playwright's own automated Chromium)
 tests/
-  admin.spec.ts             # admin creates/publishes an article through the UI,
-                             # cleans up via Drupal's own delete form
   pages/                    # Page objects for the CareerForce smoke suite below
-  smoke/                    # Phase 1 read-only smoke suite — fully anonymous,
-                             # prod-safe, no login required. See
-                             # docs/specs/phase1-read-only-smoke-test-plan.md.
+  smoke/                    # Post-deploy smoke suite: read-only, prod-safe.
+    anonymous/              #   one folder per test-plans/smoke-<area>-test-plan.md
+    admin-reports/          #   (see test-plans/README.md, "Smoke plans")
+test-plans/                 # human-readable plans that specs are generated from
 ```
 
 ## Quick start
@@ -29,18 +28,15 @@ tests/
 npm install
 npx playwright install chromium
 
-# Phase 1 smoke suite — fully anonymous, prod-safe, no login required:
+# Smoke suite — every smoke test plan, read-only and prod-safe:
 cp .env.example .env   # fill in BASIC_AUTH_USER/PASSWORD for QA's Basic Auth gate
-npx playwright test --project=smoke
+npm run login:manual -- admin   # once per session expiry; admin-reports needs it
+npm run test:smoke
 
 # Logged-in tests: log in by hand once per role (auth is SSO, so this step
 # can't be automated — and Google blocks sign-in from Playwright's own
 # automated Chromium). This saves the session for later use.
 npm run login:manual -- admin   # opens a plain Chrome window — log in, then press Enter in the terminal
-
-# No project currently runs logged-in tests (tests/admin.spec.ts) — see
-# "Testing with more than one role" below for how to wire one up once
-# you're ready to use it.
 
 # Best way to watch and debug a test:
 BASE_URL=https://qa.careerforce.link npx playwright test --ui
@@ -65,13 +61,10 @@ npm run login:manual -- admin
 ```
 
 This saves `playwright/.auth/partner.json`, `playwright/.auth/admin.json`,
-and so on. There's currently no Playwright project wired up to run
-logged-in tests against these sessions (see `playwright.config.ts` — only
-the anonymous `smoke` project exists today); add one with a default
-`storageState` (e.g. `playwright/.auth/partner.json`) when you're ready to
-run `tests/admin.spec.ts` or similar. A test (or a whole `describe` block)
-that needs a different role than its project's default overrides it with
-`test.use` — see `tests/admin.spec.ts` for a real example:
+and so on. The `smoke` project doesn't set a default
+`storageState`. A test, or a whole `describe` block, that needs a role picks
+it with `test.use`. See `tests/smoke/admin-reports/admin-reports.spec.ts`
+for a real example:
 
 ```ts
 test.describe('admin-only settings', () => {
@@ -101,7 +94,7 @@ catch flaky-test patterns: no `waitForTimeout`, no `page.pause` left in
 committed code, web-first assertions preferred, and no focused/skipped
 tests left behind. No heavy style preset is included.
 
-## Before the first run, adapt these 4 things
+## Before the first run, adapt these 3 things
 
 1. **BASE_URL** — your staging URL. Keep destructive tests on staging only.
 2. **Logged-in session** — auth is SSO, which Playwright can't drive with
@@ -113,10 +106,7 @@ tests left behind. No heavy style preset is included.
    locally whenever they expire, and CI will need its own strategy (a
    service account, a CI-friendly SSO flow, or a session injected as a
    secret) before these tests can run unattended.
-3. **Content type** — `tests/admin.spec.ts` uses `node--article` with a
-   `body` field. Change the type and fields there to match the real content
-   type you want to smoke-test first.
-4. **Labels** — if your site's Title field, Save button, or search form uses
+3. **Labels** — if your site's Title field, Save button, or search form uses
    different labels, update the `getByLabel` / `getByRole` calls. Prefer role
    and label locators over CSS classes: Drupal theme classes change often.
 
@@ -125,9 +115,9 @@ tests left behind. No heavy style preset is included.
 - **Login once, reuse the session.** Tests do not log in through the UI
   every time. `npm run login:manual -- <role>` captures each role's session
   by hand into `playwright/.auth/<role>.json`, which is gitignored.
-- **Create and clean up through the UI (for now).** `admin.spec.ts` creates
-  its test article and deletes it again through Drupal's own forms, in a
-  `finally` block — no JSON:API dependency currently. Reintroduce a
+- **Create and clean up through the UI (for now).** Tests that need data
+  create it and delete it again through Drupal's own forms, in a `finally`
+  block — no JSON:API dependency currently. Reintroduce a
   JSON:API helper if a role needs faster setup later (see
   `docs/deed-smoke-test-plan.md`).
 - **Every test cleans up after itself.** Created nodes are deleted in a

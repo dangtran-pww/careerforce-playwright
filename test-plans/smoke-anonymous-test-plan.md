@@ -1,7 +1,7 @@
-# Phase 1 — Read-Only Smoke Test Plan
+# [Smoke] - Anonymous - Test Plan
 
 **Status: implemented.** All 10 cases are written and passing against QA —
-see `tests/smoke/*.spec.ts` and `tests/pages/*.page.ts`. This doc now
+see `tests/smoke/anonymous/*.spec.ts` and `tests/pages/*.page.ts`. This doc now
 doubles as the as-built reference; corrections made while implementing are
 called out inline and in "Implementation notes" below.
 
@@ -14,27 +14,23 @@ items the source Confluence doc already calls out as prod-appropriate.
 ## Running it
 
 ```bash
-cp .env.example .env   # fill in BASIC_AUTH_USER / BASIC_AUTH_PASSWORD for QA
-npx playwright test --project=smoke
+npx playwright test tests/smoke/anonymous   # this plan only
+npm run test:smoke                          # every smoke plan
 ```
-
-QA/stage sit behind an HTTP Basic Auth gate in front of Drupal — that's
-`BASIC_AUTH_USER`/`BASIC_AUTH_PASSWORD` in `.env`, separate from any Drupal
-login. `BASE_URL` defaults to `https://qa.careerforce.link`.
 
 ## Scope
 
 - Read-only: no content created, edited, published, or deleted.
 - No email assertions, no LoginMN round trip, no multi-day/long-running waits.
 - Runs against any single environment via `BASE_URL` — prod, stage, or QA.
-- All cases are fully anonymous — no login required. They run under their
-  own `smoke` Playwright project (`testDir: tests/smoke`), with no
-  `storageState` and no dependency on the `setup` project — this suite must
-  work with none of the login auth infra in place, and now does. The
+- All cases are fully anonymous — no login required. They live in
+  `tests/smoke/anonymous/` and run in the `smoke` Playwright project with no
+  `storageState` — this plan must work with none of the login auth infra in
+  place, and does. The
   admin-report checks (status report, translations warning, search index
-  counts) moved to the admin testing plan, since they need a logged-in
-  reports-viewer session and a different ownership model (the known-issues
-  allowlist).
+  counts) moved to the [admin reports test plan](smoke-admin-reports-test-plan.md), since
+  they need a logged-in reports-viewer session and a different ownership
+  model (the known-issues allowlist).
 
 ## Non-goals (explicitly deferred to later phases)
 
@@ -99,7 +95,7 @@ tests/
     employment-readiness.page.ts  # EmploymentReadinessPage
   helpers/
     environment.ts                # expectedGtmId(baseUrl) / isProd(baseUrl)
-  smoke/
+  smoke/anonymous/
     home.spec.ts         # HP-1, HP-3, HP-4
     login.spec.ts        # HP-2
     search.spec.ts       # SR-1, SR-2
@@ -108,9 +104,8 @@ tests/
     tools.spec.ts        # CT-1, CT-2, CT-3
 ```
 
-`tests/smoke/**` is its own Playwright project (`smoke` in
-`playwright.config.ts`) — no `storageState`, no dependency on the `setup`
-project, runs standalone.
+`tests/smoke/**` is the `smoke` Playwright project. These specs set no
+`storageState` and run standalone.
 
 ## Implementation notes
 

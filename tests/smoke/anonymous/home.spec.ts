@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { HomePage } from '../pages/home.page';
-import { expectedGtmId } from '../helpers/environment';
+import { HomePage } from '../../pages/home.page';
+import { expectedGtmId } from '../../helpers/environment';
 
-// Phase 1 — Read-Only Smoke Test Plan, HP-1/HP-3/HP-4.
-// See docs/specs/phase1-read-only-smoke-test-plan.md.
+// [Smoke] - Anonymous - Test Plan, HP-1/HP-3/HP-4.
+// See test-plans/smoke-anonymous-test-plan.md.
 
 test.describe('homepage', () => {
   test('HP-1: loads for an anonymous visitor', async ({ page }) => {

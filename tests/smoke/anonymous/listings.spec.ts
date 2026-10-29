@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
-import { ListingPage } from '../pages/listing.page';
+import { ListingPage } from '../../pages/listing.page';
 
-// Phase 1 — Read-Only Smoke Test Plan, LV-2/LV-3.
-// See docs/specs/phase1-read-only-smoke-test-plan.md.
+// [Smoke] - Anonymous - Test Plan, LV-2/LV-3.
+// See test-plans/smoke-anonymous-test-plan.md.
 
 test('/events view page loads', async ({ page }) => {
   const events = new ListingPage(page, '/events', 'Events');
