@@ -55,5 +55,13 @@ export default defineConfig({
       testDir: './tests/smoke',
       use: { ...devices['Desktop Chrome'] },
     },
+    // Stage plans (test-plans/README.md → Stage plans): specs that create,
+    // edit, delete, or otherwise change site state. QA/stage only — never
+    // point this project at production. Login is per spec, as in smoke.
+    {
+      name: 'stage',
+      testDir: './tests/stage',
+      use: { ...devices['Desktop Chrome'] },
+    },
   ],
 });

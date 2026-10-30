@@ -19,7 +19,7 @@ const PHYSICAL_LOCATIONS = [
 // events currently scheduled), so it isn't asserted here — see
 // location.page.ts.
 for (const location of [...PHYSICAL_LOCATIONS, { name: 'CareerForce from Anywhere', path: '/anywhere' }]) {
-  test(`${location.name} location page shows Programs and Services`, async ({
+  test(`LV-1: ${location.name} location page shows Programs and Services`, async ({
     page,
   }) => {
     const locationPage = new LocationPage(page, location.path);

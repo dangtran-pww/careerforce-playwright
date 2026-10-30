@@ -9,7 +9,7 @@ import { LoginPage } from '../../pages/login.page';
 // Then: they see the "Log In or Register with LoginMN" hand-off button
 //       (this site has no inline username/password form of its own)
 
-test('login page offers Log In or Register with LoginMN', async ({ page }) => {
+test('HP-2: login page offers Log In or Register with LoginMN', async ({ page }) => {
   const login = new LoginPage(page);
   await login.goto();
   await expect(login.loginMNButton).toBeVisible();

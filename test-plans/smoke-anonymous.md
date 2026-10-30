@@ -1,6 +1,6 @@
 # [Smoke] - Anonymous - Test Plan
 
-**Status: implemented.** All 10 cases are written and passing against QA —
+**Status: implemented.** All 12 cases are written and passing against QA —
 see `tests/smoke/anonymous/*.spec.ts` and `tests/pages/*.page.ts`. This doc now
 doubles as the as-built reference; corrections made while implementing are
 called out inline and in "Implementation notes" below.
@@ -66,7 +66,7 @@ Location paths for LV-1:
 | Brooklyn Center | `/careerforce-location/careerforce-brooklyn-center` |
 | CareerForce from Anywhere | `/anywhere` |
 
-10 cases total, no new infrastructure required beyond the QA Basic Auth
+12 cases total, no new infrastructure required beyond the QA Basic Auth
 credentials and `dotenv` (added as a dev dependency so `playwright.config.ts`
 picks up `.env`).
 
@@ -133,6 +133,6 @@ summarized here:
 
 ## Sizing
 
-All 10 cases are read-only, anonymous interactions already described in the
+All 12 cases are read-only, anonymous interactions already described in the
 source checklist — no email, no third-party IdP round trip. Implemented and
 passing as a single suite.

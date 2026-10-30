@@ -5,14 +5,14 @@ import { SearchPage } from '../../pages/search.page';
 // See test-plans/smoke-anonymous.md.
 
 test.describe('site search', () => {
-  test('empty keyword returns the full index', async ({ page }) => {
+  test('SR-1: empty keyword returns the full index', async ({ page }) => {
     const search = new SearchPage(page, '/search', 'k');
     await search.search();
     expect(await search.resultCount()).toBeGreaterThan(0);
   });
 
   for (const keyword of ['job fair', 'networking', 'farmer']) {
-    test(`"${keyword}" returns results`, async ({ page }) => {
+    test(`SR-1: "${keyword}" returns results`, async ({ page }) => {
       const search = new SearchPage(page, '/search', 'k');
       await search.search(keyword);
       expect(await search.resultCount()).toBeGreaterThan(0);
@@ -22,7 +22,7 @@ test.describe('site search', () => {
 
 test.describe('explore careers search', () => {
   for (const keyword of ['Nursing', 'taxi driver', 'project manager']) {
-    test(`"${keyword}" returns results`, async ({ page }) => {
+    test(`SR-2: "${keyword}" returns results`, async ({ page }) => {
       const careers = new SearchPage(page, '/explore/careers', 'otitle');
       await careers.search(keyword);
       expect(await careers.resultCount()).toBeGreaterThan(0);

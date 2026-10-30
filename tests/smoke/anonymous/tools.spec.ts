@@ -10,7 +10,7 @@ import { EmploymentReadinessPage } from '../../pages/employment-readiness.page';
 // anything server-side for an anon session. Stop short of "add to goals" /
 // saving results, which needs an account and is out of this plan's scope.
 
-test('Skills Matcher loads and accepts input', async ({ page }) => {
+test('CT-1: Skills Matcher loads and accepts input', async ({ page }) => {
   const skillsMatcher = new SkillsMatcherPage(page);
   await skillsMatcher.goto();
   await skillsMatcher.answerSkills();
@@ -18,7 +18,7 @@ test('Skills Matcher loads and accepts input', async ({ page }) => {
   await expect(skillsMatcher.resultsHeading).toBeVisible();
 });
 
-test('Interest Profiler completes and scores', async ({ page }) => {
+test('CT-2: Interest Profiler completes and scores', async ({ page }) => {
   const interestProfiler = new InterestProfilerPage(page);
   await interestProfiler.goto();
   await interestProfiler.answerAll();
@@ -26,7 +26,7 @@ test('Interest Profiler completes and scores', async ({ page }) => {
   await expect(interestProfiler.resultsHeading).toBeVisible();
 });
 
-test('Employment Readiness Assessment entry page loads without login', async ({
+test('CT-3: Employment Readiness Assessment entry page loads without login', async ({
   page,
 }) => {
   const employmentReadiness = new EmploymentReadinessPage(page);

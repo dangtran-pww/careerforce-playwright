@@ -123,8 +123,9 @@ Conventions:
   the `jobseeker`, `content-manager`, or `admin` session from
   `npm run login:manual -- <role>`.
 
-The `stage` project, `test:stage` script, and fixtures are
-added with the first stage spec that is generated.
+The `stage` project and `test:stage` script were added with the first
+stage spec (`tests/stage/admin-maintenance/`). `tests/fixtures/` is
+added with the first stage spec that needs fixture files.
 
 ## Plans
 
@@ -132,8 +133,11 @@ added with the first stage spec that is generated.
   Implemented tests: `tests/smoke/anonymous/*.spec.ts`.
 - `smoke-admin-reports.md` — Status: implemented.
   Implemented test: `tests/smoke/admin-reports/admin-reports.spec.ts`.
-- `smoke-admin-maintenance.md` — Status: ready to generate.
-  Permissions rebuild, search-api rebuild tracking and reindex.
+- `smoke-admin-maintenance.md` — Status: partially implemented (AM-1,
+  AM-2 not yet verified). Implemented tests:
+  `tests/stage/admin-maintenance/*.spec.ts`.
+  Permissions rebuild, search-api rebuild tracking and reindex, and
+  search checks (site, events, appointments, similar events, occupations).
 - `smoke-content-lifecycle.md` — Status: ready to generate.
   Publish/unpublish, revisions, translation.
 - `smoke-ckeditor.md` — Status: ready to generate.
