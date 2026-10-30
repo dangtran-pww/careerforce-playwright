@@ -10,6 +10,19 @@ test('HP-1: homepage loads for an anonymous visitor', async ({ page }) => {
   await home.goto();
   await expect(home.main).toBeVisible();
   await expect(home.jobSearchHeading).toBeVisible();
+  expect(await home.jobSearchBackgroundImage()).toBe(
+    'linear-gradient(to right bottom, rgb(0, 60, 111), rgb(1, 90, 167))',
+  );
+  // The sentence has a <br> after "exploration", so textContent would run
+  // "explorationand" together; innerText renders it as a space.
+  await expect(home.jobSearchIntro).toHaveText(
+    "CareerForce is Minnesota's official career exploration and job search resource.",
+    { useInnerText: true },
+  );
+  await expect(home.jobSearchKeywordInput).toBeVisible();
+  await expect(home.jobSearchLocationInput).toBeVisible();
+  await expect(home.jobSearchDistanceSelect).toBeVisible();
+  await expect(home.jobSearchButton).toBeVisible();
   await expect(home.whatBringsYouHereHeading).toBeVisible();
   await expect(home.upcomingEventsHeading).toBeVisible();
   await expect(home.exploreCareersHeading).toBeVisible();

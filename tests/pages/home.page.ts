@@ -4,6 +4,12 @@ export class HomePage {
   readonly page: Page;
   readonly main: Locator;
   readonly jobSearchHeading: Locator;
+  readonly jobSearchBlock: Locator;
+  readonly jobSearchIntro: Locator;
+  readonly jobSearchKeywordInput: Locator;
+  readonly jobSearchLocationInput: Locator;
+  readonly jobSearchDistanceSelect: Locator;
+  readonly jobSearchButton: Locator;
   readonly whatBringsYouHereHeading: Locator;
   readonly upcomingEventsHeading: Locator;
   readonly exploreCareersHeading: Locator;
@@ -16,6 +22,26 @@ export class HomePage {
     this.page = page;
     this.main = page.locator('main');
     this.jobSearchHeading = page.getByRole('heading', { name: 'Job Search' });
+    // The page has several other "Search" buttons (header, site search), so
+    // everything in the Job Search block is scoped to its component root.
+    // The field labels are visually hidden but still give accessible names.
+    this.jobSearchBlock = page.locator(
+      '[data-component-id="careerforce_skin:sdc_job_search"]',
+    );
+    this.jobSearchIntro = this.jobSearchBlock.getByText('CareerForce is');
+    this.jobSearchKeywordInput = this.jobSearchBlock.getByRole('textbox', {
+      name: 'Keyword',
+    });
+    this.jobSearchLocationInput = this.jobSearchBlock.getByRole('combobox', {
+      name: 'Location',
+    });
+    this.jobSearchDistanceSelect = this.jobSearchBlock.getByRole('combobox', {
+      name: 'Distance',
+    });
+    this.jobSearchButton = this.jobSearchBlock.getByRole('button', {
+      name: 'Search',
+      exact: true,
+    });
     this.whatBringsYouHereHeading = page.getByRole('heading', {
       name: 'What brings you here today?',
     });
@@ -47,6 +73,15 @@ export class HomePage {
   async gtmContainerId(): Promise<string | undefined> {
     const html = await this.page.content();
     return html.match(/GTM-[A-Z0-9]+/)?.[0];
+  }
+
+  // The Job Search block's blue isn't on any element's own background — it's
+  // a primary-300 → primary-400 gradient painted by the full-width wrapper's
+  // ::before (its solid background-color sits underneath, never visible).
+  async jobSearchBackgroundImage(): Promise<string> {
+    return this.jobSearchBlock
+      .locator('.tw-full-width-bg')
+      .evaluate((el) => getComputedStyle(el, '::before').backgroundImage);
   }
 
   // The Decision Tree's options sit inside a native <details>/<summary>
