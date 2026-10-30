@@ -4,10 +4,11 @@ import { ListingPage } from '../../pages/listing.page';
 // [Smoke] - Anonymous - Test Plan, LV-2/LV-3.
 // See test-plans/smoke-anonymous.md.
 
-test('LV-2: /events view page loads', async ({ page }) => {
-  const events = new ListingPage(page, '/events', 'Events');
+test('LV-2: /education-and-training/events view page loads', async ({ page }) => {
+  const events = new ListingPage(page, '/education-and-training/events', 'Events');
   await events.goto();
   await expect(events.mainHeading()).toBeVisible();
+  await expect(events.listItems().first()).toBeVisible();
 });
 
 test('LV-3: /programs-services view page loads', async ({ page }) => {
@@ -18,4 +19,5 @@ test('LV-3: /programs-services view page loads', async ({ page }) => {
   );
   await programsAndServices.goto();
   await expect(programsAndServices.mainHeading()).toBeVisible();
+  await expect(programsAndServices.listItems().first()).toBeVisible();
 });

@@ -15,7 +15,8 @@ use:
 - **Login page:** offers the "Log In or Register with LoginMN" button.
 - **Search:** site search and the Explore Careers search both return results.
 - **Locations, Events, Programs and Services:** the pages load with their
-  main content.
+  main content, and the Events and Programs and Services pages list at
+  least 1 item.
 - **Career tools:** the Skills Matcher and Interest Profiler can be filled in
   and show results, and the Employment Readiness Assessment opens.
 
@@ -35,12 +36,24 @@ The checks come from the DEED smoke-testing checklist
 ## Running it
 
 No login needed. First time? Do the [one-time setup](README.md#one-time-setup).
-Run the line for the environment you want (about 1–2 minutes):
+Run the command for the environment you want (about 1–2 minutes).
+
+QA:
 
 ```bash
-BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/anonymous     # QA
-BASE_URL=https://stage.careerforce.link npx playwright test tests/smoke/anonymous  # Stage
-BASE_URL=https://careerforce.mn.gov npx playwright test tests/smoke/anonymous      # Production
+BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/anonymous
+```
+
+Stage:
+
+```bash
+BASE_URL=https://stage.careerforce.link npx playwright test tests/smoke/anonymous
+```
+
+Production:
+
+```bash
+BASE_URL=https://careerforce.mn.gov npx playwright test tests/smoke/anonymous
 ```
 
 Add `--ui` to [watch it run](README.md#watching-a-run). A successful run ends
@@ -49,7 +62,8 @@ with `20 passed` ([Expected result](#expected-result)).
 ## Test cases
 
 Every test starts as a visitor who isn't logged in. "Page" is the address
-after the site name, for example `/events` means `qa.careerforce.link/events`.
+after the site name, for example `/programs-services` means
+`qa.careerforce.link/programs-services`.
 
 | ID | Test | Page | Steps | Expected result |
 |---|---|---|---|---|
@@ -60,8 +74,8 @@ after the site name, for example `/events` means `qa.careerforce.link/events`.
 | SR-1 | Site search returns results | `/search` | Search with no words. Then search for "job fair", "networking", and "farmer", one at a time. | Every search shows at least 1 result. |
 | SR-2 | Career search returns results | `/explore/careers` | Search for "Nursing", "taxi driver", and "project manager", one at a time. | Every search shows at least 1 result. |
 | LV-1 | Location pages load | see the list below | Open each of the 4 location pages. | Each page shows a "Programs and Services" section. |
-| LV-2 | Events page loads | `/events` | Open the page. | The page title "Events" shows. |
-| LV-3 | Programs and Services page loads | `/programs-services` | Open the page. | The page title "Programs and Services" shows. |
+| LV-2 | Events page lists events | `/education-and-training/events` | Open the page. | The page title "Events" shows, with at least 1 event listed below it. |
+| LV-3 | Programs and Services page lists services | `/programs-services` | Open the page. | The page title "Programs and Services" shows, with at least 1 program or service listed below it. |
 | CT-1 | Skills Matcher gives results | `/occupations/skills_matcher` | Answer the 10 skill groups on the first page, click "Continue" until the last page, then submit. | A "Matching Careers By My Skills" results page shows. |
 | CT-2 | Interest Profiler gives results | `/occupations/interest_profiler` | Answer every question on each page, clicking "Continue" between pages (60 questions in all), then submit. | An "Interest Assessment Results" page shows. |
 | CT-3 | Employment Readiness Assessment opens | `/employment-readiness/take` | Open the page. | The page title "Employment Readiness Assessment" shows, with no login needed. |
@@ -87,7 +101,8 @@ Good to know:
   is only on the last page, so you still click "Continue" to get there. The
   **Interest Profiler needs all 60 answers.**
 - **Search result counts change** as content is added or removed. The tests
-  only check that there's at least 1 result, not an exact number.
+  only check that there's at least 1 result, not an exact number. The same
+  goes for the Events and Programs and Services listings (LV-2, LV-3).
 
 ## Expected result
 

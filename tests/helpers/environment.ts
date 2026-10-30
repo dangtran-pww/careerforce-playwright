@@ -1,7 +1,7 @@
 // GTM container ID differs by environment: one ID for prod, one shared across
 // the lower environments (QA, stage, sandbox) per the source smoke-testing
-// checklist. Confirmed by inspecting prod and QA directly; stage/sandbox are
-// assumed to match QA until checked.
+// checklist. Confirmed on prod, QA, and stage (HP-3 run against stage,
+// 2026-10-30); sandbox uses the same ID as QA.
 const PROD_GTM_ID = 'GTM-WL36T6M';
 const LOWER_ENV_GTM_ID = 'GTM-P8D2THV';
 
