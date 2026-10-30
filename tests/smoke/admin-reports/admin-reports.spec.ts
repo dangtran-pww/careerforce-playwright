@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../helpers/fixtures';
 import { isProd, isStage } from '../../helpers/environment';
 import { isKnownIssue } from '../../helpers/known-issues';
 

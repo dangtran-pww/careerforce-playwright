@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../helpers/fixtures';
 import { EventsSearchPage, type EventsQuery } from '../../pages/events-search.page';
 import { addDays, siteDate } from '../../helpers/dates';
 

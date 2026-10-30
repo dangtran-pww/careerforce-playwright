@@ -7,6 +7,74 @@ Playwright runs the code in `tests/` (`testDir: './tests'` in
 are the human-readable source that test scripts are generated from, and the
 record of what is already covered.
 
+## Before you run any plan
+
+Every plan's "Running it" section assumes you've done the steps below. They
+apply to all plans, so they live here and not in each plan.
+
+### One-time setup
+
+You only need to do this once per computer. Open a terminal in this project's
+folder and run:
+
+```bash
+npm install                      # downloads the test tools
+npx playwright install chromium  # downloads the browser the tests drive
+cp .env.example .env             # creates your local settings file
+```
+
+The `.env` file holds the username/password for the "Sign in" pop-up that
+protects QA and Stage. It comes pre-filled. If a run fails with a 401 /
+"Unauthorized" error, ask the team for the current values.
+
+### Environments
+
+Each plan's run commands start with `BASE_URL=...`, which tells the tests
+which website to visit. It has to come first, on the same line as the rest of
+the command.
+
+| Environment | `BASE_URL` | What can run there |
+|---|---|---|
+| QA | `https://qa.careerforce.link` | every plan |
+| Stage | `https://stage.careerforce.link` | every plan |
+| Production | `https://careerforce.mn.gov` | smoke plans only (read-only) |
+
+Never run a stage plan against Production. Stage plans create and delete
+content.
+
+### Logging in (only for plans that say so)
+
+Some plans test pages that need a logged-in user. The plan names the role it
+needs, such as `admin` or `jobseeker`. Before running it, log in once by hand:
+
+```bash
+npm run login:manual -- admin
+```
+
+A Chrome window opens. Log in, then go back to the terminal and press Enter.
+The session is saved, so you only repeat this when it expires (the tests will
+fail with a storage state / ENOENT error).
+
+### Watching a run
+
+Add `--ui` to the end of any run command to see the browser click through each
+check. A window opens. Press the ▶ (play) button to start, then click any test
+to replay it step by step.
+
+### When something fails
+
+The terminal lists which test failed by its ID (for example, `HP-1`). Match
+the ID to the plan's test cases table to see what it checks, then open the
+visual report:
+
+```bash
+npx playwright show-report
+```
+
+The report opens in your browser. For each failed test it shows a screenshot
+and a video of what was on screen when it went wrong. Share those with the dev
+team.
+
 ## Status on every plan
 
 Every plan in this folder must start with a status and, when it exists, a

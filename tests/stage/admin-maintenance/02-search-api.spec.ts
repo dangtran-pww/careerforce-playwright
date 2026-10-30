@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../helpers/fixtures';
 import { SearchApiIndexPage } from '../../pages/search-api-index.page';
 import { SearchPage } from '../../pages/search.page';
 import {

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../helpers/fixtures';
 import { waitForBatch } from '../../pages/search-api-index.page';
 
 // [Smoke] - Admin Maintenance - Test Plan — AM-1. See

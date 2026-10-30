@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../helpers/fixtures';
 import { SearchPage } from '../../pages/search.page';
 
 // [Smoke] - Anonymous - Test Plan, SR-1/SR-2.

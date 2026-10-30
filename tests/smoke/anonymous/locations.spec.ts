@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../helpers/fixtures';
 import { LocationPage } from '../../pages/location.page';
 
 // [Smoke] - Anonymous - Test Plan, LV-1.

@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../helpers/fixtures';
 import { HomePage } from '../../pages/home.page';
 import { expectedGtmId } from '../../helpers/environment';
 

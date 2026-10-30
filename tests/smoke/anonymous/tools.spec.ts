@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect } from '../../helpers/fixtures';
 import { SkillsMatcherPage } from '../../pages/skills-matcher.page';
 import { InterestProfilerPage } from '../../pages/interest-profiler.page';
 import { EmploymentReadinessPage } from '../../pages/employment-readiness.page';
