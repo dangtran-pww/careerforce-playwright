@@ -12,6 +12,7 @@
     ]
   },
   "sandbox": {
+    "excludedCommands": ["npx playwright"],
     "network": {
       "allowedDomains": ["*.careerforce.link"]
     }
