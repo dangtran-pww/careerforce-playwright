@@ -4,6 +4,7 @@ import 'dotenv/config';
 // How to run:
 //   BASE_URL=https://qa.careerforce.link npx playwright test
 //   BASE_URL=https://qa.careerforce.link npx playwright test --ui
+//   SLOW_MO=500 BASE_URL=https://qa.careerforce.link npx playwright test --headed
 //
 // QA/stage sit behind HTTP Basic Auth in front of Drupal; set
 // BASIC_AUTH_USER / BASIC_AUTH_PASSWORD (see .env.example) to get past it.
@@ -35,6 +36,11 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    // SLOW_MO=500 pauses that many ms after every action, so a --headed run
+    // can be followed by eye. Off (0) unless set.
+    launchOptions: {
+      slowMo: Number(process.env.SLOW_MO ?? 0),
+    },
   },
   projects: [
     // Seed for the Playwright agents (planner/generator/healer): they run

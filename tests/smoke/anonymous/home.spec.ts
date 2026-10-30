@@ -24,6 +24,15 @@ test('HP-1: homepage loads for an anonymous visitor', async ({ page }) => {
   await expect(home.jobSearchDistanceSelect).toBeVisible();
   await expect(home.jobSearchButton).toBeVisible();
   await expect(home.whatBringsYouHereHeading).toBeVisible();
+  await expect(home.decisionTreeToggle()).toHaveText('Choose a path');
+  await expect(home.decisionTreeCards()).toHaveCount(3);
+  for (const card of await home.decisionTreeCards().all()) {
+    const image = card.locator('img');
+    await image.scrollIntoViewIfNeeded();
+    await expect(image).toBeVisible();
+    await expect.poll(() => home.imageNaturalWidth(image)).toBeGreaterThan(0);
+    await expect(card.getByRole('heading', { level: 3 })).not.toBeEmpty();
+  }
   await expect(home.upcomingEventsHeading).toBeVisible();
   await expect(home.exploreCareersHeading).toBeVisible();
   await expect(home.upcomingTrainingProgramsHeading).toBeVisible();

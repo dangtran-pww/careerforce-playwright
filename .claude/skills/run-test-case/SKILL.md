@@ -1,7 +1,7 @@
 ---
 name: run-test-case
-description: Run one test case from test-plans/ by its ID (e.g. AM-2, HP-1, SR-1) with the Playwright test runner, guide the user through login if the case needs a saved session, and report the result with an explanation of every step performed. Or, in guide mode, don't run it and instead teach the user how to run that case themselves with the Playwright CLI and UI mode. Use when the user asks to run, execute, or check a single test case by ID, or asks how to run one.
-argument-hint: <test-case-id> [BASE_URL] [--guide]
+description: Run one test case from test-plans/ by its ID (e.g. AM-2, HP-1, SR-1) with the Playwright test runner, guide the user through login if the case needs a saved session, and report the result with an explanation of every step performed. Use when the user asks to run, execute, or check a single test case by ID.
+argument-hint: <test-case-id> [BASE_URL]
 ---
 
 # Run a test case by ID
@@ -10,18 +10,6 @@ The user gives a test case ID (for example `AM-2`). Optionally they also give
 an environment URL. Arguments: `$ARGUMENTS`
 
 If no ID was given, ask for one and stop.
-
-## 0. Pick the mode
-
-- **Run mode** (default): Claude runs the case and reports the result.
-  Follow steps 1–7.
-- **Guide mode**: the arguments contain `--guide`, or the user asks *how* to
-  run the case ("how do I run AM-2", "show me how to run…", "explain how to
-  run it myself"). Claude does not run anything. Follow steps 1–3, then
-  "Guide mode" at the end of this file, and skip steps 4–7.
-
-If it is unclear which mode the user wants, use run mode. The report still
-ends with the "Run it yourself" section.
 
 ## 1. Find the plan that defines the case
 
@@ -120,7 +108,7 @@ config default `BASE_URL` (QA, `https://qa.careerforce.link`) plus `.env`.
 If the user asked for a different environment, run the CLI instead:
 
 ```bash
-BASE_URL=<target> npx playwright test <spec-folder> --project=<project> --grep "\b<ID>:" --reporter=list
+BASE_URL=<target> npx playwright test <spec-folder> --project=<project> --grep "<ID>:" --reporter=list
 ```
 
 Give long cases a long Bash timeout, or run them in the background (see the
@@ -169,7 +157,7 @@ the skip reason the test gave.>
 ### Notes
 <Annotations the test logged (e.g. picked event IDs), warnings from the plan
 that apply, and artifacts to look at: test-results/… paths, or
-`npm run test:report` to open the HTML report.>
+`npx playwright show-report` to open the HTML report.>
 
 ### Run it yourself
 <The exact command for this case, then the optional variants below.>
@@ -189,7 +177,7 @@ declined a stage run), so the user can run the case from their own terminal
 later. Fill in the real values: no placeholders.
 
 ```bash
-BASE_URL=<target> npx playwright test <spec-folder> --project=<project> --grep "\b<ID>:"
+BASE_URL=<target> npx playwright test <spec-folder> --project=<project> --grep "<ID>:"
 ```
 
 - Use the same `BASE_URL`, spec folder, project, and grep that this run used.
@@ -203,95 +191,10 @@ Then list these variants, each built from the same command:
 | To… | Add |
 | --- | --- |
 | Watch the browser | `--headed` |
-| Step through with the inspector | `--debug` |
+| Watch it in slow motion | `--headed`, and put `SLOW_MO=500` (ms per action) before `BASE_URL=`. Write this one out as the full command, e.g. `SLOW_MO=500 BASE_URL=<target> npx playwright test <spec-folder> --project=<project> --grep "<ID>:" --headed` |
 | Use the interactive UI mode | `--ui` |
-| Open the last HTML report | run `npm run test:report` |
+| Open the last HTML report | run `npx playwright show-report` |
 
 Repeat any warning from step 3 that applies (for example that a `stage`
 case must never point at production, or that it takes minutes and should run
 off-peak).
-
-## Guide mode
-
-Do not call `mcp__playwright-test__test_run`, run `npx playwright test`, or
-start a login. Instead, write a guide that the user can follow in their own
-terminal. Use the case, spec, project, folder, and role from steps 1–3. If the
-user gave no environment, use QA (`https://qa.careerforce.link`). In step 3,
-refuse production for a `stage` case, just as in run mode, and put the
-case's warnings at the top of the guide rather than asking for confirmation.
-
-Fill in real values everywhere: no placeholders. You may check facts that
-change the guide, but only report what you found; do not fix anything:
-
-- whether `node_modules/` exists
-- whether `playwright/.auth/<role>.json` exists
-- whether the `BASIC_AUTH_USER` and `BASIC_AUTH_PASSWORD` keys are in `.env`.
-  Check only that the keys exist. Never read or print their values.
-
-Write the guide in this shape. Leave out any prerequisite that is already in
-place, and say that it is.
-
-````markdown
-## How to run <ID> — <title>
-
-**Plan:** test-plans/<plan>.md · **Spec:** <file:line> · **Project:** <project>
-**Environment:** <BASE_URL> · **Role:** <role or anonymous>
-
-<Warnings from step 3, and the plan Status if the case is not verified yet.>
-
-### What this case does
-<Two to four plain-language lines built from the plan and the test code:
-where it starts, what it does, what it checks.>
-
-### 1. One-time setup
-```bash
-npm install
-npm run install:browsers
-```
-Copy `.env.example` to `.env` and fill in `BASIC_AUTH_USER` /
-`BASIC_AUTH_PASSWORD`. Without them, QA and stage return 401.
-
-### 2. Log in as <role>
-<Only for cases with a storageState. Use the login command and the
-"PWW Staff Log In" steps from step 4, with the same BASE_URL. Say that it
-saves playwright/.auth/<role>.json, and that the user must repeat it when
-the session expires or when they switch environments.>
-
-### 3. Run it from the command line
-```bash
-BASE_URL=<target> npx playwright test <spec-folder> --project=<project> --grep "\b<ID>:"
-```
-- `<spec-folder>` limits the run to this plan's specs.
-- `--project=<project>` picks the `<project>` project in playwright.config.ts.
-- `--grep "\b<ID>:"` matches only tests titled `<ID>: …`. The `\b` stops
-  `AM-1` from also matching `AM-10`.
-
-Variants: `--headed` (watch the browser), `--debug` (step through with the
-Inspector), `--reporter=list` (one line per test in the terminal).
-
-### 4. Or run it in UI mode
-```bash
-BASE_URL=<target> npx playwright test <spec-folder> --project=<project> --ui
-```
-1. The UI mode window lists the tests in <spec-folder>. Type `<ID>:` in the
-   filter box at the top of the sidebar.
-2. Click ▶ next to the test (or next to the `describe` block for a
-   data-driven case) to run it.
-3. Click a step in the action timeline to see the page at that moment, with
-   the DOM snapshot, the console, and network calls.
-4. Turn on watch mode (the eye icon) to rerun the test after each change to
-   the spec file.
-
-### 5. Read the result
-- In the terminal: a ✓ or ✘ per test, then a summary.
-- `npm run test:report` opens the HTML report from the last CLI run.
-- On failure, `test-results/<test-folder>/` holds the screenshot, the
-  video, and `error-context.md`.
-- Redirected to `/user/login`, "Access denied", or 403: the session has
-  expired, so repeat step 2. A 401 on every page means the Basic Auth keys
-  are missing from `.env`.
-````
-
-For a case that runs several tests (data-driven, or a `describe` block), say
-how many tests the grep matches, and list the variant titles so the user
-knows what to expect. End by offering to run the case for them in run mode.

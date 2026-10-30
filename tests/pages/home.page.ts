@@ -100,6 +100,19 @@ export class HomePage {
     return this.page.locator('a[href*="decision-tree-to="]').first();
   }
 
+  // Each card is an image plus an <h3> title, both inside one link. The
+  // images are role="presentation", so they aren't reachable by role.
+  decisionTreeCards(): Locator {
+    return this.page.locator('.decision-tree .decision-tree-card');
+  }
+
+  // The card images are loading="lazy", and toBeVisible() passes on an
+  // image's reserved width/height alone — naturalWidth is only > 0 once
+  // the file has actually downloaded and decoded.
+  async imageNaturalWidth(image: Locator): Promise<number> {
+    return image.evaluate((img: HTMLImageElement) => img.naturalWidth);
+  }
+
   resetDecisionTreeButton(): Locator {
     return this.page.getByRole('button', { name: 'Reset selections' });
   }
