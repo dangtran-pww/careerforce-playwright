@@ -34,17 +34,22 @@ Read `test-plans/<plan>.md`. Note these parts:
   `smoke`, `tests/stage/…` → `stage`).
 - The **persona**, and any Scope warnings.
 
-## 2. Safety and login
+## 2. Environment, safety, and login
 
-Follow steps 3 and 4 of `.claude/skills/run-test-case/SKILL.md`, applied to
+Before you run anything, confirm with the user which environment the run
+targets, even when a URL was given in the arguments. Ask with
+AskUserQuestion and offer QA (`https://qa.careerforce.link`) first, or the
+URL from the arguments when one was given. Do not run until the user has
+answered. Use the confirmed URL as `BASE_URL` in step 3 and as the
+**Environment** in the report.
+
+Then follow steps 3 and 4 of `.claude/skills/run-test-case/SKILL.md`, applied to
 the whole plan:
 
 - Never run a `stage` project against production.
 - Warn about long runtimes and side effects, and get confirmation first.
 - Make sure the `playwright/.auth/<role>.json` session exists for every role
   that the plan's specs use.
-
-The environment defaults to QA (`https://qa.careerforce.link`).
 
 ## 3. Run the plan with tracing
 

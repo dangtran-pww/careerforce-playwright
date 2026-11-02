@@ -14,6 +14,12 @@ scripts/
   login-manual.mjs          # `npm run login:manual` — launches real Chrome for by-hand SSO
                              # login, then attaches over CDP to save storageState (Google
                              # blocks sign-in from Playwright's own automated Chromium)
+  trace-steps.mjs           # per-step screenshots from a traced run (/test-plan-report)
+  confluence-report.mjs     # uploads a report and its screenshots to Confluence
+                             # (/publish-report-confluence)
+.claude/skills/             # Claude Code skills: run-test-case, test-plan-report,
+                             # publish-report-confluence (see "Test reports and Confluence")
+reports/                    # generated test reports (gitignored)
 tests/
   pages/                    # Page objects for the CareerForce smoke suite below
   smoke/                    # Post-deploy smoke suite: read-only, prod-safe.
@@ -139,7 +145,38 @@ tests left behind. No heavy style preset is included.
 4. Run it green on staging before adding another test. A small trusted
    suite beats a large flaky one.
 
+## Test reports and Confluence
+
+Two Claude Code skills turn a test plan run into a report that QA, project
+managers, and the client can read:
+
+1. `/test-plan-report <plan>` runs every case of an `implemented` plan with
+   tracing on, and writes `reports/<plan>-<stamp>/report.md`. The report
+   explains each step in plain language, with a screenshot of the page after
+   it.
+2. `/publish-report-confluence <report-dir> <confluence-url>` publishes that
+   report as a new Confluence page under the page or space you give. It
+   uploads every screenshot and then reads the live page back to confirm that
+   each one is shown.
+
+**Always publish with the skill.** Don't paste the report into Confluence or
+write the page HTML by hand (or ask Claude to). Confluence silently drops an
+image that sits inside a numbered list item. The report puts each screenshot
+inside its numbered step, so a hand-made page loses images with no error. The
+first smoke-anonymous page lost 13 of its 24 screenshots this way.
+`scripts/confluence-report.mjs` ends the list before each image and resumes the
+numbering after it. It refuses to build the page if any image is missing or
+not uploaded. After publishing, the skill counts the images on the live page.
+
 ## Troubleshooting
+
+- **Screenshots are missing on a Confluence report page:** the page was built
+  by hand, not with `/publish-report-confluence` (see "Test reports and
+  Confluence"). Publish it again with the skill. Pointing it at the existing
+  page updates that page.
+- **The Confluence upload fails with `getaddrinfo EAI_AGAIN`:** Node is not
+  using the sandbox's network proxy. Run the upload with
+  `NODE_USE_ENV_PROXY=1` in front, as the skill does.
 
 - **Logged-in tests fail with a storage state / ENOENT error:** run `npm run
   login:manual -- <role>` to (re)create `playwright/.auth/<role>.json` — the
