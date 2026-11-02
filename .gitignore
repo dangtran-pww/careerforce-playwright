@@ -4,3 +4,4 @@ playwright-report/
 playwright/.auth/
 .env
 .playwright-mcp/
+reports/

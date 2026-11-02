@@ -4,3 +4,4 @@ playwright-report/
 playwright/.auth/
 package-lock.json
 .env
+reports/
