@@ -1,0 +1,94 @@
+# Resume Builder and Word export
+
+The Resume Builder lets a job seeker build one "master" resume in five guided steps, make "targeted" (code: *tailored*) copies of it, reorder sections, preview, download as a Word `.docx`, and upload existing resume files. Staff with the right permissions can view or manage other users' resumes. The feature is the `cf_resume` module (a custom `resume` content entity built from Paragraphs) plus `cf_resume_word` (`.docx` export with PHPWord). The older session-based builder is a separate module, see [legacy-resume-builder-form-wizard.md](legacy-resume-builder-form-wizard.md).
+
+## What users see
+
+| Path | Page | Notes |
+|---|---|---|
+| `/user/my-resumes` | Redirect | Anonymous → login with `destination`. Logged in → own My Resume Center. |
+| `/user/{uid}/my-resumes` | **My Resume Center** (page_manager `my_resumes`) | Lists master/targeted resumes and uploads. CTA blocks: build master, make a targeted copy, upload. Visibility condition `resume_access_condition` = `view`. Also a "My Resume Center" tab on the user page. |
+| `/master-resume/{user}` | "Craft your resume in just a few steps!" (page_manager `craft_your_resume`) | "Create a resume" button (`CreateMasterResumeForm`). Condition = `create`. |
+| `/resume/{id}/{step}` | Step editor | `contact_information` → `summary` → `skills` → `experience` → `education`. Each page has the step form, step navigation, title, back link, owner banner, live preview (iframe) and disclaimer. "Save and continue" goes to the next step; after Education, to the review page. |
+| `/resume/{id}` | Review page (view display `full`) | Review text, download link, links to My Resume Center and "Build a targeted resume", preview |
+| `/resume/{id}/review` | Review form | Rename (targeted only) and reorder Skills/Experience/Education with Move Up/Down buttons. Contact Information and Summary stay fixed at the top. |
+| `/resume/{id}/tailored-resume` | "Craft your targeted resume…" (page_manager `tailored_resume_start_page`) | Title field (default `clone of <title>`), creates the copy and opens its Contact Information step |
+| `/resume/{id}/preview` | Bare HTML preview | Rendered with view mode `preview`. Used inside the step-page iframe. `?step=<field>` highlights a section. |
+| `/resume/{id}/export-to-docx` | Download `.docx` | `cf_resume_word`. Filename is the resume title with spaces → `_` and unsafe characters → `-`. |
+| `/resume/{id}/delete` | Delete confirm | Texts differ for master and targeted |
+| `/media/create-minimal/resume_uploaded/for-user/{uid}` | Upload modal | Media type `resume_uploaded` |
+| `/media/{mid}/delete-uploaded-resume` | Delete uploaded file | |
+| `/resume/message/{key}` | Modal message | Shown instead of the create/upload link when a limit is reached |
+
+Admin: `/admin/content/resume` (list), `/admin/structure/resume` (entity settings / Field UI), `/admin/config/careerforce/cf_resume`, `/admin/config/careerforce/cf_resume_word_settings`.
+
+Default limits (`config/sync/cf_resume.settings.yml`): 1 master, 5 targeted, 5 uploaded files.
+
+## How it works
+
+### Data model
+- `resume` entity (tables `resume`, `resume_field_data`, `resume_revision`, `resume_field_revision`). `is_master` TRUE means master, FALSE means tailored/targeted.
+- Paragraph reference fields:
+
+  | Field | Paragraph type | Cardinality |
+  |---|---|---|
+  | `field_resume_contact_info` | `resume_contact_information` | 1 |
+  | `field_resume_summary` | `resume_summary` | 1 |
+  | `field_resume_skill_multiple` | `resume_skill` | unlimited |
+  | `field_resume_experience_multiple` | `resume_experience` | unlimited |
+  | `field_resume_education_multiple` | `resume_education` | unlimited |
+
+- `field_resume_step_order` (cardinality 3, default `skills, experience, education`) stores the user's section order. `ResumeHooks::validateStepOrderDefaultValue()` rejects non-step values in the field's default value.
+- A step counts as "complete" for navigation if its paragraph field has at least one item (`ResumeUtility::isStepComplete()`).
+- Uploaded files: media type `resume_uploaded`, field `field_media_file_private`, private scheme, extensions `txt pdf doc docx`, max 10 MB, directory `media/resume_uploaded/media_file_private/[date]`.
+
+### Create, copy and limits
+- `ResumeStorage::save()` throws `ReachedResumeLimitException` for a *new* resume when the owner already has `max_master_resumes` or `max_tailored_resumes`.
+  - On the master path, `CreateMasterResumeForm` shows `max_master_exceeded_message` and redirects to the existing master.
+  - CTA/clone links check the limit first and swap to a modal pointing at `/resume/message/max_*_exceeded_message`.
+- `cloneResume()` copies `uid`, sets `is_master = FALSE`, and `createDuplicate()`s every paragraph in the five fields. A targeted resume is fully independent of the master after creation.
+- Upload limit: `UploadedResumeQuantityConstraint` on `media`, checked against `max_uploaded_resumes`.
+
+### Access
+- Permissions are generated by `ResumePermissions::buildPermissions()` as `resume <operation> <own|any>`, for operations `create`, `delete`, `delete revisions`, `revert`, `update`, `view`.
+- `hook_resume_access` / `hook_resume_create_access` (`ResumeAccessHooks`) grant access with the `any` permission, or with `own` when the user owns the resume.
+- `ResumeAccessControlHandler::checkAccess()` checks legacy names (`view resume`, `edit resume`, …) that no permissions file defines. Only `administer resume` matters there, so the hooks decide access.
+- Role grants in `config/sync`:
+  - `authenticated`: all `own` permissions.
+  - `job_services_administrator`: all `any`.
+  - `job_services_admin`: view/delete/delete revisions/revert `any` (no update/create).
+  - `site_admin`: all `any`, plus `administer resume` and `administer resume display`.
+- Job seekers also need registration tier 1 to open resume routes (see [job-seeker-registration-and-profile.md](job-seeker-registration-and-profile.md)).
+- `ResumeOwnerIdentificationBlock` shows "You are currently viewing <first> <last>'s resume." for staff looking at someone else's resume.
+
+### Word export (`cf_resume_word`)
+- Route `entity.resume.export_to_docx` requires `resume.view` access.
+- `ExportToFileController::resumeToDocx()` builds a new `PhpWord` document in code. Section order is Contact Information, then Summary, then `field_resume_step_order`.
+- Fonts, margins, skill column count (`skill_column_count`, 3) and right tab position come from `cf_resume_word.settings`.
+- The document streams with `Content-Disposition: attachment` and no-store cache headers, and the controller invokes `hook_cf_resume_download` (audited as `resume:download`).
+- `cf_resume_word.install` reports a requirements error if `phpoffice/phpword` is missing.
+- The `.docx`/`.dotx` files in `cf_resume_word/word_templates/` are not referenced by any code (appear unused).
+
+### Clean-up and audit
+- User delete removes resumes (with revisions) and `resume_uploaded` media. Media delete removes the file and logs an alert if the file is used elsewhere.
+- `drush sql:sanitize` deletes **all** resumes, all paragraphs of the resume paragraph types, and all `resume_uploaded` media.
+- Stenographer (`cf_resume.stenographer.yml`): resume view/create/update/delete and downloads, uploads (file metadata), and private-file downloads of uploaded resumes. Storages are `stenographer_cloudwatch` and `pww_auditor`.
+
+## External services and integrations
+- No external APIs. The `.docx` is built locally with PHPWord.
+- Audit records go to CloudWatch / the `pww_auditor` storage (see `../platform-and-operations/`).
+
+## Configuration and permissions
+- `/admin/config/careerforce/cf_resume` (`administer resume`), config `cf_resume.settings` (translatable):
+  - limits, the default master label `My Master Resume`, clone label prefix/suffix
+  - delete warnings, limit messages, upload success message, preview disclaimer
+  - `pages_settings.<step|review>` texts used by the blocks (step descriptions, tips, link labels, owner message)
+- `/admin/config/careerforce/cf_resume_word_settings` (`administer cf resume word`).
+- `/admin/structure/resume` (`administer resume`): Field UI for the entity.
+- No config split differences for resume config.
+
+## Related
+- [legacy-resume-builder-form-wizard.md](legacy-resume-builder-form-wizard.md)
+- [job-seeker-registration-and-profile.md](job-seeker-registration-and-profile.md) (tier-1 gate)
+- `../platform-and-operations/` (stenographer, sanitize)
+- `../miscellaneous/theme-overview.md` (resume SDC layouts `sdc_my_resumes_layout`, `sdc_resume_two_col_layout`)
