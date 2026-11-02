@@ -61,6 +61,20 @@ Add `--ui` to the end of any run command to see the browser click through each
 check. A window opens. Press the ▶ (play) button to start, then click any test
 to replay it step by step.
 
+### Screenshots of every test
+
+By default, screenshots are only saved for tests that fail. To save a
+full-page screenshot of every test, passed or failed, put `SCREENSHOT=on` in
+front of any run command:
+
+```bash
+SCREENSHOT=on BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/anonymous
+```
+
+Then open the report with `npx playwright show-report` and click a test to see
+its screenshot under Attachments. The image files are also saved in the
+`test-results/` folder. Full-page screenshots make the run slightly slower.
+
 ### When something fails
 
 The terminal lists which test failed by its ID (for example, `HP-1`). Match

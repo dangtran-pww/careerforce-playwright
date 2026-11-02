@@ -5,6 +5,7 @@ import 'dotenv/config';
 //   BASE_URL=https://qa.careerforce.link npx playwright test
 //   BASE_URL=https://qa.careerforce.link npx playwright test --ui
 //   SLOW_MO=500 BASE_URL=https://qa.careerforce.link npx playwright test --headed
+//   SCREENSHOT=on BASE_URL=https://qa.careerforce.link npx playwright test
 //
 // QA/stage sit behind HTTP Basic Auth in front of Drupal; set
 // BASIC_AUTH_USER / BASIC_AUTH_PASSWORD (see .env.example) to get past it.
@@ -34,7 +35,12 @@ export default defineConfig({
     baseURL: process.env.BASE_URL ?? 'https://qa.careerforce.link',
     httpCredentials,
     trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
+    // SCREENSHOT=on saves a full-page screenshot at the end of every test,
+    // passed or failed. Off (failures only) unless set.
+    screenshot:
+      process.env.SCREENSHOT === 'on'
+        ? { mode: 'on', fullPage: true }
+        : 'only-on-failure',
     video: 'retain-on-failure',
     // SLOW_MO=500 pauses that many ms after every action, so a --headed run
     // can be followed by eye. Off (0) unless set.

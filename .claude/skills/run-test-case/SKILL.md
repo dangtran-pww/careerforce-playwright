@@ -192,6 +192,7 @@ Then list these variants, each built from the same command:
 | --- | --- |
 | Watch the browser | `--headed` |
 | Watch it in slow motion | `--headed`, and put `SLOW_MO=500` (ms per action) before `BASE_URL=`. Write this one out as the full command, e.g. `SLOW_MO=500 BASE_URL=<target> npx playwright test <spec-folder> --project=<project> --grep "<ID>:" --headed` |
+| Save a screenshot of the final page, even when the test passes | put `SCREENSHOT=on` before `BASE_URL=`. Write this one out as the full command, e.g. `SCREENSHOT=on BASE_URL=<target> npx playwright test <spec-folder> --project=<project> --grep "<ID>:"`. Each test saves a full-page `test-finished-1.png` under `test-results/<test-folder>/`, and the HTML report attaches it to the test. Without `SCREENSHOT=on`, a screenshot is saved only when a test fails |
 | Use the interactive UI mode | `--ui` |
 | Open the last HTML report | run `npx playwright show-report` |
 

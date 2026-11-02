@@ -59,6 +59,16 @@ BASE_URL=https://careerforce.mn.gov npx playwright test tests/smoke/anonymous
 Add `--ui` to [watch it run](README.md#watching-a-run). A successful run ends
 with `20 passed` ([Expected result](#expected-result)).
 
+To save a full-page screenshot of every test, even the ones that pass, put
+`SCREENSHOT=on` in front ([more on screenshots](README.md#screenshots-of-every-test)):
+
+```bash
+SCREENSHOT=on BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/anonymous
+```
+
+The screenshots open with `npx playwright show-report`, under each test's
+Attachments, and the image files are saved in `test-results/`.
+
 ## Test cases
 
 Every test starts as a visitor who isn't logged in. "Page" is the address
