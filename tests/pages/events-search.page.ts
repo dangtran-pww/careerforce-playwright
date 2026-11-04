@@ -1,4 +1,5 @@
 import { type Locator, type Page } from '@playwright/test';
+import type { Results } from '../helpers/results';
 
 // Events search (/education-and-training/events). Doesn't fit SearchPage:
 // the count is "Showing X-Y of Z" at the start of .view-header (not
@@ -41,6 +42,23 @@ export class EventsSearchPage {
     const text = (await this.header.textContent()) ?? '';
     const match = text.match(/Showing\s+\d+\s*-\s*\d+\s+of\s+(\d+)/i);
     return match ? Number(match[1]) : 0;
+  }
+
+  // Total plus the event links on the current page. Links, not titles,
+  // because many events share a title ("Job Club") across dates.
+  async results(): Promise<Results> {
+    return {
+      total: await this.resultCount(),
+      items: await this.cardLinks.evaluateAll((els) =>
+        els.map((el) => el.getAttribute('href') ?? ''),
+      ),
+    };
+  }
+
+  // A filter checkbox, e.g. 'ff[virtual]'. The form is rendered several
+  // times (sidebar, mobile drawer), all kept in sync, so the first is enough.
+  filterCheckbox(name: string): Locator {
+    return this.page.locator(`input[name="${name}"]`).first();
   }
 
   // ISO start timestamps of the cards on the current page, in page order.

@@ -65,7 +65,19 @@ export default defineConfig({
     {
       name: 'smoke',
       testDir: './tests/smoke',
+      grepInvert: /@mobile-only/,
       use: { ...devices['Desktop Chrome'] },
+    },
+    // Mobile smoke: the anonymous smoke plan again on a phone, to check the
+    // public pages work and lay out at a small screen size. Tag a test
+    // `@desktop-only` to keep it out of this, or `@mobile-only` to keep it
+    // out of `smoke`. Every test here also fails if the page scrolls
+    // sideways (see `noHorizontalScroll` in tests/helpers/fixtures.ts).
+    {
+      name: 'smoke-mobile',
+      testDir: './tests/smoke/anonymous',
+      grepInvert: /@desktop-only/,
+      use: { ...devices['Pixel 7'] },
     },
     // Stage plans (test-plans/README.md → Stage plans): specs that create,
     // edit, delete, or otherwise change site state. QA/stage only — never

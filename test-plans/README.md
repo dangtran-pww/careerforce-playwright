@@ -159,7 +159,11 @@ all:
 ```bash
 npm run test:smoke                              # all smoke plans
 npx playwright test tests/smoke/admin-reports   # one plan
+npm run test:smoke:mobile                       # smoke-anonymous on a phone
 ```
+
+The mobile run is separate. `npm run test:smoke` is desktop only. See
+[smoke-anonymous.md → Mobile](smoke-anonymous.md#mobile).
 
 Conventions:
 

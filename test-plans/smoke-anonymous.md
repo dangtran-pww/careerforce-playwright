@@ -12,18 +12,25 @@ use:
 
 - **Homepage:** every section loads, the Decision Tree ("What brings you here
   today?") works, and the Google Tag Manager tracking code is present.
-- **Login page:** offers the "Log In or Register with LoginMN" button.
+- **Login page:** offers the 3 ways to log in: LoginMN for job seekers, an
+  email and password form for partners, and a "Log In" button for DEED staff.
 - **Search:** site search and the Explore Careers search both return results.
 - **Locations, Events, Programs and Services:** the pages load with their
   main content, and the Events and Programs and Services pages list at
   least 1 item.
 - **Career tools:** the Skills Matcher and Interest Profiler can be filled in
   and show results, and the Employment Readiness Assessment opens.
+- **Filters:** on Events, Programs and Services, Job Search, site search and
+  Training Programs, two different filters (or sort orders) give different
+  results ([Filters](#filters)).
+- **On a phone:** the same checks again in an emulated Android phone
+  browser, plus the header menu button (MB-1) and a check that no page
+  scrolls sideways ([Mobile](#mobile)).
 
 The checks never log in, and they don't create, edit, or delete any site
 content. The only things they do besides viewing pages are what any visitor
-can do: make choices in the Decision Tree and submit the Skills Matcher and
-Interest Profiler forms. Both are approved for Production, so the plan is safe
+can do: make choices in the Decision Tree, filter and sort listings, and
+submit the Skills Matcher and Interest Profiler forms. Both are approved for Production, so the plan is safe
 to run on QA, Stage, and **Production**.
 
 The checks don't cover emails or anything that takes longer than a single
@@ -41,33 +48,66 @@ Run the command for the environment you want (about 1–2 minutes).
 QA:
 
 ```bash
-BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/anonymous
+BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/anonymous --project=smoke
 ```
 
 Stage:
 
 ```bash
-BASE_URL=https://stage.careerforce.link npx playwright test tests/smoke/anonymous
+BASE_URL=https://stage.careerforce.link npx playwright test tests/smoke/anonymous --project=smoke
 ```
 
 Production:
 
 ```bash
-BASE_URL=https://careerforce.mn.gov npx playwright test tests/smoke/anonymous
+BASE_URL=https://careerforce.mn.gov npx playwright test tests/smoke/anonymous --project=smoke
 ```
 
+Keep `--project=smoke` in the command. Without it, the same tests also run on
+the phone ([Mobile](#mobile)), 48 runs in all.
+
 Add `--ui` to [watch it run](README.md#watching-a-run). A successful run ends
-with `20 passed` ([Expected result](#expected-result)).
+with `28 passed` ([Expected result](#expected-result)).
 
 To save a full-page screenshot of every test, even the ones that pass, put
 `SCREENSHOT=on` in front ([more on screenshots](README.md#screenshots-of-every-test)):
 
 ```bash
-SCREENSHOT=on BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/anonymous
+SCREENSHOT=on BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/anonymous --project=smoke
 ```
 
 The screenshots open with `npx playwright show-report`, under each test's
 Attachments, and the image files are saved in `test-results/`.
+
+### Running the mobile tests
+
+The mobile tests ([Mobile](#mobile)) run on your computer, in a browser that
+emulates the phone. Run the command for the environment you want.
+
+QA:
+
+```bash
+BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/anonymous --project=smoke-mobile
+```
+
+Stage:
+
+```bash
+BASE_URL=https://stage.careerforce.link npx playwright test tests/smoke/anonymous --project=smoke-mobile
+```
+
+Production:
+
+```bash
+BASE_URL=https://careerforce.mn.gov npx playwright test tests/smoke/anonymous --project=smoke-mobile
+```
+
+The mobile tests can't tell whether a page *looks* right. To review the
+layout, save full-page screenshots and look through them:
+
+```bash
+SCREENSHOT=on BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/anonymous --project=smoke-mobile
+```
 
 ## Test cases
 
@@ -77,8 +117,8 @@ after the site name, for example `/programs-services` means
 
 | ID | Test | Page | Steps | Expected result |
 |---|---|---|---|---|
-| HP-1 | Homepage loads | `/` | Open the homepage. | All 8 sections show their headings: "Job Search", "What brings you here today?", "Upcoming Events", "Explore Careers", "Upcoming Training Programs", "Get the most out of CareerForce, create an account", "Connect to our Services", "CareerForce Blog". The Job Search block has a blue gradient background (dark navy at the top left to bright blue at the bottom right) and shows the text "CareerForce is Minnesota's official career exploration and job search resource.", a keyword box, a location box, a distance dropdown, and a "Search" button. The "What brings you here today?" section shows a "Choose a path" dropdown and 3 cards, each with an image and a title. |
-| HP-2 | Login page offers LoginMN | `/user/login` | Open the login page. | A "Log In or Register with LoginMN" button shows. |
+| HP-1 | Homepage loads | `/` | Open the homepage. | All 8 sections show their headings: "Job Search", "What brings you here today?", "Upcoming Events", "Explore Careers", "Upcoming Training Programs", "Get the most out of CareerForce, create an account", "Connect to our Services", "CareerForce Blog". The Job Search block shows the text "CareerForce is Minnesota's official career exploration and job search resource.", a keyword box, a location box, a distance dropdown, and a "Search" button. The "What brings you here today?" section shows a "Choose a path" dropdown and 3 cards, each with an image and a title. |
+| HP-2 | Login page offers all 3 logins | `/user/login` | Open the login page. Click "CareerForce partner organization or a training program provider" to open it. Then click "DEED Staff Member" to open it. Don't fill in or submit anything. | **Job Seekers:** the "Job Seekers" heading, a "Register to:" list, a "Log In or Register with LoginMN" button, and a "Data Privacy Notice" with a link to DEED's data privacy policies. **Partners:** the section starts closed; once opened it shows a "Log In" heading, "Email address" and "Password" boxes, a "Forgot your password?" link, a "Submit" button, and a "Request one today" link to `/user/register-partner`. **DEED staff:** the section starts closed; once opened it shows a "Log In" button. |
 | HP-3 | Tracking code is present | `/` | Open the homepage. | The page includes the Google Tag Manager code for this environment: `GTM-WL36T6M` on Production, `GTM-P8D2THV` on QA and Stage. |
 | HP-4 | Decision Tree works | `/` | In "What brings you here today?", open "Choose a path" and click the first option. | The next step shows, with a "Reset selections" link. |
 | SR-1 | Site search returns results | `/search` | Search with no words. Then search for "job fair", "networking", and "farmer", one at a time. | Every search shows at least 1 result. |
@@ -89,6 +129,15 @@ after the site name, for example `/programs-services` means
 | CT-1 | Skills Matcher gives results | `/occupations/skills_matcher` | Answer the 10 skill groups on the first page, click "Continue" until the last page, then submit. | A "Matching Careers By My Skills" results page shows. |
 | CT-2 | Interest Profiler gives results | `/occupations/interest_profiler` | Answer every question on each page, clicking "Continue" between pages (60 questions in all), then submit. | An "Interest Assessment Results" page shows. |
 | CT-3 | Employment Readiness Assessment opens | `/employment-readiness/take` | Open the page. | The page title "Employment Readiness Assessment" shows, with no login needed. |
+| MB-1 | Mobile menu opens (phones only) | `/` | On a phone, tap the menu button (☰) in the header. | The menu opens and shows "Find a Job", "Job Loss Resources", "Job Search Tools", "Education and Training", and "Resources for". |
+| FL-1 | Events: Online vs In Person | `/education-and-training/events` | Open the page with no filter. Then filter by Format "Online", then by "In Person". | See [Filters](#filters). The ticked format stays ticked. |
+| FL-2 | Events: two topics | `/education-and-training/events` | Same, with Topic "Resumes", then "Job Search". | See [Filters](#filters). The ticked topic stays ticked. |
+| FL-3 | Events: two event types | `/education-and-training/events` | Same, with Event Type "Workshop", then "Job Club". | See [Filters](#filters). The ticked type stays ticked. |
+| FL-4 | Programs and Services: two keywords | `/programs-services` | Open with no keyword. Then search "veterans", then "youth". | See [Filters](#filters). The keyword stays in the box, and each search lists a service named after it ("Veterans Employment Services", "Youth Employment"). |
+| FL-5 | Job Search: two companies | `/job-search?title=nurse` | Search "nurse". Pick the 2 companies with the most jobs in the Company dropdown, and filter by each in turn. | See [Filters](#filters). The dropdown shows the chosen company, and every job listed is from it. |
+| FL-6 | Job Search: two cities | `/job-search?title=nurse` | Same with the City dropdown. | See [Filters](#filters). The dropdown shows the chosen city, and every job listed is in it. |
+| FL-7 | Site search: newest vs oldest first | `/search?k=job` | Search "job". Then sort by Date Published, Desc, then Asc. | Both sorts show the same number of results as the unsorted search, in a different order. |
+| FL-8 | Training Programs: virtual vs not | `/training-programs` | Open with no filter. Then set Virtual/Hybrid to "True", then "False". | See [Filters](#filters). The dropdown shows the chosen value. |
 
 Location pages for LV-1:
 
@@ -101,8 +150,13 @@ Location pages for LV-1:
 
 Good to know:
 
-- **Login is handled by LoginMN** (the State of Minnesota's shared login), so
-  the CareerForce login page has no username or password boxes of its own.
+- **Job seekers log in with LoginMN** (the State of Minnesota's shared login),
+  so the Job Seekers section has no username or password boxes of its own.
+  Only partners and training providers use the email and password form.
+- **The "PWW Staff Log In" button** in the DEED Staff Member section shows
+  only on QA and Stage, not on Production, so HP-2 doesn't check for it.
+- **HP-2 never logs in.** The partner form has a reCAPTCHA, and the test
+  only opens the two sections to check what's inside them.
 - **"Choose a path" starts closed** in the Decision Tree. Click it to open the
   options.
 - **Location pages don't always have an "Events" section.** It only appears
@@ -114,10 +168,56 @@ Good to know:
   only check that there's at least 1 result, not an exact number. The same
   goes for the Events and Programs and Services listings (LV-2, LV-3).
 
+### Filters
+
+The FL cases check that a filter actually filters. Each one opens the listing
+with no filter, then with filter X, then with filter Y, and expects:
+
+- The unfiltered listing shows at least 1 result.
+- X and Y each show no more results than the unfiltered listing.
+- **X and Y show different results:** a different total, or different items
+  on the first page.
+
+An empty result is fine. QA has no job fairs at the moment, for example, so
+filtering by them shows "No results found." A filter can also match
+everything: on QA, every event is In Person. Only X and Y showing the very
+same results fails, because that means the filter was ignored. Exact counts
+are never checked.
+
+- **Job Search companies and cities come from an outside job feed**, so FL-5
+  and FL-6 don't name them. They use the 2 with the most jobs in the
+  dropdown at the time.
+- **Every filter is in the page address**, for example
+  `/education-and-training/events?ff[virtual]=virtual`, so the tests open
+  that address rather than clicking the form.
+- **Job Search's Location and Distance aren't covered.** The location only
+  works when it's picked from the address suggestions, so a typed location
+  shows no jobs at any distance.
+
+## Mobile
+
+The same plan also runs on an emulated Android phone (Pixel 7, in Chrome), to
+check that the public pages work and fit a small screen. Its project is
+`smoke-mobile`.
+
+On the phone:
+
+- **Every case runs except HP-3 and the FL cases.** The tracking code is in
+  the page whatever the device, and the filtering happens on the server, so
+  checking them once on desktop is enough.
+- **MB-1 runs only on phones.** On desktop the menu is always shown, so there
+  is no menu button.
+- **No page may scroll sideways.** After each case, the test also checks that
+  the page fits the screen width. If something sticks out past the right edge,
+  the test fails and names the widest element.
+
+To run the mobile tests, see [Running the mobile tests](#running-the-mobile-tests).
+
 ## Expected result
 
-The terminal ends with `20 passed`. The plan has 12 test cases, but some are
-repeated with different inputs, so they add up to 20 runs:
+The terminal ends with `28 passed`. The desktop run has 20 test cases (all
+but MB-1, which is phone only), but some are repeated with different inputs,
+so they add up to 28 runs:
 
 | Test case | Runs | Why |
 |---|---|---|
@@ -127,8 +227,12 @@ repeated with different inputs, so they add up to 20 runs:
 | LV-1 | 4 | Aitkin, Bloomington, Brooklyn Center, CareerForce from Anywhere |
 | LV-2, LV-3 | 2 | once each |
 | CT-1, CT-2, CT-3 | 3 | once each |
-| **Total** | **20** | |
+| FL-1 to FL-8 | 8 | once each |
+| **Total** | **28** | |
 
-If the total is anything other than 20, or anything fails, see
+If the total is anything other than 28, or anything fails, see
 [When something fails](README.md#when-something-fails).
+
+The mobile run (`--project=smoke-mobile`) has 20 runs: the same 28 minus
+HP-3 and the 8 FL cases, plus MB-1. A successful run ends with `20 passed`.
 

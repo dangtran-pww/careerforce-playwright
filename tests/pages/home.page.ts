@@ -75,15 +75,6 @@ export class HomePage {
     return html.match(/GTM-[A-Z0-9]+/)?.[0];
   }
 
-  // The Job Search block's blue isn't on any element's own background — it's
-  // a primary-300 → primary-400 gradient painted by the full-width wrapper's
-  // ::before (its solid background-color sits underneath, never visible).
-  async jobSearchBackgroundImage(): Promise<string> {
-    return this.jobSearchBlock
-      .locator('.tw-full-width-bg')
-      .evaluate((el) => getComputedStyle(el, '::before').backgroundImage);
-  }
-
   // The Decision Tree's options sit inside a native <details>/<summary>
   // disclosure ("Choose a path") that starts collapsed below ~900px tall
   // viewports — the options are in the DOM but not actually visible until

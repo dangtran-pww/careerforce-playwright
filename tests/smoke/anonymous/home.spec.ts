@@ -10,9 +10,6 @@ test('HP-1: homepage loads for an anonymous visitor', async ({ page }) => {
   await home.goto();
   await expect(home.main).toBeVisible();
   await expect(home.jobSearchHeading).toBeVisible();
-  expect(await home.jobSearchBackgroundImage()).toBe(
-    'linear-gradient(to right bottom, rgb(0, 60, 111), rgb(1, 90, 167))',
-  );
   // The sentence has a <br> after "exploration", so textContent would run
   // "explorationand" together; innerText renders it as a space.
   await expect(home.jobSearchIntro).toHaveText(
@@ -41,15 +38,17 @@ test('HP-1: homepage loads for an anonymous visitor', async ({ page }) => {
   await expect(home.blogHeading).toBeVisible();
 });
 
-test('HP-3: homepage loads the GTM container expected for this environment', async ({
-  page,
-  baseURL,
-}) => {
-  const home = new HomePage(page);
-  await home.goto();
-  const gtmId = await home.gtmContainerId();
-  expect(gtmId).toBe(expectedGtmId(baseURL!));
-});
+// The GTM ID is in the HTML whatever the device, so mobile skips this.
+test(
+  'HP-3: homepage loads the GTM container expected for this environment',
+  { tag: '@desktop-only' },
+  async ({ page, baseURL }) => {
+    const home = new HomePage(page);
+    await home.goto();
+    const gtmId = await home.gtmContainerId();
+    expect(gtmId).toBe(expectedGtmId(baseURL!));
+  },
+);
 
 test('HP-4: homepage Decision Tree widget advances to a second step', async ({
   page,

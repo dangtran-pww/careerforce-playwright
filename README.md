@@ -38,6 +38,7 @@ npx playwright install chromium
 cp .env.example .env   # fill in BASIC_AUTH_USER/PASSWORD for QA's Basic Auth gate
 npm run login:manual -- admin   # once per session expiry; admin-reports needs it
 npm run test:smoke
+npm run test:smoke:mobile       # smoke-anonymous on an Android phone
 
 # Logged-in tests: log in by hand once per role (auth is SSO, so this step
 # can't be automated — and Google blocks sign-in from Playwright's own
