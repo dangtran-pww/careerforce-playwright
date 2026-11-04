@@ -1,21 +1,17 @@
 {
-  "hooks": {
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "[ -n \"$CLAUDE_ENV_FILE\" ] && [ -s \"$HOME/.nvm/nvm.sh\" ] || exit 0; . \"$HOME/.nvm/nvm.sh\" >/dev/null 2>&1; nvm use --silent >/dev/null 2>&1; printf 'export PATH=%q\\n' \"$PATH\" >> \"$CLAUDE_ENV_FILE\"; exit 0"
-          }
-        ]
-      }
-    ]
-  },
   "sandbox": {
     "excludedCommands": ["npx playwright"],
     "network": {
       "allowedDomains": ["*.careerforce.link"]
     }
+  },
+  "permissions": {
+    "allow": ["mcp__playwright-test"],
+    "ask": [
+      "mcp__playwright-test__browser_run_code_unsafe",
+      "mcp__playwright-test__browser_evaluate",
+      "mcp__playwright-test__browser_file_upload"
+    ]
   }
 }
 
