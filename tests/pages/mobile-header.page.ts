@@ -21,4 +21,20 @@ export class MobileHeader {
   topLevelLink(name: string): Locator {
     return this.mainNavigation.getByRole('link', { name, exact: true });
   }
+
+  // Each top-level item has a "Sub-menu for <name>" button next to its link,
+  // which shows that item's own list of links.
+  subMenuButton(name: string): Locator {
+    return this.mainNavigation.getByRole('button', { name: `Sub-menu for ${name}` });
+  }
+
+  subMenuLinks(name: string): Locator {
+    return this.mainNavigation
+      .getByRole('listitem')
+      // `has` is searched inside each list item, so it must not start from
+      // the navigation again.
+      .filter({ has: this.page.getByRole('button', { name: `Sub-menu for ${name}` }) })
+      .getByRole('list')
+      .getByRole('link');
+  }
 }

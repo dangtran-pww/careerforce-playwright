@@ -68,10 +68,10 @@ BASE_URL=https://careerforce.mn.gov npx playwright test tests/smoke/anonymous --
 ```
 
 Keep `--project=smoke` in the command. Without it, the same tests also run on
-the phone ([Mobile](#mobile)), 66 runs in all.
+the phone ([Mobile](#mobile)), 72 runs in all.
 
 Add `--ui` to [watch it run](README.md#watching-a-run). A successful run ends
-with `37 passed` ([Expected result](#expected-result)).
+with `40 passed` ([Expected result](#expected-result)).
 
 To save a full-page screenshot of every test, even the ones that pass, put
 `SCREENSHOT=on` in front ([more on screenshots](README.md#screenshots-of-every-test)):
@@ -121,25 +121,25 @@ after the site name, for example `/programs-services` means
 
 | ID | Test | Page | Steps | Expected result |
 |---|---|---|---|---|
-| HP-1 | Homepage loads | `/` | Open the homepage. | All 8 sections show their headings: "Job Search", "What brings you here today?", "Upcoming Events", "Explore Careers", "Upcoming Training Programs", "Get the most out of CareerForce, create an account", "Connect to our Services", "CareerForce Blog". The Job Search block shows the text "CareerForce is Minnesota's official career exploration and job search resource.", a keyword box, a location box, a distance dropdown, and a "Search" button. The "What brings you here today?" section shows a "Choose a path" dropdown and 3 cards, each with an image and a title. |
+| HP-1 | Homepage loads | `/` | Open the homepage. | All 8 sections show their headings: "Job Search", "What brings you here today?", "Upcoming Events", "Explore Careers", "Upcoming Training Programs", "Get the most out of CareerForce, create an account", "Connect to our Services", "CareerForce Blog". The Job Search block shows the text "CareerForce is Minnesota's official career exploration and job search resource.", a keyword box, a location box, a distance dropdown, and a "Search" button. The "What brings you here today?" section shows a "Choose a path" dropdown and 3 cards, each with an image and a title. "Upcoming Events", "Upcoming Training Programs", "Connect to our Services" and "CareerForce Blog" each list at least 1 item, and link to their full list: `/education-and-training/events`, `/training-programs`, `/programs-services`, `/careerforce-blog`. |
 | HP-2 | Login page offers all 3 logins | `/user/login` | Open the login page. Click "CareerForce partner organization or a training program provider" to open it. Then click "DEED Staff Member" to open it. Don't fill in or submit anything. | **Job Seekers:** the "Job Seekers" heading, a "Register to:" list, a "Log In or Register with LoginMN" button, and a "Data Privacy Notice" with a link to DEED's data privacy policies. **Partners:** the section starts closed; once opened it shows a "Log In" heading, "Email address" and "Password" boxes, a "Forgot your password?" link, a "Submit" button, and a "Request one today" link to `/user/register-partner`. **DEED staff:** the section starts closed; once opened it shows a "Log In" button. |
 | HP-3 | Tracking code is present | `/` | Open the homepage. | The page includes the Google Tag Manager code for this environment: `GTM-WL36T6M` on Production, `GTM-P8D2THV` on QA and Stage. |
-| HP-4 | Decision Tree works | `/` | In "What brings you here today?", open "Choose a path" and click the first option. | The next step shows, with a "Reset selections" link. |
-| SR-1 | Site search returns results | `/search` | Search with no words. Then search for "job fair", "networking", and "farmer", one at a time. | Every search shows at least 1 result. |
-| SR-2 | Career search returns results | `/explore/careers` | Search for "Nursing", "taxi driver", and "project manager", one at a time. | Every search shows at least 1 result. |
+| HP-4 | Decision Tree works | `/` | In "What brings you here today?", open "Choose a path" and click the first option. Then click "Reset selections". | After picking: "Choose a path" shows the chosen option, a "Tell us more." question appears, the 3 cards change, and a "Reset selections" button shows. After Reset: back to "Choose a path" and the original 3 cards, with no "Tell us more." and no Reset button. |
+| SR-1 | Site search returns results | `/search` | Search with no words. Then search for "job fair", "networking", and "farmer", one at a time. Then search for a made-up word ("zzqxnotaword"). Finally, on the homepage, type "networking" in the header's "Search CareerForce" box and press Enter (on a phone, tap the header's "Search" button first). | Every real search shows at least 1 result. The 3 keyword searches show "Search results 1-N of N", and their first result is a page on this site. The made-up word shows "No results found." and no results. The header box opens `/search?k=networking` with results. |
+| SR-2 | Career search returns results | `/explore/careers` | Search for "Nursing", "taxi driver", and "project manager", one at a time. Then, on the homepage, type "Nursing" in the Explore Careers box and click "Search". | Every search shows at least 1 result. The homepage box opens `/explore/careers?otitle=Nursing`. |
 | SR-3 | Career page opens | `/explore/careers` | Search for "Nursing" and click the "Registered Nurses" result. It opens in a new tab. Then click "Find current job openings in this occupation". | The career page `/explore/careers/29-1141.00` shows the title "Registered Nurses" and the sections "Also known as", "Daily Work Activities", "Data By Region", and "Qualifications". The job openings link opens Job Search for "Registered Nurses" with at least 1 job. |
 | JS-1 | Homepage Job Search works | `/` | In the Job Search block, type "nurse" and click "Search". | Job Search opens (`/job-search?title=nurse…`, distance 20 miles) with "nurse" still in the Keyword box and at least 1 job. |
 | JS-2 | Jobs have their links | `/job-search?title=nurse` | Look at the first 3 jobs. | Each has a title, a "Learn more and apply" link that opens the employer's posting on another site in a new tab, and a "Read more" link to that job. |
 | JS-3 | A job opens on its own | `/job-search?title=nurse` | Click "Read more" on the first job. | Only that job shows (same title), with its full description. |
 | JS-4 | Save search and Bookmark ask to log in | `/job-search?title=nurse` | Click "Bookmark" on the first job, then close the dialog. Then click "Save search" (on a phone, open "Filters" first), then close the dialog. Don't log in. | Each time, a dialog shows on top of the page, saying "Create an account or log in to use this feature", with a "Log In or Register" button, a "Continue Browsing" link, and a "DEED staff and partners log in here." link back to this search. On a phone this currently fails for Save search; see [Known issues](#known-issues). |
 | JS-5 | No JavaScript errors | see the list below | Open each page. | No JavaScript error, other than the ones listed in [Known issues](#known-issues). |
-| LV-1 | Location pages load | see the list below | Open each of the 4 location pages. | Each page shows a "Programs and Services" section. |
-| LV-2 | Events page lists events | `/education-and-training/events` | Open the page. | The page title "Events" shows, with at least 1 event listed below it. |
-| LV-3 | Programs and Services page lists services | `/programs-services` | Open the page. | The page title "Programs and Services" shows, with at least 1 program or service listed below it. |
+| LV-1 | Location pages load | see the list below | Open each of the 4 location pages. | Each page shows its title ("CareerForce in Aitkin", …, "CareerForce from Anywhere") and a "Programs and Services" section. The 3 offices also show "Location Details" with Address, Phone (a link to call), Email (a link to email), Hours (at least 1 day with a time), and a map. "CareerForce from Anywhere" is virtual: no Location Details, but a phone link and an email link. |
+| LV-2 | Events page lists events | `/education-and-training/events` | Open the page. Click the first event. Don't register. | The page title "Events" shows, with at least 1 event listed below it. The first event card has a title, a date, a start time and a place. Its page has the event title, the sections "Date", "Time", "Location" and "Offered By", and a "Log In or Create Account" button. |
+| LV-3 | Programs and Services page lists services | `/programs-services` | Open the page. Open the first 2 programs. | The page title "Programs and Services" shows, with at least 1 program or service listed below it. Each opened program's page has the same title as its card. |
 | CT-1 | Skills Matcher gives results | `/occupations/skills_matcher` | Answer the 10 skill groups on the first page, click "Continue" until the last page, then submit. | A "Matching Careers By My Skills" results page shows. |
 | CT-2 | Interest Profiler gives results | `/occupations/interest_profiler` | Answer every question on each page, clicking "Continue" between pages (60 questions in all), then submit. | An "Interest Assessment Results" page shows. |
 | CT-3 | Employment Readiness Assessment opens | `/employment-readiness/take` | Open the page. | The page title "Employment Readiness Assessment" shows, with no login needed. |
-| MB-1 | Mobile menu opens (phones only) | `/` | On a phone, tap the menu button (☰) in the header. | The menu opens and shows "Find a Job", "Job Loss Resources", "Job Search Tools", "Education and Training", and "Resources for". |
+| MB-1 | Mobile menu opens (phones only) | `/` | On a phone, tap the menu button (☰) in the header. Tap the arrow next to "Find a Job". Then tap the menu button again. | The menu opens and shows "Find a Job", "Job Loss Resources", "Job Search Tools", "Education and Training", and "Resources for". The "Find a Job" sub-menu opens with "Job Search", "Job Fairs and Networking Events", "Explore Careers", and "Explore Industries". The second tap closes the menu. |
 | FL-1 | Events: Online vs In Person | `/education-and-training/events` | Open the page with no filter. Then filter by Format "Online", then by "In Person". | See [Filters](#filters). The ticked format stays ticked. |
 | FL-2 | Events: two topics | `/education-and-training/events` | Same, with Topic "Resumes", then "Job Search". | See [Filters](#filters). The ticked topic stays ticked. |
 | FL-3 | Events: two event types | `/education-and-training/events` | Same, with Event Type "Workshop", then "Job Club". | See [Filters](#filters). The ticked type stays ticked. |
@@ -254,15 +254,15 @@ To run the mobile tests, see [Running the mobile tests](#running-the-mobile-test
 
 ## Expected result
 
-The terminal ends with `37 passed`. The desktop run has 26 test cases (all
+The terminal ends with `40 passed`. The desktop run has 26 test cases (all
 but MB-1, which is phone only), but some are repeated with different inputs,
-so they add up to 37 runs:
+so they add up to 40 runs:
 
 | Test case | Runs | Why |
 |---|---|---|
 | HP-1, HP-2, HP-3, HP-4 | 4 | once each |
-| SR-1 | 4 | an empty search, plus "job fair", "networking", "farmer" |
-| SR-2 | 3 | "Nursing", "taxi driver", "project manager" |
+| SR-1 | 6 | an empty search; "job fair", "networking", "farmer"; a word with no matches; the header search box |
+| SR-2 | 4 | "Nursing", "taxi driver", "project manager"; the homepage Explore Careers box |
 | SR-3 | 1 | once |
 | JS-1, JS-2, JS-3, JS-4 | 4 | once each |
 | JS-5 | 4 | Homepage, Job Search, site search, Explore Careers |
@@ -270,12 +270,12 @@ so they add up to 37 runs:
 | LV-2, LV-3 | 2 | once each |
 | CT-1, CT-2, CT-3 | 3 | once each |
 | FL-1 to FL-8 | 8 | once each |
-| **Total** | **37** | |
+| **Total** | **40** | |
 
-If the total is anything other than 37, or anything fails, see
+If the total is anything other than 40, or anything fails, see
 [When something fails](README.md#when-something-fails).
 
-The mobile run (`--project=smoke-mobile`) has 29 runs: the same 37 minus
-HP-3 and the 8 FL cases, plus MB-1. A successful run ends with `29 passed`.
+The mobile run (`--project=smoke-mobile`) has 32 runs: the same 40 minus
+HP-3 and the 8 FL cases, plus MB-1. A successful run ends with `32 passed`.
 JS-4 counts as passed there while it fails as expected ([Known issues](#known-issues)).
 

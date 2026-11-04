@@ -17,6 +17,7 @@ export class EventsSearchPage {
   readonly view: Locator;
   readonly header: Locator;
   readonly cardLinks: Locator;
+  readonly cards: Locator;
   readonly cardDates: Locator;
   readonly cardLocations: Locator;
   readonly emptyMessage: Locator;
@@ -26,6 +27,10 @@ export class EventsSearchPage {
     this.view = page.locator('.view-id-content_search').first();
     this.header = this.view.locator('.view-header').first();
     this.cardLinks = this.view.locator('a.cf-events-search-card-link');
+    // A whole card: title link, tag pills, date, times and city.
+    this.cards = this.view
+      .locator('article')
+      .filter({ has: page.locator('a.cf-events-search-card-link') });
     this.cardDates = this.view.locator('.cf-events-search-card-icon-date time');
     this.cardLocations = this.view.locator('.views-row');
     this.emptyMessage = this.view.locator('.view-empty');

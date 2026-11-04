@@ -13,6 +13,7 @@ export class SearchPage {
   readonly resultSummary: Locator;
   readonly resultRows: Locator;
   readonly resultTitles: Locator;
+  readonly noResults: Locator;
   private readonly path: string;
   private readonly queryParam: string;
 
@@ -28,6 +29,7 @@ export class SearchPage {
     this.resultSummary = page.locator('.view-header__result-summary-header');
     this.resultRows = page.locator('.views-row');
     this.resultTitles = page.locator('main').locator(resultTitleSelector);
+    this.noResults = page.locator('main').getByText('No results found.', { exact: true });
   }
 
   // Any GET params, for the sort and filter controls (all GET forms).

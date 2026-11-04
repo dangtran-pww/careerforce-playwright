@@ -79,8 +79,10 @@ export class HomePage {
   // disclosure ("Choose a path") that starts collapsed below ~900px tall
   // viewports — the options are in the DOM but not actually visible until
   // the <summary> is clicked open.
+  // The first question's toggle. Once a path is picked, the follow-up
+  // question ("Tell us more.") adds a second toggle of its own.
   decisionTreeToggle(): Locator {
-    return this.page.locator('summary.decision-tree-question-toggle');
+    return this.page.locator('summary.decision-tree-question-toggle').first();
   }
 
   // The options themselves are plain links to
@@ -106,5 +108,42 @@ export class HomePage {
 
   resetDecisionTreeButton(): Locator {
     return this.page.getByRole('button', { name: 'Reset selections' });
+  }
+
+  // The card titles (h3), in order. They change with each step.
+  async decisionTreeCardTitles(): Promise<string[]> {
+    return (await this.decisionTreeCards().getByRole('heading', { level: 3 }).allTextContents()).map(
+      (t) => t.trim(),
+    );
+  }
+
+  // Picking a path updates the widget in place (the URL doesn't change) and
+  // adds this follow-up question.
+  decisionTreeFollowUp(): Locator {
+    return this.page.locator('.decision-tree').getByRole('heading', { name: 'Tell us more.' });
+  }
+
+  // Each homepage listing section is a Drupal view, found by its view class:
+  // '.view-display-id-upcoming_events', '.view-display-id-upcoming_training_programs',
+  // '.view-id-featured_services', '.view-id-article_content'. Events and
+  // Training load after the page does, so wait for their items.
+  sectionItems(viewClass: string): Locator {
+    return this.page.locator(`main ${viewClass} article`);
+  }
+
+  // The Explore Careers box: a GET form to /explore/careers?otitle=...
+  // Scoped to its form, as the page has several other "Search" buttons.
+  get exploreCareersForm(): Locator {
+    return this.page.locator('main form[action="/explore/careers"]');
+  }
+
+  get exploreCareersInput(): Locator {
+    return this.exploreCareersForm.getByRole('textbox', {
+      name: 'Search by career title or keyword',
+    });
+  }
+
+  get exploreCareersButton(): Locator {
+    return this.exploreCareersForm.getByRole('button', { name: 'Search' });
   }
 }

@@ -17,6 +17,14 @@ const TOP_LEVEL_LINKS = [
   'Resources for',
 ];
 
+// The "Find a Job" sub-menu, as on QA (2026-11-04).
+const FIND_A_JOB_LINKS = [
+  ['Job Search', '/job-search'],
+  ['Job Fairs and Networking Events', '/jobfairs'],
+  ['Explore Careers', '/explore/careers'],
+  ['Explore Industries', '/industry/all-industries-careerseekers'],
+] as const;
+
 test(
   'MB-1: mobile menu button opens the main navigation',
   { tag: '@mobile-only' },
@@ -32,5 +40,26 @@ test(
     for (const name of TOP_LEVEL_LINKS) {
       await expect(header.topLevelLink(name)).toBeVisible();
     }
+
+    await test.step('open the "Find a Job" sub-menu', async () => {
+      const subMenu = header.subMenuButton('Find a Job');
+      await expect(subMenu).toHaveAttribute('aria-expanded', 'false');
+      await expect(header.subMenuLinks('Find a Job').first()).toBeHidden();
+      await subMenu.click();
+      await expect(subMenu).toHaveAttribute('aria-expanded', 'true');
+      for (const [name, href] of FIND_A_JOB_LINKS) {
+        await expect(header.subMenuLinks('Find a Job').filter({ hasText: name })).toHaveAttribute(
+          'href',
+          href,
+        );
+        await expect(header.subMenuLinks('Find a Job').filter({ hasText: name })).toBeVisible();
+      }
+    });
+
+    await test.step('close the menu', async () => {
+      await header.menuToggle.click();
+      await expect(header.menuToggle).toHaveAttribute('aria-expanded', 'false');
+      await expect(header.mainNavigation).toBeHidden();
+    });
   },
 );

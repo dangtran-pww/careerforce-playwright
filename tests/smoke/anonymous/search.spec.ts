@@ -2,6 +2,8 @@ import { test, expect } from '../../helpers/fixtures';
 import { SearchPage } from '../../pages/search.page';
 import { CareerDetailPage } from '../../pages/career-detail.page';
 import { JobSearchPage } from '../../pages/job-search.page';
+import { HomePage } from '../../pages/home.page';
+import { SiteHeader } from '../../pages/site-header.page';
 
 // [Smoke] - Anonymous - Test Plan, SR-1/SR-2/SR-3.
 // See test-plans/smoke-anonymous.md.
@@ -18,8 +20,33 @@ test.describe('site search', () => {
       const search = new SearchPage(page, '/search', 'k');
       await search.search(keyword);
       expect(await search.resultCount()).toBeGreaterThan(0);
+      // "Search results 1-50 of 142": the page shows where it is in the list.
+      await expect(search.resultSummary).toHaveText(/^Search results 1-\d+ of \d+$/);
+      // Results are pages on this site.
+      await expect(search.resultRows.first().getByRole('link').first()).toHaveAttribute(
+        'href',
+        /^\/[^/]/,
+      );
     });
   }
+
+  // A word that matches nothing shows the empty message instead of results,
+  // so the results above aren't just a fixed list.
+  test('SR-1: a keyword with no matches says "No results found."', async ({ page }) => {
+    const search = new SearchPage(page, '/search', 'k');
+    await search.search('zzqxnotaword');
+    await expect(search.noResults).toBeVisible();
+    await expect(search.resultRows).toHaveCount(0);
+    expect(await search.resultCount()).toBe(0);
+  });
+
+  test('SR-1: the header search box runs a site search', async ({ page }) => {
+    await page.goto('/');
+    await new SiteHeader(page).search('networking');
+    await expect(page).toHaveURL(/\/search\?(.*&)?k=networking(&|$)/);
+    const search = new SearchPage(page, '/search', 'k');
+    expect(await search.resultCount()).toBeGreaterThan(0);
+  });
 });
 
 test.describe('explore careers search', () => {
@@ -30,6 +57,16 @@ test.describe('explore careers search', () => {
       expect(await careers.resultCount()).toBeGreaterThan(0);
     });
   }
+
+  test('SR-2: the homepage Explore Careers box runs a career search', async ({ page }) => {
+    const home = new HomePage(page);
+    await home.goto();
+    await home.exploreCareersInput.fill('Nursing');
+    await home.exploreCareersButton.click();
+    await expect(page).toHaveURL(/\/explore\/careers\?(.*&)?otitle=Nursing(&|$)/);
+    const careers = new SearchPage(page, '/explore/careers', 'otitle');
+    expect(await careers.resultCount()).toBeGreaterThan(0);
+  });
 
   // Registered Nurses is O*NET code 29-1141.00, which doesn't change, so
   // its result is found by its address. Career results open in a new tab
