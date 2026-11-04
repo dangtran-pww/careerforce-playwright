@@ -79,6 +79,24 @@ export default defineConfig({
       grepInvert: /@desktop-only/,
       use: { ...devices['Pixel 7'] },
     },
+    // Accessibility (test-plans/accessibility-public.md): axe-core WCAG 2.2 AA
+    // scans of the public pages, on desktop and again on a phone (mobile
+    // layouts have their own contrast, tap target and menu problems).
+    // Read-only and prod-safe, but not part of the smoke run: run with
+    // `npm run test:a11y`. Same @mobile-only / @desktop-only tags as smoke;
+    // the phone run also gets the noHorizontalScroll check.
+    {
+      name: 'accessibility',
+      testDir: './tests/accessibility',
+      grepInvert: /@mobile-only/,
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'accessibility-mobile',
+      testDir: './tests/accessibility',
+      grepInvert: /@desktop-only/,
+      use: { ...devices['Pixel 7'] },
+    },
     // Stage plans (test-plans/README.md → Stage plans): specs that create,
     // edit, delete, or otherwise change site state. QA/stage only — never
     // point this project at production. Login is per spec, as in smoke.

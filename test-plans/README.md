@@ -213,7 +213,24 @@ The `stage` project and `test:stage` script were added with the first
 stage spec (`tests/stage/admin-maintenance/`). `tests/fixtures/` is
 added with the first stage spec that needs fixture files.
 
+## Accessibility plan
+
+`accessibility-public.md` ↔ `tests/accessibility/`, run by the `accessibility`
+(desktop) and `accessibility-mobile` (phone) Playwright projects. It scans
+the public pages with axe-core against WCAG 2.2 AA. It is read-only and
+prod-safe like a smoke plan, but it isn't part of the smoke run:
+
+```bash
+npm run test:a11y      # desktop and phone
+npm run a11y:summary   # reports/a11y-<stamp>/summary.md from the last run
+```
+
 ## Plans
+
+- `accessibility-public.md` — Status: implemented.
+  Implemented test: `tests/accessibility/a11y.spec.ts`.
+  axe-core WCAG 2.2 AA scans of the public pages, desktop and phone, with
+  a summary report. Every violation fails its test (no allowlist).
 
 - `smoke-anonymous.md` — Status: implemented.
   Implemented tests: `tests/smoke/anonymous/*.spec.ts`.

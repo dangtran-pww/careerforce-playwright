@@ -25,6 +25,8 @@ tests/
   smoke/                    # Post-deploy smoke suite: read-only, prod-safe.
     anonymous/              #   one folder per test-plans/smoke-<area>.md
     admin-reports/          #   (see test-plans/README.md, "Smoke plans")
+  accessibility/            # axe-core WCAG 2.2 AA scans of the public pages
+                             # (see "Accessibility"); not part of the smoke run
 test-plans/                 # human-readable plans that specs are generated from
 ```
 
@@ -145,6 +147,25 @@ tests left behind. No heavy style preset is included.
    can see — not database values.
 4. Run it green on staging before adding another test. A small trusted
    suite beats a large flaky one.
+
+## Accessibility
+
+`tests/accessibility/` scans the public pages with
+[axe-core](https://github.com/dequelabs/axe-core) against WCAG 2.2 A/AA, on
+desktop (`accessibility` project) and on a phone (`accessibility-mobile`).
+It's read-only and prod-safe but separate from the smoke run. The plan is
+[test-plans/accessibility-public.md](test-plans/accessibility-public.md).
+
+```bash
+BASE_URL=https://qa.careerforce.link npm run test:a11y   # scan (desktop + phone)
+npm run a11y:summary                                      # reports/a11y-<stamp>/summary.md
+```
+
+A test fails on any violation. Nothing is allowlisted, so every problem
+found is reported, including the ones the site already has. The summary report counts
+violations per page and impact, and shows the change since the previous
+summary. Automated scans catch roughly a third of WCAG problems, so keyboard
+and screen reader checks are still manual.
 
 ## Test reports and Confluence
 
