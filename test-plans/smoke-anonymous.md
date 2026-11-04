@@ -27,6 +27,9 @@ use:
 - **Filters:** on Events, Programs and Services, Job Search, site search and
   Training Programs, two different filters (or sort orders) give different
   results ([Filters](#filters)).
+- **Site-wide:** an unknown address shows the "Page Not Found" page, the
+  footer has its contact details and links, the 5 main menu pages open, and
+  "Skip to main content" works from the keyboard.
 - **On a phone:** the same checks again in an emulated Android phone
   browser, plus the header menu button (MB-1) and a check that no page
   scrolls sideways ([Mobile](#mobile)).
@@ -68,10 +71,10 @@ BASE_URL=https://careerforce.mn.gov npx playwright test tests/smoke/anonymous --
 ```
 
 Keep `--project=smoke` in the command. Without it, the same tests also run on
-the phone ([Mobile](#mobile)), 72 runs in all.
+the phone ([Mobile](#mobile)), 88 runs in all.
 
 Add `--ui` to [watch it run](README.md#watching-a-run). A successful run ends
-with `40 passed` ([Expected result](#expected-result)).
+with `48 passed` ([Expected result](#expected-result)).
 
 To save a full-page screenshot of every test, even the ones that pass, put
 `SCREENSHOT=on` in front ([more on screenshots](README.md#screenshots-of-every-test)):
@@ -148,6 +151,10 @@ after the site name, for example `/programs-services` means
 | FL-6 | Job Search: two cities | `/job-search?title=nurse` | Same with the City dropdown. | See [Filters](#filters). The dropdown shows the chosen city, and every job listed is in it. |
 | FL-7 | Site search: newest vs oldest first | `/search?k=job` | Search "job". Then sort by Date Published, Desc, then Asc. | Both sorts show the same number of results as the unsorted search, in a different order. |
 | FL-8 | Training Programs: virtual vs not | `/training-programs` | Open with no filter. Then set Virtual/Hybrid to "True", then "False". | See [Filters](#filters). The dropdown shows the chosen value. |
+| GN-1 | Page Not Found | an address that doesn't exist, e.g. `/pww-smoke-test-no-such-page` | Open it. | The site answers "not found" (HTTP 404) and shows the title "Page Not Found", with working links to the homepage (`/`), search (`/search`), and events (`/events`, which opens the Events page). |
+| GN-2 | Footer | `/` | Look at the footer. | "Contact CareerForce" with a phone number and an email link. Links to CareerForce Locations, Connect to Our Services, Our Partners, Blog, About CareerForce, Your Right to Fair Treatment, and Site Index. Facebook, X, LinkedIn, YouTube, and Instagram links that open in a new tab. |
+| GN-3 | Main menu pages open | see the list below | Check the homepage header has the menu link, then open its page. Do this for each of the 5 main menu items. | Each page opens, and its title starts with the menu item's name. |
+| GN-4 | Skip to main content | `/` | Press Tab once, then Enter, then Tab again. | The first Tab shows the "Skip to main content" link. Enter goes to the main content (`#main-content`), and the next Tab lands inside it, not in the header menu. |
 
 Location pages for LV-1:
 
@@ -157,6 +164,16 @@ Location pages for LV-1:
 | Bloomington | `/careerforce-location/careerforce-bloomington` |
 | Brooklyn Center | `/careerforce-location/careerforce-brooklyn-center` |
 | CareerForce from Anywhere | `/anywhere` |
+
+Main menu pages for GN-3:
+
+| Menu item | Page |
+|---|---|
+| Find a Job | `/find-job` |
+| Job Loss Resources | `/job-loss-resources` |
+| Job Search Tools | `/job-search-tools` |
+| Education and Training | `/education-and-training` |
+| Resources for | `/resources-job-seekers-and-career-explorers` |
 
 Good to know:
 
@@ -184,6 +201,11 @@ Good to know:
 - **Search result counts change** as content is added or removed. The tests
   only check that there's at least 1 result, not an exact number. The same
   goes for the Events and Programs and Services listings (LV-2, LV-3).
+- **The Page Not Found page has a 4th link**, "new career opportunity". It
+  sends a visitor who isn't logged in to the login page, so GN-1 doesn't
+  check it.
+- **The footer phone number is plain text**, not a link you can tap to call,
+  so GN-2 checks the text only.
 
 Pages for JS-5:
 
@@ -254,9 +276,9 @@ To run the mobile tests, see [Running the mobile tests](#running-the-mobile-test
 
 ## Expected result
 
-The terminal ends with `40 passed`. The desktop run has 26 test cases (all
+The terminal ends with `48 passed`. The desktop run has 30 test cases (all
 but MB-1, which is phone only), but some are repeated with different inputs,
-so they add up to 40 runs:
+so they add up to 48 runs:
 
 | Test case | Runs | Why |
 |---|---|---|
@@ -270,12 +292,14 @@ so they add up to 40 runs:
 | LV-2, LV-3 | 2 | once each |
 | CT-1, CT-2, CT-3 | 3 | once each |
 | FL-1 to FL-8 | 8 | once each |
-| **Total** | **40** | |
+| GN-1, GN-2, GN-4 | 3 | once each |
+| GN-3 | 5 | the 5 main menu pages |
+| **Total** | **48** | |
 
-If the total is anything other than 40, or anything fails, see
+If the total is anything other than 48, or anything fails, see
 [When something fails](README.md#when-something-fails).
 
-The mobile run (`--project=smoke-mobile`) has 32 runs: the same 40 minus
-HP-3 and the 8 FL cases, plus MB-1. A successful run ends with `32 passed`.
+The mobile run (`--project=smoke-mobile`) has 40 runs: the same 48 minus
+HP-3 and the 8 FL cases, plus MB-1. A successful run ends with `40 passed`.
 JS-4 counts as passed there while it fails as expected ([Known issues](#known-issues)).
 
