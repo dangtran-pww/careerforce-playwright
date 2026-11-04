@@ -15,19 +15,80 @@ export type JobFilterOption = {
 // and cities exist is read from the dropdowns at run time, never hard-coded.
 export class JobSearchPage {
   readonly page: Page;
+  readonly heading: Locator;
+  readonly keywordInput: Locator;
   readonly resultSummary: Locator;
   readonly cards: Locator;
   readonly companySelect: Locator;
   readonly citySelect: Locator;
+  readonly saveSearchLink: Locator;
+  readonly openFiltersButton: Locator;
+  // Save search and Bookmark both open this for an anonymous visitor: a
+  // modal asking them to log in or register. Both use the same heading
+  // ("Log in or register to save your search"), so tests don't rely on it.
+  readonly loginDialog: Locator;
 
   constructor(page: Page) {
     this.page = page;
+    this.heading = page.getByRole('heading', { level: 1, name: 'Job Search' });
+    this.keywordInput = page.locator('main input[name="title"]');
     // "Showing 500 jobs". Same class as the other listings' summary, but the
     // wording differs, so SearchPage.resultCount() doesn't parse it.
     this.resultSummary = page.locator('main .view-header__result-summary-header');
     this.cards = page.locator('main .job-search-result');
     this.companySelect = page.locator('main select[name="company"]');
     this.citySelect = page.locator('main select[name="loc"]');
+    this.saveSearchLink = page.getByRole('main').getByRole('link', { name: 'Save search' });
+    this.openFiltersButton = page.getByRole('button', { name: 'Open filters' });
+    this.loginDialog = page.getByRole('dialog');
+  }
+
+  // On a phone, the Company/City filters and Save search are in a drawer
+  // behind a "Filters" button (accessible name "Open filters"). On desktop
+  // they're always shown and the button is hidden.
+  async showFilters() {
+    if (await this.openFiltersButton.isVisible()) {
+      await this.openFiltersButton.click();
+    }
+  }
+
+  // True when nothing covers the middle of the element, i.e. a tap there
+  // would reach it. toBeVisible() alone passes for a dialog hidden behind
+  // another layer.
+  async isOnTop(element: Locator): Promise<boolean> {
+    return element.evaluate((el) => {
+      const box = el.getBoundingClientRect();
+      const hit = document.elementFromPoint(
+        box.left + box.width / 2,
+        box.top + box.height / 2,
+      );
+      return hit !== null && (hit === el || el.contains(hit));
+    });
+  }
+
+  cardTitle(card: Locator): Locator {
+    return card.getByRole('heading', { level: 3 });
+  }
+
+  // Each card has the apply link twice (one for wide screens, one for
+  // phones), both to the employer's posting on an outside site.
+  applyLinks(card: Locator): Locator {
+    return card.getByRole('link', { name: /^Learn more and apply/ });
+  }
+
+  // Opens the job on its own, at /job-search?jvid=<job ID>.
+  readMoreLink(card: Locator): Locator {
+    return card.getByRole('link', { name: /^Read more/ });
+  }
+
+  bookmarkLink(card: Locator): Locator {
+    return card.locator('a.bookmark');
+  }
+
+  // Only the single-job view shows the full description; list cards show
+  // a short .job-description__summary instead.
+  fullDescription(card: Locator): Locator {
+    return card.locator('.job-description__full');
   }
 
   async search(params: Record<string, string>) {

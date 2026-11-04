@@ -14,7 +14,11 @@ use:
   today?") works, and the Google Tag Manager tracking code is present.
 - **Login page:** offers the 3 ways to log in: LoginMN for job seekers, an
   email and password form for partners, and a "Log In" button for DEED staff.
-- **Search:** site search and the Explore Careers search both return results.
+- **Search:** site search and the Explore Careers search both return
+  results, and a career page opens from the results with its main sections.
+- **Job Search:** the homepage Job Search leads to results; each job has its
+  links; a job opens on its own; Save search and Bookmark ask a visitor to
+  log in; and the main pages load without JavaScript errors.
 - **Locations, Events, Programs and Services:** the pages load with their
   main content, and the Events and Programs and Services pages list at
   least 1 item.
@@ -64,10 +68,10 @@ BASE_URL=https://careerforce.mn.gov npx playwright test tests/smoke/anonymous --
 ```
 
 Keep `--project=smoke` in the command. Without it, the same tests also run on
-the phone ([Mobile](#mobile)), 48 runs in all.
+the phone ([Mobile](#mobile)), 66 runs in all.
 
 Add `--ui` to [watch it run](README.md#watching-a-run). A successful run ends
-with `28 passed` ([Expected result](#expected-result)).
+with `37 passed` ([Expected result](#expected-result)).
 
 To save a full-page screenshot of every test, even the ones that pass, put
 `SCREENSHOT=on` in front ([more on screenshots](README.md#screenshots-of-every-test)):
@@ -123,6 +127,12 @@ after the site name, for example `/programs-services` means
 | HP-4 | Decision Tree works | `/` | In "What brings you here today?", open "Choose a path" and click the first option. | The next step shows, with a "Reset selections" link. |
 | SR-1 | Site search returns results | `/search` | Search with no words. Then search for "job fair", "networking", and "farmer", one at a time. | Every search shows at least 1 result. |
 | SR-2 | Career search returns results | `/explore/careers` | Search for "Nursing", "taxi driver", and "project manager", one at a time. | Every search shows at least 1 result. |
+| SR-3 | Career page opens | `/explore/careers` | Search for "Nursing" and click the "Registered Nurses" result. It opens in a new tab. Then click "Find current job openings in this occupation". | The career page `/explore/careers/29-1141.00` shows the title "Registered Nurses" and the sections "Also known as", "Daily Work Activities", "Data By Region", and "Qualifications". The job openings link opens Job Search for "Registered Nurses" with at least 1 job. |
+| JS-1 | Homepage Job Search works | `/` | In the Job Search block, type "nurse" and click "Search". | Job Search opens (`/job-search?title=nurse…`, distance 20 miles) with "nurse" still in the Keyword box and at least 1 job. |
+| JS-2 | Jobs have their links | `/job-search?title=nurse` | Look at the first 3 jobs. | Each has a title, a "Learn more and apply" link that opens the employer's posting on another site in a new tab, and a "Read more" link to that job. |
+| JS-3 | A job opens on its own | `/job-search?title=nurse` | Click "Read more" on the first job. | Only that job shows (same title), with its full description. |
+| JS-4 | Save search and Bookmark ask to log in | `/job-search?title=nurse` | Click "Bookmark" on the first job, then close the dialog. Then click "Save search" (on a phone, open "Filters" first), then close the dialog. Don't log in. | Each time, a dialog shows on top of the page, saying "Create an account or log in to use this feature", with a "Log In or Register" button, a "Continue Browsing" link, and a "DEED staff and partners log in here." link back to this search. On a phone this currently fails for Save search; see [Known issues](#known-issues). |
+| JS-5 | No JavaScript errors | see the list below | Open each page. | No JavaScript error, other than the ones listed in [Known issues](#known-issues). |
 | LV-1 | Location pages load | see the list below | Open each of the 4 location pages. | Each page shows a "Programs and Services" section. |
 | LV-2 | Events page lists events | `/education-and-training/events` | Open the page. | The page title "Events" shows, with at least 1 event listed below it. |
 | LV-3 | Programs and Services page lists services | `/programs-services` | Open the page. | The page title "Programs and Services" shows, with at least 1 program or service listed below it. |
@@ -164,9 +174,36 @@ Good to know:
 - **Skills Matcher needs only 10 answers** (all on the first page), but Submit
   is only on the last page, so you still click "Continue" to get there. The
   **Interest Profiler needs all 60 answers.**
+- **The jobs on Job Search come from an outside job feed**, so JS-1 to JS-4
+  never name a job; they use whatever "nurse" returns.
+- **Career pages load in two steps.** The page says "Loading..." until the
+  career details arrive, so wait for the title before checking anything.
+- **JS-5 checks only real JavaScript errors**, not every red line in the
+  browser console. The tests block the analytics and AWS WAF scripts on
+  purpose, and those blocked loads show up in the console as errors.
 - **Search result counts change** as content is added or removed. The tests
   only check that there's at least 1 result, not an exact number. The same
   goes for the Events and Programs and Services listings (LV-2, LV-3).
+
+Pages for JS-5:
+
+| Page | Address |
+|---|---|
+| Homepage | `/` |
+| Job Search | `/job-search?title=nurse` |
+| Site search | `/search?k=job` |
+| Explore Careers | `/explore/careers?otitle=Nursing` |
+
+### Known issues
+
+These bugs were found on QA on 2026-11-04. The tests allow for them, so a run
+stays green and a *new* problem still fails. When one is fixed, remove its
+entry as described.
+
+| Bug | Where | How the test allows for it |
+|---|---|---|
+| Job Search throws `TypeError: Cannot read properties of null (reading '1')` on every load | `/job-search` | JS-5 lists it in `tests/helpers/known-issues.ts` and adds a "known issue" note to the report. Remove the entry once fixed. |
+| On a phone, Save search opens its login dialog *behind* the full-screen Filters panel, so the visitor sees nothing happen | `/job-search`, phones only | JS-4 is marked as expected to fail on phones (`test.fail`). Once fixed, the run reports "expected to fail, but passed"; then remove the `test.fail` line. |
 
 ### Filters
 
@@ -207,6 +244,8 @@ On the phone:
   checking them once on desktop is enough.
 - **MB-1 runs only on phones.** On desktop the menu is always shown, so there
   is no menu button.
+- **JS-4 is expected to fail on phones** until the Save search dialog bug
+  is fixed ([Known issues](#known-issues)). It still counts as passed.
 - **No page may scroll sideways.** After each case, the test also checks that
   the page fits the screen width. If something sticks out past the right edge,
   the test fails and names the widest element.
@@ -215,24 +254,28 @@ To run the mobile tests, see [Running the mobile tests](#running-the-mobile-test
 
 ## Expected result
 
-The terminal ends with `28 passed`. The desktop run has 20 test cases (all
+The terminal ends with `37 passed`. The desktop run has 26 test cases (all
 but MB-1, which is phone only), but some are repeated with different inputs,
-so they add up to 28 runs:
+so they add up to 37 runs:
 
 | Test case | Runs | Why |
 |---|---|---|
 | HP-1, HP-2, HP-3, HP-4 | 4 | once each |
 | SR-1 | 4 | an empty search, plus "job fair", "networking", "farmer" |
 | SR-2 | 3 | "Nursing", "taxi driver", "project manager" |
+| SR-3 | 1 | once |
+| JS-1, JS-2, JS-3, JS-4 | 4 | once each |
+| JS-5 | 4 | Homepage, Job Search, site search, Explore Careers |
 | LV-1 | 4 | Aitkin, Bloomington, Brooklyn Center, CareerForce from Anywhere |
 | LV-2, LV-3 | 2 | once each |
 | CT-1, CT-2, CT-3 | 3 | once each |
 | FL-1 to FL-8 | 8 | once each |
-| **Total** | **28** | |
+| **Total** | **37** | |
 
-If the total is anything other than 28, or anything fails, see
+If the total is anything other than 37, or anything fails, see
 [When something fails](README.md#when-something-fails).
 
-The mobile run (`--project=smoke-mobile`) has 20 runs: the same 28 minus
-HP-3 and the 8 FL cases, plus MB-1. A successful run ends with `20 passed`.
+The mobile run (`--project=smoke-mobile`) has 29 runs: the same 37 minus
+HP-3 and the 8 FL cases, plus MB-1. A successful run ends with `29 passed`.
+JS-4 counts as passed there while it fails as expected ([Known issues](#known-issues)).
 
