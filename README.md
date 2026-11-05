@@ -1,8 +1,6 @@
-# CareerForce Drupal Playwright 
+# CareerForce Playwright 
 
-A small, working starter for end-to-end tests on a Drupal site. It is built
-for staging first: log in once, reuse the session, create test data as
-needed, and test real user journeys through the browser.
+A small, working starter for end-to-end tests on CareerForce site.
 
 ## What is inside
 
@@ -25,6 +23,8 @@ tests/
   smoke/                    # Post-deploy smoke suite: read-only, prod-safe.
     anonymous/              #   one folder per test-plans/smoke-<area>.md
     admin-reports/          #   (see test-plans/README.md, "Smoke plans")
+  functional/               # deeper read-only checks of one feature, one folder per
+    job-search/             #   feature (see test-plans/README.md, "Functional plans")
   accessibility/            # axe-core WCAG 2.2 AA scans of the public pages
                              # (see "Accessibility"); not part of the smoke run
 test-plans/                 # human-readable plans that specs are generated from
@@ -40,7 +40,7 @@ npx playwright install chromium
 cp .env.example .env   # fill in BASIC_AUTH_USER/PASSWORD for QA's Basic Auth gate
 npm run login:manual -- admin   # once per session expiry; admin-reports needs it
 npm run test:smoke
-npm run test:smoke:mobile       # smoke-anonymous on an Android phone
+npx playwright test --project=smoke-mobile   # smoke-anonymous on an Android phone
 
 # Logged-in tests: log in by hand once per role (auth is SSO, so this step
 # can't be automated — and Google blocks sign-in from Playwright's own

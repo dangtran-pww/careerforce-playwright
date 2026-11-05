@@ -31,7 +31,9 @@ Read `test-plans/<plan>.md`. Note these parts:
 - The **test cases table**: ID, title, page, steps, and expected result.
   Also read the sub-tables that the cases point to.
 - **Running it**: the spec folder and the project (`tests/smoke/…` →
-  `smoke`, `tests/stage/…` → `stage`).
+  `smoke`, `tests/stage/…` → `stage`). Functional plans use the feature's
+  project, which runs only that feature's tag: `tests/functional/job-search/…`
+  → `job-search`.
 - The **persona**, and any Scope warnings.
 
 ## 2. Environment, safety, and login

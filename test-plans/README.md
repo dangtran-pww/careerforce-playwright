@@ -159,7 +159,7 @@ all:
 ```bash
 npm run test:smoke                              # all smoke plans
 npx playwright test tests/smoke/admin-reports   # one plan
-npm run test:smoke:mobile                       # smoke-anonymous on a phone
+npx playwright test --project=smoke-mobile      # smoke-anonymous on a phone
 ```
 
 The mobile run is separate. `npm run test:smoke` is desktop only. See
@@ -190,7 +190,7 @@ flows that create, edit, or delete data. They need no test inbox and no
 LoginMN.
 
 ```bash
-npm run test:stage                                 # all stage plans
+npx playwright test --project=stage                # all stage plans
 npx playwright test tests/stage/content-lifecycle  # one plan
 ```
 
@@ -209,9 +209,33 @@ Conventions:
   the `jobseeker`, `content-manager`, or `admin` session from
   `npm run login:manual -- <role>`.
 
-The `stage` project and `test:stage` script were added with the first
+The `stage` project was added with the first
 stage spec (`tests/stage/admin-maintenance/`). `tests/fixtures/` is
 added with the first stage spec that needs fixture files.
+
+## Functional plans
+
+Deeper checks of one feature, as an anonymous visitor: more cases and more
+searches than a smoke test. They are read-only and prod-safe, but they make
+too many requests for the post-deploy smoke run.
+
+```bash
+npx playwright test --project=job-search          # Job Search functional plans
+npx playwright test tests/functional/job-search   # one feature
+```
+
+Conventions:
+
+- **Naming:** one plan per feature, `test-plans/<area>.md` ↔
+  `tests/functional/<area>/`, e.g. `job-search.md` ↔
+  `tests/functional/job-search/`. Each part of the feature is its own spec
+  file in that folder, e.g. `search.spec.ts`.
+- **Tags and projects:** wrap every functional suite in a `test.describe` tagged
+  with its feature, e.g. `{ tag: '@job-search' }`. Each feature has its own
+  Playwright project (e.g. `job-search`) that runs only that tag.
+- **Known bugs are `test.fail`.** A case that checks a known bug is marked as
+  expected to fail, with the bug in a comment, so the run stays green. Once the
+  bug is fixed, the run reports "expected to fail, but passed".
 
 ## Accessibility plan
 
@@ -231,6 +255,12 @@ npm run a11y:summary   # reports/a11y-<stamp>/summary.md from the last run
   Implemented test: `tests/accessibility/a11y.spec.ts`.
   axe-core WCAG 2.2 AA scans of the public pages, desktop and phone, with
   a summary report. Every violation fails its test (no allowlist).
+
+- `job-search.md` — Status: implemented.
+  Implemented test: `tests/functional/job-search/search.spec.ts`.
+  Job Search part 1, search: form, keyword and location, location formats,
+  distance, empty and occupation searches, bad input, location suggestions.
+  3 known bugs are marked `test.fail`.
 
 - `smoke-anonymous.md` — Status: implemented.
   Implemented tests: `tests/smoke/anonymous/*.spec.ts`.

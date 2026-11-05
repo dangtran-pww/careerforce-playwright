@@ -17,6 +17,17 @@ export class JobSearchPage {
   readonly page: Page;
   readonly heading: Locator;
   readonly keywordInput: Locator;
+  // A combobox: typing shows suggestions in `locationSuggestions`.
+  readonly locationInput: Locator;
+  readonly locationSuggestions: Locator;
+  readonly distanceSelect: Locator;
+  readonly sortSelect: Locator;
+  readonly searchButton: Locator;
+  readonly resetLink: Locator;
+  // The inline message under Keyword when the server rejects it.
+  readonly keywordError: Locator;
+  readonly noResults: Locator;
+  readonly pager: Locator;
   readonly resultSummary: Locator;
   readonly cards: Locator;
   readonly companySelect: Locator;
@@ -32,6 +43,15 @@ export class JobSearchPage {
     this.page = page;
     this.heading = page.getByRole('heading', { level: 1, name: 'Job Search' });
     this.keywordInput = page.locator('main input[name="title"]');
+    this.locationInput = page.locator('main input[name="location[text]"]');
+    this.locationSuggestions = page.locator('#edit-location-text-listbox').getByRole('option');
+    this.distanceSelect = page.locator('main select[name="radius"]');
+    this.sortSelect = page.locator('main select[name="sort"]');
+    this.searchButton = page.getByRole('main').getByRole('button', { name: 'Search', exact: true });
+    this.resetLink = page.getByRole('main').getByRole('link', { name: 'Reset' });
+    this.keywordError = page.locator('main .form-item-title .form-item--error-message');
+    this.noResults = page.locator('main .no-results');
+    this.pager = page.getByRole('main').getByRole('navigation', { name: /pag/i });
     // "Showing 500 jobs". Same class as the other listings' summary, but the
     // wording differs, so SearchPage.resultCount() doesn't parse it.
     this.resultSummary = page.locator('main .view-header__result-summary-header');
@@ -95,7 +115,10 @@ export class JobSearchPage {
     await this.page.goto(`/job-search?${new URLSearchParams(params)}`);
   }
 
+  // Waits for the results (or "No results found.") first: after a click on
+  // Search, the URL changes before the new results are on the page.
   async resultCount(): Promise<number> {
+    await this.resultSummary.or(this.noResults).first().waitFor();
     if ((await this.resultSummary.count()) === 0) return 0;
     const text = (await this.resultSummary.first().textContent()) ?? '';
     const match = text.match(/Showing\s+([\d,]+)\s+jobs?/i);
@@ -111,6 +134,13 @@ export class JobSearchPage {
         els.map((el) => el.getAttribute('data-jvid') ?? ''),
       ),
     };
+  }
+
+  // Every city in the City filter, e.g. "Albert Lea, MN". The filter lists
+  // the whole result set, not just the first page, so it shows how far a
+  // search reaches even when "Showing N jobs" is capped at 500.
+  async cities(): Promise<JobFilterOption[]> {
+    return this.topOptions(this.citySelect, Infinity);
   }
 
   // The options of a filter dropdown with the most jobs first, skipping the

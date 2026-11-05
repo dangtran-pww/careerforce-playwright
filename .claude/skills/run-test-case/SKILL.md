@@ -50,7 +50,10 @@ Specs title their tests with the case ID first, for example
 ## 3. Safety check before running
 
 - The **project** is the folder under `tests/`: `tests/smoke/…` → `smoke`,
-  `tests/stage/…` → `stage`.
+  `tests/stage/…` → `stage`. Functional tests are the exception: there is
+  no `functional` project. Use the feature's project, which runs only the tag
+  on the spec's `test.describe`: `tests/functional/job-search/…` (tag
+  `@job-search`) → `job-search`.
 - `stage` tests change site state, for example a reindex or a permissions
   rebuild. Never run them against production. If the target URL looks like
   production (not `qa.` or `stage.`), refuse and explain why.

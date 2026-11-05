@@ -52,10 +52,16 @@ export default defineConfig({
     // Seed for the Playwright agents (planner/generator/healer): they run
     // tests/seed.spec.ts to open a browser with this config. Listed first
     // because the agents default to the first project. Not a real test.
+    // viewport: null lets the page follow the browser window size, so a
+    // headed agent session reflows when the window is resized. Playwright
+    // rejects deviceScaleFactor with a null viewport, so it is dropped.
     {
       name: 'seed',
       testMatch: 'seed.spec.ts',
-      use: { ...devices['Desktop Chrome'] },
+      use: (({ deviceScaleFactor: _dsf, ...desktopChrome }) => ({
+        ...desktopChrome,
+        viewport: null,
+      }))(devices['Desktop Chrome']),
     },
     // Post-deploy smoke suite: every spec from a test-plans/smoke-*.md,
     // one folder per plan (tests/smoke/<area>/). Must stay read-only and
@@ -96,6 +102,18 @@ export default defineConfig({
       testDir: './tests/accessibility',
       grepInvert: /@desktop-only/,
       use: { ...devices['Pixel 7'] },
+    },
+    // Functional plans (test-plans/README.md → Functional plans): deeper,
+    // read-only checks of one feature, e.g. test-plans/job-search.md.
+    // Prod-safe like smoke, but too many requests for a post-deploy run, so
+    // not part of it. One project per feature: every functional suite is
+    // tagged with its feature (e.g. `@job-search`) and the feature's project
+    // runs only that tag. Run with `npx playwright test --project=job-search`.
+    {
+      name: 'job-search',
+      testDir: './tests/functional',
+      grep: /@job-search/,
+      use: { ...devices['Desktop Chrome'] },
     },
     // Stage plans (test-plans/README.md → Stage plans): specs that create,
     // edit, delete, or otherwise change site state. QA/stage only — never

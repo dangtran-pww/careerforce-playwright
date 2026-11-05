@@ -8,8 +8,6 @@
   "permissions": {
     "allow": ["mcp__playwright-test"],
     "ask": [
-      "mcp__playwright-test__browser_run_code_unsafe",
-      "mcp__playwright-test__browser_evaluate",
       "mcp__playwright-test__browser_file_upload"
     ]
   }
