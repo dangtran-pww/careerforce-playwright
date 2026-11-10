@@ -37,8 +37,8 @@ function searchParams(location: string, radius = '20') {
   };
 }
 
-// Every functional suite carries a feature tag; the `job-search` Playwright
-// project runs only tests tagged @job-search.
+// Every functional suite carries a feature tag, so `--grep @job-search` picks
+// the feature out of the functional-desktop / functional-mobile projects.
 test.describe('Job Search: search', { tag: '@job-search' }, () => {
   test('JSS-1: page loads with the search form and results', async ({
     page,

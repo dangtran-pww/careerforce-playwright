@@ -1,4 +1,5 @@
 import { test, expect } from '../../helpers/fixtures';
+import { useRole } from '../../helpers/roles';
 import { EventsSearchPage, type EventsQuery } from '../../pages/events-search.page';
 import { addDays, siteDate } from '../../helpers/dates';
 
@@ -8,7 +9,7 @@ import { addDays, siteDate } from '../../helpers/dates';
 // Assertions compare against the unfiltered count and against what's on the
 // cards — never fixed numbers — so they hold as events come and go.
 
-test.use({ storageState: 'playwright/.auth/admin.json' });
+useRole('admin');
 
 async function countFor(events: EventsSearchPage, query: EventsQuery) {
   await events.search(query);

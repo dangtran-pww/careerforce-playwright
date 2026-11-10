@@ -1,5 +1,13 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, type Project } from '@playwright/test';
 import 'dotenv/config';
+import { hostResolverRules } from './tests/helpers/blocked-hosts.mjs';
+import {
+  DESKTOP_ONLY_SMOKE_AREAS,
+  DEVICES,
+  SKIP_TAG,
+  type DeviceName,
+} from './tests/helpers/devices.mjs';
+import { credentialsFor, currentEnv } from './tests/helpers/environments.mjs';
 
 // How to run:
 //   BASE_URL=https://qa.careerforce.link npx playwright test
@@ -7,18 +15,44 @@ import 'dotenv/config';
 //   SLOW_MO=500 BASE_URL=https://qa.careerforce.link npx playwright test --headed
 //   SCREENSHOT=on BASE_URL=https://qa.careerforce.link npx playwright test
 //
+// BASE_URL picks the environment (tests/helpers/environments.mts): QA,
+// Stage, Production or Sandbox. The dashboard (`npm run dashboard`) sets it
+// for you from its environment picker.
+//
 // QA/stage sit behind HTTP Basic Auth in front of Drupal; set
-// BASIC_AUTH_USER / BASIC_AUTH_PASSWORD (see .env.example) to get past it.
+// BASIC_AUTH_USER / BASIC_AUTH_PASSWORD (see .env.example) to get past it,
+// or BASIC_AUTH_USER_<ENV> / BASIC_AUTH_PASSWORD_<ENV> for one environment.
 //
 // Destructive tests (create/edit/delete) must point at staging, never production.
 // Read-only smoke tests are the only ones suitable for a post-deploy prod check.
 
-const httpCredentials = process.env.BASIC_AUTH_USER
-  ? {
-      username: process.env.BASIC_AUTH_USER,
-      password: process.env.BASIC_AUTH_PASSWORD ?? '',
-    }
-  : undefined;
+const env = currentEnv();
+const httpCredentials = credentialsFor(env);
+
+// One project per suite and device, named `<suite>-<device>`, e.g.
+// smoke-desktop and smoke-mobile. Each device skips the tests tagged for the
+// other (`@desktop-only` / `@mobile-only`, see tests/helpers/devices.mts).
+// `perDevice` adds settings for one device only.
+function suite(
+  name: string,
+  {
+    testDir,
+    devices = ['desktop', 'mobile'],
+    perDevice = {},
+  }: {
+    testDir: string;
+    devices?: DeviceName[];
+    perDevice?: Partial<Record<DeviceName, Project>>;
+  },
+): Project[] {
+  return devices.map((device) => ({
+    name: `${name}-${device}`,
+    testDir,
+    grepInvert: SKIP_TAG[device],
+    ...perDevice[device],
+    use: { ...DEVICES[device], ...perDevice[device]?.use },
+  }));
+}
 
 export default defineConfig({
   testDir: './tests',
@@ -32,7 +66,7 @@ export default defineConfig({
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? 'github' : 'html',
   use: {
-    baseURL: process.env.BASE_URL ?? 'https://qa.careerforce.link',
+    baseURL: env.baseURL,
     httpCredentials,
     trace: 'on-first-retry',
     // SCREENSHOT=on saves a full-page screenshot at the end of every test,
@@ -44,8 +78,14 @@ export default defineConfig({
     video: 'retain-on-failure',
     // SLOW_MO=500 pauses that many ms after every action, so a --headed run
     // can be followed by eye. Off (0) unless set.
+    // --host-resolver-rules makes the tracking hosts and the AWS WAF
+    // challenge SDK unreachable for the whole browser (see
+    // tests/helpers/blocked-hosts.mts), so the block also covers tabs opened
+    // by hand in --headed / --debug / --ui runs, the MCP agents' browser, and
+    // useRole's session check, not only pages a test drives.
     launchOptions: {
       slowMo: Number(process.env.SLOW_MO ?? 0),
+      args: [`--host-resolver-rules=${hostResolverRules}`],
     },
   },
   projects: [
@@ -55,73 +95,49 @@ export default defineConfig({
     // viewport: null lets the page follow the browser window size, so a
     // headed agent session reflows when the window is resized. Playwright
     // rejects deviceScaleFactor with a null viewport, so it is dropped.
+    //
+    // SEED_STORAGE_STATE logs the agent's browser in: the dashboard's prompt
+    // steps (dashboard/server/suite-runs.mjs) set it to a role's login file so
+    // Claude can check pages as that role.
     {
       name: 'seed',
       testMatch: 'seed.spec.ts',
       use: (({ deviceScaleFactor: _dsf, ...desktopChrome }) => ({
         ...desktopChrome,
         viewport: null,
-      }))(devices['Desktop Chrome']),
+        storageState: process.env.SEED_STORAGE_STATE || undefined,
+      }))(DEVICES.desktop),
     },
-    // Post-deploy smoke suite: every spec from a test-plans/smoke-*.md,
-    // one folder per plan (tests/smoke/<area>/). Must stay read-only and
-    // prod-safe. No default storageState — specs that need a role set it via
-    // `test.use({ storageState: 'playwright/.auth/<role>.json' })`, which needs
-    // `npm run login:manual -- <role>` to have been run first.
-    {
-      name: 'smoke',
+    // Smoke suite: every spec from a test-plans/smoke-*.md, one folder per
+    // plan (tests/smoke/<area>/). Read-only and prod-safe. No default login:
+    // a spec that needs a role calls `useRole('<role>')`
+    // (tests/helpers/roles.ts), which needs
+    // `npm run login:manual -- <role> --env <env>` to have been run first.
+    // Admin and editor areas run on desktop only (DESKTOP_ONLY_SMOKE_AREAS);
+    // on mobile, every test also fails if the page scrolls sideways
+    // (`noHorizontalScroll` in tests/helpers/fixtures.ts).
+    ...suite('smoke', {
       testDir: './tests/smoke',
-      grepInvert: /@mobile-only/,
-      use: { ...devices['Desktop Chrome'] },
-    },
-    // Mobile smoke: the anonymous smoke plan again on a phone, to check the
-    // public pages work and lay out at a small screen size. Tag a test
-    // `@desktop-only` to keep it out of this, or `@mobile-only` to keep it
-    // out of `smoke`. Every test here also fails if the page scrolls
-    // sideways (see `noHorizontalScroll` in tests/helpers/fixtures.ts).
-    {
-      name: 'smoke-mobile',
-      testDir: './tests/smoke/anonymous',
-      grepInvert: /@desktop-only/,
-      use: { ...devices['Pixel 7'] },
-    },
-    // Accessibility (test-plans/accessibility-public.md): axe-core WCAG 2.2 AA
-    // scans of the public pages, on desktop and again on a phone (mobile
-    // layouts have their own contrast, tap target and menu problems).
-    // Read-only and prod-safe, but not part of the smoke run: run with
-    // `npm run test:a11y`. Same @mobile-only / @desktop-only tags as smoke;
-    // the phone run also gets the noHorizontalScroll check.
-    {
-      name: 'accessibility',
-      testDir: './tests/accessibility',
-      grepInvert: /@mobile-only/,
-      use: { ...devices['Desktop Chrome'] },
-    },
-    {
-      name: 'accessibility-mobile',
-      testDir: './tests/accessibility',
-      grepInvert: /@desktop-only/,
-      use: { ...devices['Pixel 7'] },
-    },
+      perDevice: {
+        mobile: {
+          testIgnore: DESKTOP_ONLY_SMOKE_AREAS.map((a) => `**/smoke/${a}/**`),
+        },
+      },
+    }),
     // Functional plans (test-plans/README.md → Functional plans): deeper,
-    // read-only checks of one feature, e.g. test-plans/job-search.md.
-    // Prod-safe like smoke, but too many requests for a post-deploy run, so
-    // not part of it. One project per feature: every functional suite is
-    // tagged with its feature (e.g. `@job-search`) and the feature's project
-    // runs only that tag. Run with `npx playwright test --project=job-search`.
-    {
-      name: 'job-search',
-      testDir: './tests/functional',
-      grep: /@job-search/,
-      use: { ...devices['Desktop Chrome'] },
-    },
+    // read-only checks of one feature, one folder per feature
+    // (tests/functional/<feature>/). Prod-safe like smoke, but too many
+    // requests for a post-deploy run. Run one feature by its folder:
+    // `npx playwright test tests/functional/job-search --project=functional-desktop`.
+    ...suite('functional', { testDir: './tests/functional' }),
     // Stage plans (test-plans/README.md → Stage plans): specs that create,
     // edit, delete, or otherwise change site state. QA/stage only — never
-    // point this project at production. Login is per spec, as in smoke.
+    // point this project at production. Desktop only. Login is per spec, as
+    // in smoke.
     {
       name: 'stage',
       testDir: './tests/stage',
-      use: { ...devices['Desktop Chrome'] },
+      use: DEVICES.desktop,
     },
   ],
 });

@@ -48,19 +48,19 @@ Run the command for the environment you want.
 QA:
 
 ```bash
-BASE_URL=https://qa.careerforce.link npx playwright test --project=job-search
+BASE_URL=https://qa.careerforce.link npx playwright test --project=functional-desktop tests/functional/job-search
 ```
 
 Stage:
 
 ```bash
-BASE_URL=https://stage.careerforce.link npx playwright test --project=job-search
+BASE_URL=https://stage.careerforce.link npx playwright test --project=functional-desktop tests/functional/job-search
 ```
 
 Production:
 
 ```bash
-BASE_URL=https://careerforce.mn.gov npx playwright test --project=job-search
+BASE_URL=https://careerforce.mn.gov npx playwright test --project=functional-desktop tests/functional/job-search
 ```
 
 Add `--ui` to [watch it run](README.md#watching-a-run). A successful run ends
@@ -70,7 +70,7 @@ To save a full-page screenshot of every test, even the ones that pass, put
 `SCREENSHOT=on` in front ([more on screenshots](README.md#screenshots-of-every-test)):
 
 ```bash
-SCREENSHOT=on BASE_URL=https://qa.careerforce.link npx playwright test --project=job-search
+SCREENSHOT=on BASE_URL=https://qa.careerforce.link npx playwright test --project=functional-desktop tests/functional/job-search
 ```
 
 The screenshots open with `npx playwright show-report`, under each test's

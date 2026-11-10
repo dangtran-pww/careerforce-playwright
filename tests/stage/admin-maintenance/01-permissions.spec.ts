@@ -1,4 +1,5 @@
 import { test, expect } from '../../helpers/fixtures';
+import { useRole } from '../../helpers/roles';
 import { waitForBatch } from '../../pages/search-api-index.page';
 
 // [Smoke] - Admin Maintenance - Test Plan — AM-1. See
@@ -8,7 +9,7 @@ import { waitForBatch } from '../../pages/search-api-index.page';
 // Files in this folder are numbered so one worker runs them in plan order:
 // permissions, reindex (AM-2/AM-3), then the search checks (AM-4/AM-5).
 
-test.use({ storageState: 'playwright/.auth/admin.json' });
+useRole('admin');
 
 test('AM-1: permissions rebuild completes', async ({ page }) => {
   test.setTimeout(15 * 60_000);

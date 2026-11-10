@@ -1,4 +1,5 @@
 import { test, expect } from '../../helpers/fixtures';
+import { useRole } from '../../helpers/roles';
 import { SearchApiIndexPage } from '../../pages/search-api-index.page';
 import { SearchPage } from '../../pages/search.page';
 import {
@@ -17,7 +18,7 @@ import { siteDate } from '../../helpers/dates';
 // leaves an index empty unnoticed. AM-3 then checks every search backed by
 // those indexes actually returns results.
 
-test.use({ storageState: 'playwright/.auth/admin.json' });
+useRole('admin');
 
 const INDEXES = [
   { label: 'Appointment Occurrences', machineName: 'appointment_occurrences' },

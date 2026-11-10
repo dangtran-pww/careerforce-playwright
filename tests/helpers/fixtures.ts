@@ -1,46 +1,14 @@
 import { test as base, expect } from '@playwright/test';
 
-// Keeps test runs out of the site's analytics and ad reporting. The site
-// loads Google Analytics, Google Ads conversion tags, and LinkedIn Insight
-// through Google Tag Manager, so every test visit would otherwise count as
-// real traffic (and as ad conversions) on whichever environment it hits.
-//
-// Blocking the GTM loader stops all of those tags; the collectors are also
-// listed in case one is ever loaded outside GTM. HP-3 still passes: it reads
-// the GTM container ID from the page HTML, which this doesn't touch.
+import { isTracking, isWafChallenge } from './blocked-hosts.mjs';
+
+// Keeps test runs out of the site's analytics and ad reporting, and stops the
+// AWS WAF challenge script. See ./blocked-hosts.mts for what is blocked and why.
+// The browser itself is also told these hosts don't exist (launchOptions in
+// playwright.config.ts); this request-level block adds the tracking paths on
+// www.google.com and www.linkedin.com, which a host-level block can't match.
 //
 // Every spec imports `test` and `expect` from here, not '@playwright/test'.
-const TRACKING_HOSTS = [
-  /(^|\.)googletagmanager\.com$/,
-  /(^|\.)google-analytics\.com$/,
-  /^analytics\.google\.com$/,
-  /(^|\.)doubleclick\.net$/,
-  /^snap\.licdn\.com$/,
-  /^px\.ads\.linkedin\.com$/,
-];
-const TRACKING_PATHS: Record<string, RegExp> = {
-  'www.google.com': /^\/(ccm|rmkt|pagead)\//,
-  'www.linkedin.com': /^\/px\//,
-};
-
-function isTracking(url: URL): boolean {
-  return (
-    TRACKING_HOSTS.some((host) => host.test(url.hostname)) ||
-    (TRACKING_PATHS[url.hostname]?.test(url.pathname) ?? false)
-  );
-}
-
-// The site's custom aws_waf module adds the AWS WAF challenge SDK
-// (https://<id>.<region>.sdk.awswaf.com/.../challenge.js) to every page. In a
-// Playwright browser its bot check fails and shows a human-verification
-// screen, so the tests block the SDK and its token calls (all on awswaf.com).
-//
-// This only stops the client-side script. If a WAF rule on the server side
-// challenges or blocks a request, blocking the script won't help: the test
-// traffic has to be allowed in the WAF itself (e.g. by IP or a secret header).
-function isWafChallenge(url: URL): boolean {
-  return /(^|\.)awswaf\.com$/.test(url.hostname);
-}
 
 // The widest element sticking out past the right edge of the screen, as a
 // short CSS-like description, so a layout failure says what to look at.

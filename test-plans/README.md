@@ -42,6 +42,10 @@ the command.
 Never run a stage plan against Production. Stage plans create and delete
 content.
 
+The test dashboard (`npm run dashboard`) has an environment picker, so you
+don't need `BASE_URL` there. Several plans can also run together as a suite
+(see `test-suites/README.md`).
+
 ### Logging in (only for plans that say so)
 
 Some plans test pages that need a logged-in user. The plan names the role it
@@ -51,8 +55,8 @@ needs, such as `admin` or `jobseeker`. Before running it, log in once by hand:
 npm run login:manual -- admin
 ```
 
-A Chrome window opens. Log in, then go back to the terminal and press Enter.
-The session is saved, so you only repeat this when it expires (the tests will
+A Chromium window opens. Log in; the session is saved as soon as you are
+logged in, then close the window. The session is kept, so you only repeat this when it expires (the tests will
 fail with a storage state / ENOENT error).
 
 ### Watching a run
@@ -157,24 +161,32 @@ means every case in every `smoke-*.md`, and one command runs them
 all:
 
 ```bash
-npm run test:smoke                              # all smoke plans
+npm run test:smoke                              # all smoke plans, desktop and phone
 npx playwright test tests/smoke/admin-reports   # one plan
-npx playwright test --project=smoke-mobile      # smoke-anonymous on a phone
+npx playwright test --project=smoke-mobile      # phone only
 ```
 
-The mobile run is separate. `npm run test:smoke` is desktop only. See
-[smoke-anonymous.md → Mobile](smoke-anonymous.md#mobile).
+Every smoke plan runs on desktop (`smoke-desktop`) and on a phone
+(`smoke-mobile`), except the admin and editor areas, which are desktop only
+(`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`). See
+[smoke-anonymous.md → Mobile](smoke-anonymous.md#mobile) and the README's
+"Desktop and mobile" section.
 
 Conventions:
 
 - **Naming:** `test-plans/smoke-<area>.md` ↔ `tests/smoke/<area>/`.
   Every spec from a smoke plan lives under `tests/smoke/`, and nothing else
-  does. The `smoke` Playwright project runs that folder.
+  does. The `smoke-desktop` and `smoke-mobile` Playwright projects run that
+  folder.
 - **Read-only and prod-safe:** no creating, editing, or deleting. Tests that
   write data belong outside `tests/smoke/`.
 - **Login is per spec, not per project:** a plan that needs a logged-in role
-  sets `test.use({ storageState: 'playwright/.auth/<role>.json' })` on each
-  `describe` block. Run `npm run login:manual -- <role>` first.
+  calls `useRole('<role>')` (from `tests/helpers/roles.ts`, which loads
+  `playwright/.auth/<env>/<role>.json` and checks the session still works) in
+  each spec or `describe` block. Run `npm run login:manual -- <role>` first.
+- **Devices:** a new area runs on desktop and phone. If it's an admin or
+  editor area, add it to `DESKTOP_ONLY_SMOKE_AREAS` and put
+  `Devices: desktop only` in the plan's header.
 
 Adding a new smoke plan:
 
@@ -197,7 +209,7 @@ npx playwright test tests/stage/content-lifecycle  # one plan
 Conventions:
 
 - **Naming:** `test-plans/smoke-<area>.md` ↔ `tests/stage/<area>/`.
-  A `stage` Playwright project runs that folder.
+  A `stage` Playwright project runs that folder, on desktop only.
 - **Clean up in `finally`:** every test deletes or reverts what it created,
   even when an assertion fails. Created content is titled
   `Playwright test <timestamp>`.
@@ -205,7 +217,7 @@ Conventions:
   `workers: 1`.
 - **Synthetic data only:** fixture files live in `tests/fixtures/`; no real
   names, contact details, DOBs, or SSNs.
-- **Login is per spec:** same as smoke — `test.use({ storageState })` with
+- **Login is per spec:** same as smoke — `useRole('<role>')` with
   the `jobseeker`, `content-manager`, or `admin` session from
   `npm run login:manual -- <role>`.
 
@@ -220,8 +232,8 @@ searches than a smoke test. They are read-only and prod-safe, but they make
 too many requests for the post-deploy smoke run.
 
 ```bash
-npx playwright test --project=job-search          # Job Search functional plans
-npx playwright test tests/functional/job-search   # one feature
+npx playwright test --project=functional-desktop --project=functional-mobile   # all functional plans
+npx playwright test tests/functional/job-search --project=functional-desktop   # one feature, desktop
 ```
 
 Conventions:
@@ -231,30 +243,14 @@ Conventions:
   `tests/functional/job-search/`. Each part of the feature is its own spec
   file in that folder, e.g. `search.spec.ts`.
 - **Tags and projects:** wrap every functional suite in a `test.describe` tagged
-  with its feature, e.g. `{ tag: '@job-search' }`. Each feature has its own
-  Playwright project (e.g. `job-search`) that runs only that tag.
+  with its feature, e.g. `{ tag: '@job-search' }`, so `--grep @job-search`
+  picks it out. All features run in the `functional-desktop` and
+  `functional-mobile` projects; pick one feature by its folder or tag.
 - **Known bugs are `test.fail`.** A case that checks a known bug is marked as
   expected to fail, with the bug in a comment, so the run stays green. Once the
   bug is fixed, the run reports "expected to fail, but passed".
 
-## Accessibility plan
-
-`accessibility-public.md` ↔ `tests/accessibility/`, run by the `accessibility`
-(desktop) and `accessibility-mobile` (phone) Playwright projects. It scans
-the public pages with axe-core against WCAG 2.2 AA. It is read-only and
-prod-safe like a smoke plan, but it isn't part of the smoke run:
-
-```bash
-npm run test:a11y      # desktop and phone
-npm run a11y:summary   # reports/a11y-<stamp>/summary.md from the last run
-```
-
 ## Plans
-
-- `accessibility-public.md` — Status: implemented.
-  Implemented test: `tests/accessibility/a11y.spec.ts`.
-  axe-core WCAG 2.2 AA scans of the public pages, desktop and phone, with
-  a summary report. Every violation fails its test (no allowlist).
 
 - `job-search.md` — Status: implemented.
   Implemented test: `tests/functional/job-search/search.spec.ts`.

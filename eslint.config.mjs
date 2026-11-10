@@ -8,6 +8,7 @@
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import playwright from 'eslint-plugin-playwright';
+import reactHooks from 'eslint-plugin-react-hooks';
 
 export default tseslint.config(
   eslint.configs.recommended,
@@ -23,8 +24,14 @@ export default tseslint.config(
       'playwright/no-skipped-test': 'warn',
     },
   },
+  // The dashboard's React app: the rules of hooks.
+  {
+    files: ['dashboard/src/**/*.{ts,tsx}'],
+    ...reactHooks.configs.flat['recommended-latest'],
+  },
   {
     ignores: [
+      'dashboard/dist/',
       'node_modules/',
       'test-results/',
       'playwright-report/',

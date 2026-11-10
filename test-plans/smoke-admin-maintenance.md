@@ -6,11 +6,25 @@ Pending cases: AM-1, AM-2 — generated but not yet verified against a live
 admin session (the saved admin session had expired). AM-3, AM-4, AM-5
 verified on QA, 2026-10-29.
 
+Devices: desktop only. Admin and editor screens are not tested on a phone (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`).
+
 Split out from [deed-smoke-test-plan.md](../docs/deed-smoke-test-plan.md)
 §3 (search-api maintenance) and §9 (permissions rebuild), Phase 2. These
 are the admin write actions that the
 [admin reports plan](smoke-admin-reports.md) deliberately leaves
 out because they change site state.
+
+## Login
+
+| | |
+|---|---|
+| **Site login** | Required. Every case (AM-1 to AM-5) runs as a logged-in admin, including the search checks that a visitor could also do. |
+| **Role** | `admin`: a PWW staff Google account that has admin rights on the environment being tested. It must be able to rebuild permissions (`/admin/reports/status/rebuild`) and manage Search API indexes (`/admin/config/search/search-api`). |
+| **How to log in** | By hand, once per environment: `npm run login:manual -- admin --env <qa\|stage>` (without `--env`, it uses the environment `BASE_URL` in `.env` points at). A Chromium window opens on the login page. Click "PWW Staff Log In" and finish the Google sign-in. The session is saved as soon as you're back on the site, then close the window. The tests can't log in themselves: Google blocks sign-in from a browser Playwright controls. |
+| **Saved session** | `playwright/.auth/<env>/admin.json`, one file per environment, shared with [smoke-admin-reports](smoke-admin-reports.md). A QA session doesn't work on Stage. |
+| **Site password gate** | QA and Stage also ask for the Basic Auth username and password. The tests and the login window both take it from `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` in `.env` ([one-time setup](README.md#one-time-setup)). |
+| **When it expires** | Run the login command again. The `stage` project has no session check before it starts, so an expired session shows up as every case failing on the login page; a missing file fails with a storage state / ENOENT error. Drupal can also end the session early, e.g. when the same account logs in somewhere else. AM-1 and AM-2 are still unverified because the session had expired. |
+| **Environments** | QA and Stage only. Never Production: AM-1 and AM-2 change site state. |
 
 ## Running it
 
@@ -42,7 +56,7 @@ Runs in the `stage` project (see
 
 ## Persona / fixtures
 
-- **Admin** — `playwright/.auth/admin.json`.
+- **Admin** — `playwright/.auth/<env>/admin.json`.
 - No test data created. AM-5 does **not** create appointments; it uses
   whatever slots QA already has (see "Appointments data" under Scope).
 

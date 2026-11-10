@@ -30,10 +30,13 @@ Read `test-plans/<plan>.md`. Note these parts:
   reported on, and list the plans that are `implemented`. Then stop.
 - The **test cases table**: ID, title, page, steps, and expected result.
   Also read the sub-tables that the cases point to.
-- **Running it**: the spec folder and the project (`tests/smoke/…` →
-  `smoke`, `tests/stage/…` → `stage`). Functional plans use the feature's
-  project, which runs only that feature's tag: `tests/functional/job-search/…`
-  → `job-search`.
+- **Running it**: the spec folder and the project. Projects are
+  `<suite>-<device>`: `tests/smoke/…` → `smoke-desktop` (and `smoke-mobile`
+  for a phone run), `tests/functional/…` → `functional-desktop` (and
+  `functional-mobile`), `tests/stage/…` → `stage`. Report on desktop
+  (`<suite>-desktop`) unless the user asks for the phone. Admin and editor
+  smoke areas are desktop only (`DESKTOP_ONLY_SMOKE_AREAS` in
+  `tests/helpers/devices.mts`).
 - The **persona**, and any Scope warnings.
 
 ## 2. Environment, safety, and login
@@ -50,8 +53,8 @@ the whole plan:
 
 - Never run a `stage` project against production.
 - Warn about long runtimes and side effects, and get confirmation first.
-- Make sure the `playwright/.auth/<role>.json` session exists for every role
-  that the plan's specs use.
+- Make sure the `playwright/.auth/<env>/<role>.json` session exists for every
+  role that the plan's specs pass to `useRole`.
 
 ## 3. Run the plan with tracing
 

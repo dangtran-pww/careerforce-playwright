@@ -1,4 +1,5 @@
 import { test, expect } from '../../helpers/fixtures';
+import { useRole } from '../../helpers/roles';
 import {
   AppointmentsSearchPage,
   type Format,
@@ -15,7 +16,7 @@ import { addDays, longDate, siteDate, weekday } from '../../helpers/dates';
 // at all". Assertions only relate filtered results to the same day's
 // unfiltered results, never fixed counts or location names.
 
-test.use({ storageState: 'playwright/.auth/admin.json' });
+useRole('admin');
 
 const TEN_MILES_KM = '16.09';
 const REMOTE: Format[] = ['online', 'phone'];

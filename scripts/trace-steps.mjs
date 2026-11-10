@@ -6,7 +6,7 @@
 //
 // Run the tests with tracing on and the JSON reporter, then this script:
 //   BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/anonymous \
-//     --project=smoke --trace on --output <out>/test-output --reporter=json > <out>/results.json
+//     --project=smoke-desktop --trace on --output <out>/test-output --reporter=json > <out>/results.json
 //   node scripts/trace-steps.mjs <out>/results.json <out>
 //
 // Writes <out>/steps.json (every test, its status, and its steps) and

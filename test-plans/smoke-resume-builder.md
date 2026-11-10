@@ -24,7 +24,7 @@ BASE_URL=https://qa.careerforce.link npx playwright test tests/stage/resume-buil
 
 ## Persona / fixtures
 
-- **Job seeker** — `playwright/.auth/jobseeker.json`, ideally a dedicated
+- **Job seeker** — `playwright/.auth/<env>/jobseeker.json`, ideally a dedicated
   account with no existing resumes (open question 1).
 - `tests/fixtures/sample-resume.docx` and `tests/fixtures/sample.pdf` —
   synthetic.

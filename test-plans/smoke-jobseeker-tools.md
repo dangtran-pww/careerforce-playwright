@@ -25,7 +25,7 @@ BASE_URL=https://qa.careerforce.link npx playwright test tests/stage/jobseeker-t
 
 ## Persona / fixtures
 
-- **Job seeker** — `playwright/.auth/jobseeker.json`.
+- **Job seeker** — `playwright/.auth/<env>/jobseeker.json`.
 
 ## Test cases
 

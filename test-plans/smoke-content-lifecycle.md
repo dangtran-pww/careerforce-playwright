@@ -3,6 +3,8 @@
 Status: ready to generate
 Implemented test: —
 
+Devices: desktop only. Admin and editor screens are not tested on a phone (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`).
+
 Split out from [deed-smoke-test-plan.md](../docs/deed-smoke-test-plan.md)
 §13 (publish/unpublish, revisioning) and §17 (translation), Phase 2.
 
@@ -22,7 +24,7 @@ BASE_URL=https://qa.careerforce.link npx playwright test tests/stage/content-lif
 
 ## Persona / fixtures
 
-- **Content manager** — `playwright/.auth/content-manager.json`.
+- **Content manager** — `playwright/.auth/<env>/content-manager.json`.
 - **Anonymous** — a second, logged-out context, for visibility checks.
 
 ## Test cases

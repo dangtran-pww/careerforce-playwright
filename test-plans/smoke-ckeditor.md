@@ -3,6 +3,8 @@
 Status: ready to generate
 Implemented test: —
 
+Devices: desktop only. Admin and editor screens are not tested on a phone (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`).
+
 Split out from [deed-smoke-test-plan.md](../docs/deed-smoke-test-plan.md)
 §15, Phase 2. The source checklist used
 `/testdiversity-manufacturing-initiative-dimi` on QA as its example page;
@@ -27,7 +29,7 @@ BASE_URL=https://qa.careerforce.link npx playwright test tests/stage/ckeditor
 
 ## Persona / fixtures
 
-- **Content manager** — `playwright/.auth/content-manager.json`.
+- **Content manager** — `playwright/.auth/<env>/content-manager.json`.
 - At least one image in the media library (for CK-5). If the library could
   be empty, upload `tests/fixtures/sample.jpg` first.
 - `tests/helpers/ckeditor-toolbars.ts` — the expected toolbar buttons per

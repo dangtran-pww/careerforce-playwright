@@ -25,8 +25,8 @@ BASE_URL=https://qa.careerforce.link npx playwright test tests/stage/profile
 
 ## Persona / fixtures
 
-- **Job seeker** — `playwright/.auth/jobseeker.json`.
-- **Admin** (stands in for customer support) — `playwright/.auth/admin.json`.
+- **Job seeker** — `playwright/.auth/<env>/jobseeker.json`.
+- **Admin** (stands in for customer support) — `playwright/.auth/<env>/admin.json`.
 - Admin cases need the job seeker account's user name or uid.
 
 ## Test cases

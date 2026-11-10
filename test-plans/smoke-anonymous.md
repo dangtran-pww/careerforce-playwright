@@ -47,6 +47,18 @@ public.
 The checks come from the DEED smoke-testing checklist
 ([deed-smoke-test-plan.md](../docs/deed-smoke-test-plan.md)).
 
+## Login
+
+| | |
+|---|---|
+| **Site login** | None. Every test runs as a visitor who isn't logged in. |
+| **Role** | Anonymous. No saved session is used, so there is nothing to run `npm run login:manual` for, and nothing that can expire. |
+| **Site password gate** | QA and Stage ask for a username and password (a browser "Sign in" pop-up) before showing any page. The tests answer it with `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` from your `.env` file ([one-time setup](README.md#one-time-setup)). Production has no gate. |
+| **Accounts touched** | None. HP-2 opens the login sections but never fills them in or submits. |
+
+If a run fails with 401 / "Unauthorized" on QA or Stage, the gate
+password in `.env` is out of date. Ask the team for the current values.
+
 ## Running it
 
 No login needed. First time? Do the [one-time setup](README.md#one-time-setup).
@@ -55,22 +67,22 @@ Run the command for the environment you want (about 1–2 minutes).
 QA:
 
 ```bash
-BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/anonymous --project=smoke
+BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/anonymous --project=smoke-desktop
 ```
 
 Stage:
 
 ```bash
-BASE_URL=https://stage.careerforce.link npx playwright test tests/smoke/anonymous --project=smoke
+BASE_URL=https://stage.careerforce.link npx playwright test tests/smoke/anonymous --project=smoke-desktop
 ```
 
 Production:
 
 ```bash
-BASE_URL=https://careerforce.mn.gov npx playwright test tests/smoke/anonymous --project=smoke
+BASE_URL=https://careerforce.mn.gov npx playwright test tests/smoke/anonymous --project=smoke-desktop
 ```
 
-Keep `--project=smoke` in the command. Without it, the same tests also run on
+Keep `--project=smoke-desktop` in the command. Without it, the same tests also run on
 the phone ([Mobile](#mobile)), 88 runs in all.
 
 Add `--ui` to [watch it run](README.md#watching-a-run). A successful run ends
@@ -80,7 +92,7 @@ To save a full-page screenshot of every test, even the ones that pass, put
 `SCREENSHOT=on` in front ([more on screenshots](README.md#screenshots-of-every-test)):
 
 ```bash
-SCREENSHOT=on BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/anonymous --project=smoke
+SCREENSHOT=on BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/anonymous --project=smoke-desktop
 ```
 
 The screenshots open with `npx playwright show-report`, under each test's

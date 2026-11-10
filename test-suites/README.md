@@ -1,0 +1,108 @@
+# Test suites
+
+A suite is one run made of several steps, started from the test dashboard
+(`npm run dashboard` → **Suites**). The steps run one after another on the
+environment picked in the dashboard's header:
+
+1. **Plans:** test plans from `test-plans/`, run with Playwright.
+2. **Prompts:** checks Claude does by looking at the site in a browser
+   (`claude -p` with the Playwright MCP). Each one ends with a verdict: pass,
+   fail or unsure, with a summary, findings and screenshots.
+
+`smoke.md` is the post-deploy smoke suite. `job-search.md` runs the Job
+Search functional plan on desktop and phone. `jobseeker-registration.md`,
+`resume-builder.md`, `events.md` and `appointments.md` are placeholders with
+no steps yet. Add a suite by adding a `.md`
+file here. Each prompt is its own file in `prompts/`, so several suites can
+share one. The dashboard reads both the next time the Suites page loads.
+
+## Format
+
+```md
+# [Suite] - Smoke
+
+One paragraph saying what the suite is for. The dashboard shows it.
+
+**Order:** 1
+
+## Plans
+
+| Plan | Projects |
+|---|---|
+| smoke-anonymous | smoke-desktop, smoke-mobile |
+| smoke-admin-reports | (default) |
+
+## Prompts
+
+| ID | Prompt |
+|---|---|
+| PR-1 | [homepage-layout](prompts/homepage-layout.md) |
+| PR-2 | [admin-content-list](prompts/admin-content-list.md) |
+```
+
+Any section can be left out. Text between a heading and its table is for
+people and is ignored.
+
+- **Order:** where the suite sits on the Suites page, lowest first. Suites
+  without it come last, by name. Today: Smoke 1, Job Search 2, Job Seeker
+  Registration 3, Events 4, Appointments 5, Resume Builder 6.
+
+### Plans
+
+`Plan` is the plan's file name in `test-plans/` without `.md`. `Projects` is
+a comma-separated list of Playwright projects, or `(default)` for the ones
+the plan page ticks by default. A plan with no tests yet is listed as "No
+tests yet" and skipped.
+
+A suite that targets Production must stay read-only. A suite that has a Stage
+plan (one that changes data, even before its tests exist) never runs on
+Production. Keep Stage plans in a suite of their own.
+
+### Prompts
+
+`ID` is the check's ID in this suite. `Prompt` is the prompt file in
+`prompts/`: a link to it as above, or just its name (`homepage-layout`). A
+missing file, or one without a `## Prompt` section, is listed as a problem
+and the check is left out.
+
+A prompt file looks like this:
+
+```md
+# Admin content list
+
+**Role:** admin
+
+Notes for people (why the check exists, what it covers). Ignored.
+
+## Prompt
+
+Open /admin/content. Check the content list loads with its filters and at
+least one row, and that the admin toolbar shows. Do not edit, save or delete
+anything.
+```
+
+- The `#` heading is the check's name on the dashboard.
+- `Role` is `anonymous` or a role with a saved login (`admin`, `jobseeker`,
+  ...).
+- Everything under `## Prompt` (up to the next `##` heading) is sent to
+  Claude as written, so it can run over several lines and use lists. Write
+  it as one check with a clear pass/fail, the way you'd ask a tester: what
+  to open, what must be there, and what must not happen.
+
+How a prompt runs (`dashboard/server/suite-runs.mjs`):
+
+- Claude Code runs headless with only the Playwright MCP's browser tools. It
+  can't run commands or edit files. It is told to stay read-only (no forms
+  that change data, no logout), but a browser that can click can submit a
+  form, so word admin prompts carefully.
+- The browser blocks tracking like the tests do, gets past the Basic Auth
+  gate, and is logged in as the role (`SEED_STORAGE_STATE`, the `seed`
+  project in `playwright.config.ts`).
+- Screenshots go to the step's `screenshots/` folder and show on the run
+  page.
+- Each prompt costs Claude usage, shown on the run page. Set
+  `PROMPT_MODEL=sonnet` (or `haiku`) in `.env` for a cheaper model. A prompt
+  that runs longer than 6 minutes is stopped (`PROMPT_TIMEOUT_MS`), as is one
+  that goes past 40 turns (`PROMPT_MAX_TURNS`).
+- `claude` must be installed and logged in on the machine running the
+  dashboard.

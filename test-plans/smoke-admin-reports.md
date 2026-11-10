@@ -8,26 +8,28 @@ AR-1 currently fails on QA (a real, unallowlisted status-report error) — see
 bug in the test.
 Implemented test: `tests/smoke/admin-reports/admin-reports.spec.ts`
 
+**Devices: desktop only.** Admin and editor screens are not tested on a phone (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`).
+
 Split out from [deed-smoke-test-plan.md](../docs/deed-smoke-test-plan.md) /
 [smoke-anonymous.md](smoke-anonymous.md).
 Covers read-only admin report checks that need a logged-in admin session, as
 opposed to the anonymous plan's fully-anonymous suite.
 
+## Login
+
+| | |
+|---|---|
+| **Site login** | Required. Every case runs as a logged-in admin. |
+| **Role** | `admin`: a PWW staff Google account that has admin rights on the environment being tested (it must be able to open `/admin/reports/status`). |
+| **How to log in** | By hand, once per environment: `npm run login:manual -- admin --env <qa\|stage\|prod>` (without `--env`, it uses the environment `BASE_URL` in `.env` points at). A Chromium window opens on the login page. On QA and Stage, click "PWW Staff Log In" and finish the Google sign-in. On Production, which has no "PWW Staff Log In" button, open "DEED Staff Member", click its "Log In" button and finish the sign-in. The session is saved as soon as you're back on the site, then close the window. The tests can't log in themselves: the sign-in is single sign-on, which blocks a browser Playwright controls. |
+| **Saved session** | `playwright/.auth/<env>/admin.json`, one file per environment. A QA session doesn't work on Stage. |
+| **Site password gate** | QA and Stage also ask for the Basic Auth username and password. The tests and the login window both take it from `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` in `.env` ([one-time setup](README.md#one-time-setup)). Production has no gate. |
+| **When it expires** | Run the login command again. With `--project=smoke-admin-reports`, a check runs first (`tests/setup/admin-session.setup.ts`) and stops with "The saved admin session has expired…" plus the command to run. Run as part of `--project=smoke`, there is no check first, so each case fails on the login page instead. A missing file fails with a storage state / ENOENT error. |
+| **Write access** | The admin account can change the site, but every case here is read-only. Keep it that way (see open question 3). |
+
 ## Running it
 
-One-time setup — generate the admin session (SSO login, by hand):
-
-```bash
-npm run login:manual -- admin
-```
-
-A plain Chrome window opens to the login page. Click "PWW Staff Log In",
-complete the Google sign-in, and once you're back on the site logged in,
-return to the terminal and press Enter. This saves
-`playwright/.auth/admin.json` (see `scripts/login-manual.mjs`); re-run it
-whenever that session expires.
-
-Then run the cases:
+Log in first ([Login](#login)), then run the cases:
 
 ```bash
 npx playwright test tests/smoke/admin-reports
@@ -51,7 +53,7 @@ To run a single case, add `-g`, e.g. `-g "AR-1"`.
 ## Persona / fixtures
 
 - **Admin** — reuse the existing `admin` storageState
-  (`playwright/.auth/admin.json`), generated via `npm run login:manual -- admin`
+  (`playwright/.auth/<env>/admin.json`), generated via `npm run login:manual -- admin`
   (see `scripts/login-manual.mjs`). No dedicated least-privilege "reports-viewer" role for v1 —
   see open question 3 below on the implications of that choice.
 
@@ -65,7 +67,7 @@ To run a single case, add `-g`, e.g. `-g "AR-1"`.
 
 ## Implementation notes
 
-Written against a real admin session (`playwright/.auth/admin.json`) on
+Written against a real admin session (`playwright/.auth/<env>/admin.json`) on
 qa.careerforce.link, Drupal 11.4 / Claro theme:
 
 - **AR-1 selectors corrected.** The real status-report row is
@@ -135,7 +137,7 @@ qa.careerforce.link, Drupal 11.4 / Claro theme:
 ```
 tests/
   smoke/admin-reports/
-    admin-reports.spec.ts # AR-1..AR-3, storageState: playwright/.auth/admin.json
+    admin-reports.spec.ts # AR-1..AR-3, storageState: playwright/.auth/<env>/admin.json
                           # (generate via `npm run login:manual -- admin`)
   helpers/
     known-issues.ts       # allowlist of accepted status-report errors/warnings, keyed by env

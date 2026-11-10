@@ -49,11 +49,13 @@ Specs title their tests with the case ID first, for example
 
 ## 3. Safety check before running
 
-- The **project** is the folder under `tests/`: `tests/smoke/…` → `smoke`,
-  `tests/stage/…` → `stage`. Functional tests are the exception: there is
-  no `functional` project. Use the feature's project, which runs only the tag
-  on the spec's `test.describe`: `tests/functional/job-search/…` (tag
-  `@job-search`) → `job-search`.
+- The **project** is `<suite>-<device>`, from the folder under `tests/`:
+  `tests/smoke/…` → `smoke-desktop`, `tests/functional/…` →
+  `functional-desktop`, `tests/stage/…` → `stage` (desktop only). Run on
+  desktop unless the user asks for the phone, then use `smoke-mobile` /
+  `functional-mobile`. Admin and editor smoke areas
+  (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`) and tests
+  tagged `@desktop-only` have no phone run.
 - `stage` tests change site state, for example a reindex or a permissions
   rebuild. Never run them against production. If the target URL looks like
   production (not `qa.` or `stage.`), refuse and explain why.
@@ -64,25 +66,25 @@ Specs title their tests with the case ID first, for example
 
 ## 4. Make sure the user is logged in, if the case needs it
 
-Skip this step for anonymous cases, meaning the spec has no `storageState`.
+Skip this step for anonymous cases, meaning the spec doesn't call `useRole`.
 
-1. Find the role from the spec's
-   `test.use({ storageState: 'playwright/.auth/<role>.json' })`.
+1. Find the role from the spec's `useRole('<role>')`. Its session is
+   `playwright/.auth/<env>/<role>.json` (e.g. `playwright/.auth/qa/admin.json`).
 2. Check whether that file exists.
 3. If it is missing, or a later run fails in a way that suggests the session
    has expired (see step 6), stop and guide the user:
 
    > This case runs as **<role>**. Please run this in your own terminal (it
-   > opens a real Chrome window and waits for you to press Enter, so it
+   > opens a browser window and keeps running until you close it, so it
    > can't run inside this session):
    >
    > ```bash
    > BASE_URL=<target> npm run login:manual -- <role>
    > ```
    >
-   > In the Chrome window, click **"PWW Staff Log In"** and complete the
-   > Google sign-in. Once you are back on the site and logged in, return to
-   > the terminal and press Enter. That saves `playwright/.auth/<role>.json`.
+   > In the browser window, click **"PWW Staff Log In"** and complete the
+   > Google sign-in. As soon as you are back on the site and logged in, the
+   > script saves `playwright/.auth/<role>.json`; then close the window.
    > Tell me when it's done.
 
    Use the same `BASE_URL` for the login as for the test run, because

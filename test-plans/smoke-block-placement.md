@@ -3,6 +3,8 @@
 Status: ready to generate
 Implemented test: —
 
+Devices: desktop only. Admin and editor screens are not tested on a phone (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`).
+
 Split out from [deed-smoke-test-plan.md](../docs/deed-smoke-test-plan.md)
 §13 (block placement), Phase 2.
 
@@ -22,7 +24,7 @@ BASE_URL=https://qa.careerforce.link npx playwright test tests/stage/block-place
 
 ## Persona / fixtures
 
-- **Admin** — `playwright/.auth/admin.json`.
+- **Admin** — `playwright/.auth/<env>/admin.json`.
 - **Anonymous** — a logged-out context, for visibility checks.
 - Block description and body text: `Playwright test <timestamp>`.
 
