@@ -1,4 +1,4 @@
-import { type Locator, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 export class HomePage {
   readonly page: Page;
@@ -85,14 +85,6 @@ export class HomePage {
     return this.page.locator('summary.decision-tree-question-toggle').first();
   }
 
-  // The options themselves are plain links to
-  // /homepage?decision-tree-id=...&decision-tree-to=N; Drupal renders the
-  // next step server-side from that query string alone, so following one is
-  // just navigation — nothing is written.
-  firstDecisionTreeOption(): Locator {
-    return this.page.locator('a[href*="decision-tree-to="]').first();
-  }
-
   // Each card is an image plus an <h3> title, both inside one link. The
   // images are role="presentation", so they aren't reachable by role.
   decisionTreeCards(): Locator {
@@ -115,6 +107,48 @@ export class HomePage {
     return (await this.decisionTreeCards().getByRole('heading', { level: 3 }).allTextContents()).map(
       (t) => t.trim(),
     );
+  }
+
+  // The Decision Tree's questions, in order: 0 is "What brings you here
+  // today?" ("Choose a path"), 1 is the follow-up "Tell us more." ("Make a
+  // selection"), which only exists once a path is picked.
+  decisionTreeQuestion(level: number): Locator {
+    return this.page.locator('.decision-tree .decision-tree-question').nth(level);
+  }
+
+  decisionTreeQuestionToggle(level: number): Locator {
+    return this.decisionTreeQuestion(level).locator('summary.decision-tree-question-toggle');
+  }
+
+  // The <details> around a question's options. The two questions share
+  // name="decision-tree", so opening one closes the other.
+  decisionTreeQuestionDropdown(level: number): Locator {
+    return this.decisionTreeQuestion(level).locator('details');
+  }
+
+  // The options are plain links to
+  // /homepage?decision-tree-id=...&decision-tree-to=N. With JavaScript the
+  // block fetches that step over AJAX (a GET) instead; either way nothing is
+  // written.
+  decisionTreeOptions(level: number): Locator {
+    return this.decisionTreeQuestion(level).locator('a[href*="decision-tree-to="]');
+  }
+
+  // The option labels of a question, read from the DOM, so they don't need
+  // the dropdown open.
+  async decisionTreeOptionTexts(level: number): Promise<string[]> {
+    return (await this.decisionTreeOptions(level).allTextContents()).map((t) => t.trim());
+  }
+
+  // Opens the question's dropdown (if closed) and clicks the option. The
+  // block reloads over AJAX; wait for the toggle to show the choice.
+  async pickDecisionTreeOption(level: number, text: string) {
+    const toggle = this.decisionTreeQuestionToggle(level);
+    if (!(await this.decisionTreeQuestionDropdown(level).evaluate((d: HTMLDetailsElement) => d.open))) {
+      await toggle.click();
+    }
+    await this.decisionTreeOptions(level).getByText(text, { exact: true }).click();
+    await expect(toggle).toHaveText(text);
   }
 
   // Picking a path updates the widget in place (the URL doesn't change) and

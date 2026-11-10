@@ -103,31 +103,98 @@ for (const { name, path } of GTM_PAGES) {
   );
 }
 
-// Picking a path changes the widget in place: the toggle shows the chosen
-// path, a "Tell us more." question appears, and the 3 cards change. Reset
-// puts everything back. Nothing is saved; it's all in the page.
-test('HP-4: homepage Decision Tree widget advances to a second step', async ({
-  page,
-}) => {
+// The Decision Tree has 2 levels: a path under "Choose a path", then an
+// answer under "Tell us more.". Each pick reloads only the block and changes
+// the cards. Only the structure is checked, not the wording: editors change it, and Production may differ from QA. Nothing is
+// saved; following an option is just a GET.
+test('HP-4: homepage Decision Tree walks every path', async ({ page }) => {
   const home = new HomePage(page);
-  await home.goto();
-  const firstStepCards = await home.decisionTreeCardTitles();
-  expect(firstStepCards).toHaveLength(3);
 
-  await home.decisionTreeToggle().click();
-  const option = home.firstDecisionTreeOption();
-  const optionText = ((await option.textContent()) ?? '').trim();
-  await option.click();
+  // Checked after every step: every card has a title, a loaded image and a
+  // link. Returns the card titles.
+  const checkStep = async (): Promise<string[]> => {
+    await expect(home.decisionTreeCards().first()).toBeVisible();
+    for (const card of await home.decisionTreeCards().all()) {
+      await expect(card.getByRole('heading', { level: 3 })).not.toBeEmpty();
+      await expect(card.getByRole('link')).toHaveAttribute('href', /\S/);
+      const image = card.locator('img');
+      await image.scrollIntoViewIfNeeded();
+      await expect.poll(() => home.imageNaturalWidth(image)).toBeGreaterThan(0);
+    }
+    return home.decisionTreeCardTitles();
+  };
 
-  await test.step('second step', async () => {
-    await expect(home.resetDecisionTreeButton()).toBeVisible();
-    await expect(home.decisionTreeToggle()).toHaveText(optionText);
+  // Picks a path and checks the step after it. Returns that step's cards.
+  const pickPath = async (path: string, previousCards: string[]) => {
+    await home.pickDecisionTreeOption(0, path);
+    await expect(home.decisionTreeQuestionDropdown(0)).toHaveJSProperty('open', false);
     await expect(home.decisionTreeFollowUp()).toBeVisible();
+    await expect(home.decisionTreeQuestionToggle(1)).toHaveText('Make a selection');
+    expect((await home.decisionTreeOptionTexts(1)).length).toBeGreaterThanOrEqual(2);
+    await expect(home.resetDecisionTreeButton()).toBeVisible();
     await expect
-      .poll(() => home.decisionTreeCardTitles(), {
-        message: 'the cards should change after picking a path',
-      })
-      .not.toEqual(firstStepCards);
+      .poll(() => home.decisionTreeCardTitles(), { message: `cards change after "${path}"` })
+      .not.toEqual(previousCards);
+    return checkStep();
+  };
+
+  // Picks an answer and checks its cards differ from the path's.
+  const pickAnswer = async (answer: string, pathCards: string[]) => {
+    await home.pickDecisionTreeOption(1, answer);
+    await expect(home.decisionTreeQuestionDropdown(1)).toHaveJSProperty('open', false);
+    await expect
+      .poll(() => home.decisionTreeCardTitles(), { message: `cards change after "${answer}"` })
+      .not.toEqual(pathCards);
+    return checkStep();
+  };
+
+  await home.goto();
+  let startCards: string[] = [];
+  let paths: string[] = [];
+
+  await test.step('Start', async () => {
+    await expect(home.decisionTreeToggle()).toHaveText('Choose a path');
+    paths = await home.decisionTreeOptionTexts(0);
+    expect(paths.length).toBeGreaterThanOrEqual(2);
+    await expect(home.decisionTreeCards()).toHaveCount(3);
+    startCards = await checkStep();
+    await expect(home.decisionTreeFollowUp()).toBeHidden();
+    await expect(home.resetDecisionTreeButton()).toBeHidden();
+  });
+
+  // Each path with its first answer. Picking the next path straight after
+  // also checks that changing the path resets "Tell us more.".
+  let previousCards = startCards;
+  const answersByPath = new Map<string, string[]>();
+  for (const path of paths) {
+    await test.step(`Path "${path}" and its first answer`, async () => {
+      const pathCards = await pickPath(path, previousCards);
+      const answers = await home.decisionTreeOptionTexts(1);
+      answersByPath.set(path, answers);
+      previousCards = await pickAnswer(answers[0], pathCards);
+    });
+  }
+
+  await test.step(`Every answer of "${paths[0]}"`, async () => {
+    const pathCards = await pickPath(paths[0], previousCards);
+    const seen: string[][] = [];
+    for (const answer of await home.decisionTreeOptionTexts(1)) {
+      const cards = await pickAnswer(answer, pathCards);
+      expect(seen, `"${answer}" shows its own cards`).not.toContainEqual(cards);
+      seen.push(cards);
+    }
+  });
+
+  // An answer of the first path is chosen at this point.
+  await test.step('Changing the path resets "Tell us more."', async () => {
+    const before = await home.decisionTreeCardTitles();
+    await home.pickDecisionTreeOption(0, paths[1]);
+    await expect(home.decisionTreeQuestionToggle(1)).toHaveText('Make a selection');
+    await expect
+      .poll(() => home.decisionTreeOptionTexts(1))
+      .toEqual(answersByPath.get(paths[1]));
+    await expect.poll(() => home.decisionTreeCardTitles()).not.toEqual(before);
+    await checkStep();
   });
 
   await test.step('Reset selections', async () => {
@@ -135,6 +202,19 @@ test('HP-4: homepage Decision Tree widget advances to a second step', async ({
     await expect(home.decisionTreeToggle()).toHaveText('Choose a path');
     await expect(home.decisionTreeFollowUp()).toBeHidden();
     await expect(home.resetDecisionTreeButton()).toBeHidden();
-    await expect.poll(() => home.decisionTreeCardTitles()).toEqual(firstStepCards);
+    await expect.poll(() => home.decisionTreeCardTitles()).toEqual(startCards);
+    await checkStep();
+  });
+
+  await test.step('A card opens its page', async () => {
+    await pickPath(paths[0], startCards);
+    // Job Search is covered by the JS cases, so open a card that links elsewhere.
+    const card = home.decisionTreeCards().locator('a:not([href^="/job-search"])').first();
+    const href = (await card.getAttribute('href'))!;
+    await card.click();
+    await expect(page).toHaveURL(new RegExp(`${href.replace(/[.?*+^$()|[\]\\]/g, '\\$&')}$`));
+    const title = page.getByRole('heading', { level: 1 }).first();
+    await expect(title).toBeVisible();
+    await expect(title).not.toHaveText(/Page Not Found|Forbidden|Error/i);
   });
 });
