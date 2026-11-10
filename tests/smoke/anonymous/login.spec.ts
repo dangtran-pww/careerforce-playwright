@@ -1,5 +1,6 @@
 import { test, expect } from '../../helpers/fixtures';
 import { LoginPage } from '../../pages/login.page';
+import { isProd } from '../../helpers/environment';
 
 // [Smoke] - Anonymous - Test Plan, HP-2.
 // See test-plans/smoke-anonymous.md.
@@ -9,11 +10,13 @@ import { LoginPage } from '../../pages/login.page';
 // Then: they see the three ways to log in:
 //       - Job Seekers: the "Log In or Register with LoginMN" hand-off button
 //       - Partners: an email/password form, behind a closed accordion
-//       - DEED staff: a "Log In" button, behind a second closed accordion
+//       - DEED staff: a "Log In" button, behind a second closed accordion,
+//         plus a "PWW Staff Log In" button on QA and Stage (not on Production)
 // The accordions are only opened, never submitted: nothing is logged in.
 
 test('HP-2: login page offers Job Seeker, partner, and DEED staff login', async ({
   page,
+  baseURL,
 }) => {
   const login = new LoginPage(page);
   await login.goto();
@@ -23,6 +26,7 @@ test('HP-2: login page offers Job Seeker, partner, and DEED staff login', async 
     expect(await login.jobSeekerBenefits.count()).toBeGreaterThan(0);
     await expect(login.loginMNButton).toBeVisible();
     await expect(login.dataPrivacyNotice).toBeVisible();
+    await expect(login.dataPrivacyLink).toBeVisible();
     await expect(login.dataPrivacyLink).toHaveAttribute(
       'href',
       'https://mn.gov/deed/about/what-guides-us/data-practices/',
@@ -38,8 +42,10 @@ test('HP-2: login page offers Job Seeker, partner, and DEED staff login', async 
     await expect(login.partnerLoginHeading).toBeVisible();
     await expect(login.partnerEmailInput).toBeVisible();
     await expect(login.partnerPasswordInput).toBeVisible();
+    await expect(login.partnerForgotPasswordLink).toBeVisible();
     await expect(login.partnerForgotPasswordLink).toHaveAttribute('href', '/user/password');
     await expect(login.partnerSubmitButton).toBeVisible();
+    await expect(login.partnerRequestAccountLink).toBeVisible();
     await expect(login.partnerRequestAccountLink).toHaveAttribute(
       'href',
       '/user/register-partner',
@@ -51,5 +57,10 @@ test('HP-2: login page offers Job Seeker, partner, and DEED staff login', async 
     await expect(login.staffLoginButton).toBeHidden();
     await login.staffToggle.click();
     await expect(login.staffLoginButton).toBeVisible();
+    if (isProd(baseURL!)) {
+      await expect(login.pwwStaffLoginButton).toHaveCount(0);
+    } else {
+      await expect(login.pwwStaffLoginButton).toBeVisible();
+    }
   });
 });

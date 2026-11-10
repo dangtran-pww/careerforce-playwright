@@ -17,6 +17,9 @@
 //                              for the last run on that environment)
 //   GET  /api/plans/:slug      one plan, its cases, projects and recent runs
 //   POST /api/plans/:slug/run  run it: { env, projects?, cases?, headed? }
+//   POST /api/plans/:slug/ui   open it in Playwright UI mode, an interactive
+//                              window: { env, projects?, cases? }. Not a run;
+//                              opening another closes the one before
 //   GET  /api/plans/:slug/cases/:id/explanation
 //                              the saved plain-words explanation of that
 //                              case's test code ({ explanation: null } if none)
@@ -88,6 +91,7 @@ import { latestReview, reviewCase } from './review.mjs';
 import { loadPlan, loadPlans } from './plans.mjs';
 import { loadSuite, loadSuites } from './suites.mjs';
 import { startSuiteRun } from './suite-runs.mjs';
+import { closeUiMode, openUiMode } from './ui-mode.mjs';
 import {
   RunError,
   activeRunId,
@@ -412,6 +416,26 @@ async function api(req, res, pathname, searchParams) {
   }
 
   if (
+    (m = pathname.match(/^\/api\/plans\/([\w-]+)\/ui$/)) &&
+    req.method === 'POST'
+  ) {
+    const plan = await loadPlan(m[1]);
+    if (!plan) return sendJson(res, 404, { error: 'No such plan.' });
+    const body = await readJsonBody(req);
+    return sendJson(
+      res,
+      200,
+      await openUiMode(plan, {
+        env: envParam(body.env),
+        projects: Array.isArray(body.projects)
+          ? body.projects.map(String)
+          : undefined,
+        cases: Array.isArray(body.cases) ? body.cases.map(String) : [],
+      }),
+    );
+  }
+
+  if (
     (m = pathname.match(
       /^\/api\/plans\/([\w-]+)\/cases\/([A-Z][A-Z0-9]*-\d+)\/explanation$/,
     ))
@@ -620,9 +644,10 @@ async function openWindow(url) {
   await page.goto(url);
 }
 
-// A test run started from the dashboard ends with it.
+// A test run, or a UI mode window, started from the dashboard ends with it.
 function shutdown() {
   stopActiveRun();
+  closeUiMode();
   server.close();
   process.exit(0);
 }

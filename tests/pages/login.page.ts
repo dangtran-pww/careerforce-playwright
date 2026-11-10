@@ -8,7 +8,7 @@ import { type Locator, type Page } from '@playwright/test';
 //   on load, holding Drupal's own email/password form (with a reCAPTCHA).
 // - DEED Staff Member: a second closed <details>, with a staff SSO "Log In"
 //   button. QA and stage also add a "PWW Staff Log In" button there;
-//   production doesn't, so the smoke test doesn't rely on it.
+//   production doesn't.
 // The page has several "Log In" texts (header, partner form heading, staff
 // button), so each section's controls are scoped to that section's root.
 export class LoginPage {
@@ -30,6 +30,7 @@ export class LoginPage {
   readonly staffSection: Locator;
   readonly staffToggle: Locator;
   readonly staffLoginButton: Locator;
+  readonly pwwStaffLoginButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -74,6 +75,9 @@ export class LoginPage {
     this.staffLoginButton = this.staffSection.getByRole('button', {
       name: 'Log In',
       exact: true,
+    });
+    this.pwwStaffLoginButton = this.staffSection.getByRole('button', {
+      name: 'PWW Staff Log In',
     });
   }
 

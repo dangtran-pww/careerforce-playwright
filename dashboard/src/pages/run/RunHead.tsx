@@ -9,6 +9,7 @@ import { Facts } from '../../components/Facts';
 import { RerunButton } from '../../components/RerunButton';
 import { TitleRow } from '../../components/PageTitle';
 import { TimeAgo } from '../../components/TimeAgo';
+import { UiModeButton } from '../../components/UiModeButton';
 import { useEnv } from '../../hooks/useEnv';
 import { duration } from '../../lib/format';
 import { runDuration, runOwnerPath, whatRan } from '../../lib/runs';
@@ -81,6 +82,16 @@ export function RunHead({ run }: { run: Run }) {
               ? `Run ${run.cases.join(', ')} again`
               : 'Run again'}
           </RerunButton>
+        )}
+        {!running && !isSuite && (
+          <UiModeButton
+            planSlug={run.plan}
+            body={{ projects: run.projects, cases: run.cases }}
+          >
+            {run.cases.length
+              ? `Open ${run.cases.join(', ')} in UI mode`
+              : 'Open in UI mode'}
+          </UiModeButton>
         )}
         {!running && run.stats && !isSuite && (
           <a

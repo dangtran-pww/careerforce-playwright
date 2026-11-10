@@ -15,6 +15,7 @@ import { FailureExplain } from './FailureExplain';
 import { RerunButton } from './RerunButton';
 import { Table, VisuallyHidden } from './Table';
 import { Tags } from './Tags';
+import { UiModeButton } from './UiModeButton';
 
 const ORDER = { unexpected: 0, flaky: 1, expected: 2, skipped: 3 };
 
@@ -158,7 +159,8 @@ export function TestResults({
   );
 }
 
-// Runs the test's case again, on the test's project only.
+// Runs the test's case again, on the test's project only, or opens it in
+// Playwright UI mode to run it interactively.
 function RerunCase({
   plan,
   test,
@@ -178,6 +180,13 @@ function RerunCase({
       >
         Run {caseId} ({test.project}) again
       </RerunButton>
+      <UiModeButton
+        planSlug={plan}
+        className="ghost small"
+        body={{ cases: [caseId], projects: [test.project] }}
+      >
+        Open {caseId} in UI mode
+      </UiModeButton>
     </div>
   );
 }
