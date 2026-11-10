@@ -202,6 +202,12 @@ export const shownCommand = (env, args) =>
 
 // ---- plan runs -------------------------------------------------------------
 
+/** Whether `project` has a test for any of the `cases` (ids). */
+const runsAnyCase = (plan, project, cases) =>
+  plan.cases.some(
+    (c) => cases.includes(c.id) && c.projects?.some((p) => p.name === project),
+  );
+
 /** Playwright arguments that run a plan's chosen projects and cases. */
 export function planArgs(plan, { projects, cases = [], headed = false } = {}) {
   const known = new Set(plan.projects.map((p) => p.name));
@@ -217,12 +223,23 @@ export function planArgs(plan, { projects, cases = [], headed = false } = {}) {
   const chosenCases = cases.filter((c) => caseIds.has(c));
   if (cases.length && !chosenCases.length)
     throw new RunError(400, 'None of those cases are in this plan.');
+  // With cases picked, only the projects that run at least one of them: a
+  // @desktop-only case such as HP-3 has no tests in smoke-mobile, and
+  // Playwright fails a project/grep pair that matches nothing.
+  const projectsForCases = chosenCases.length
+    ? chosen.filter((p) => runsAnyCase(plan, p, chosenCases))
+    : chosen;
+  if (!projectsForCases.length)
+    throw new RunError(
+      400,
+      `${chosenCases.join(', ')} ${chosenCases.length > 1 ? "don't" : "doesn't"} run in ${chosen.join(' or ')}.`,
+    );
   return {
-    projects: chosen,
+    projects: projectsForCases,
     cases: chosenCases,
     args: [
       ...plan.runPaths,
-      ...chosen.flatMap((p) => ['--project', p]),
+      ...projectsForCases.flatMap((p) => ['--project', p]),
       ...(chosenCases.length ? ['-g', caseGrep(chosenCases)] : []),
       ...(headed ? ['--headed'] : []),
     ],

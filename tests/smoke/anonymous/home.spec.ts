@@ -1,6 +1,7 @@
 import { test, expect } from '../../helpers/fixtures';
 import { HomePage } from '../../pages/home.page';
 import { expectedGtmId } from '../../helpers/environment';
+import { gtmContainerIds } from '../../helpers/gtm';
 
 // [Smoke] - Anonymous - Test Plan, HP-1/HP-3/HP-4.
 // See test-plans/smoke-anonymous.md.
@@ -77,17 +78,30 @@ test('HP-1: homepage loads for an anonymous visitor', async ({ page }) => {
   }
 });
 
+// The pages HP-3 checks for the GTM container: the homepage plus 2 pages
+// built differently (the Job Search app and the login form).
+const GTM_PAGES = [
+  { name: 'homepage', path: '/' },
+  { name: 'Job Search', path: '/job-search' },
+  { name: 'login page', path: '/user/login' },
+];
+
 // The GTM ID is in the HTML whatever the device, so mobile skips this.
-test(
-  'HP-3: homepage loads the GTM container expected for this environment',
-  { tag: '@desktop-only' },
-  async ({ page, baseURL }) => {
-    const home = new HomePage(page);
-    await home.goto();
-    const gtmId = await home.gtmContainerId();
-    expect(gtmId).toBe(expectedGtmId(baseURL!));
-  },
-);
+for (const { name, path } of GTM_PAGES) {
+  test(
+    `HP-3: ${name} loads the GTM container expected for this environment`,
+    { tag: '@desktop-only' },
+    async ({ page, baseURL }) => {
+      const response = await page.goto(path);
+      // Drupal's 404 and error pages include GTM too, so check the page
+      // itself loaded before trusting the ID.
+      expect(response?.status(), `HTTP status of ${path}`).toBe(200);
+      expect(await gtmContainerIds(page), `GTM containers on ${path}`).toEqual([
+        expectedGtmId(baseURL!),
+      ]);
+    },
+  );
+}
 
 // Picking a path changes the widget in place: the toggle shows the chosen
 // path, a "Tell us more." question appears, and the 3 cards change. Reset

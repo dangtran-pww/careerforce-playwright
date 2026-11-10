@@ -22,6 +22,23 @@ export const runBody = (choice: PlanChoice, cases = [...choice.cases]) => ({
   headed: choice.headed,
 });
 
+// The chosen projects that run at least one of the chosen cases (all of the
+// chosen projects when no case is picked). A @desktop-only case such as HP-3
+// has no tests in smoke-mobile, and Playwright fails a project/grep pair
+// that matches nothing. Mirrors planArgs in dashboard/server/runs.mjs.
+export function projectsForCases(plan: Plan, choice: PlanChoice): string[] {
+  const projects = [...choice.projects];
+  if (!choice.cases.size) return projects;
+  const forCases = projects.filter((name) =>
+    plan.cases.some(
+      (c) => choice.cases.has(c.id) && c.projects.some((p) => p.name === name),
+    ),
+  );
+  // None left: keep the choice, so the command still shows what was picked
+  // (the server refuses that run and says why).
+  return forCases.length ? forCases : projects;
+}
+
 // The Playwright command for this choice, to copy and run by hand.
 export function planCommand(plan: Plan, choice: PlanChoice, env: Env): string {
   const cases = [...choice.cases];
@@ -29,7 +46,7 @@ export function planCommand(plan: Plan, choice: PlanChoice, env: Env): string {
     `BASE_URL=${env.baseURL}`,
     'npx playwright test',
     ...plan.runPaths,
-    ...[...choice.projects].map((p) => `--project ${p}`),
+    ...projectsForCases(plan, choice).map((p) => `--project ${p}`),
     cases.length ? `-g '\\b(?:${cases.join('|')})(?!\\d)'` : null,
     choice.headed ? '--headed' : null,
   ]

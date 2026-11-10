@@ -75,14 +75,6 @@ export class HomePage {
     await this.page.goto('/');
   }
 
-  // The GTM module here self-hosts gtm.js rather than loading it from
-  // googletagmanager.com, so reading the container ID out of the rendered
-  // HTML is more reliable than watching for a specific network request.
-  async gtmContainerId(): Promise<string | undefined> {
-    const html = await this.page.content();
-    return html.match(/GTM-[A-Z0-9]+/)?.[0];
-  }
-
   // The Decision Tree's options sit inside a native <details>/<summary>
   // disclosure ("Choose a path") that starts collapsed below ~900px tall
   // viewports — the options are in the DOM but not actually visible until

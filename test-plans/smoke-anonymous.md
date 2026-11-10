@@ -83,10 +83,10 @@ BASE_URL=https://careerforce.mn.gov npx playwright test tests/smoke/anonymous --
 ```
 
 Keep `--project=smoke-desktop` in the command. Without it, the same tests also run on
-the phone ([Mobile](#mobile)), 88 runs in all.
+the phone ([Mobile](#mobile)), 90 runs in all.
 
 Add `--ui` to [watch it run](README.md#watching-a-run). A successful run ends
-with `48 passed` ([Expected result](#expected-result)).
+with `50 passed` ([Expected result](#expected-result)).
 
 To save a full-page screenshot of every test, even the ones that pass, put
 `SCREENSHOT=on` in front ([more on screenshots](README.md#screenshots-of-every-test)):
@@ -138,7 +138,7 @@ after the site name, for example `/programs-services` means
 |---|---|---|---|---|
 | HP-1 | Homepage loads | `/` | Open the homepage. | The main content shows. All 8 sections show their headings: "Job Search", "What brings you here today?", "Upcoming Events", "Explore Careers", "Upcoming Training Programs", "Get the most out of CareerForce, create an account", "Connect to our Services", "CareerForce Blog". The Job Search block shows the text "CareerForce is Minnesota's official career exploration and job search resource.", a keyword box, a location box, a distance dropdown, and a "Search" button. The "What brings you here today?" section shows a "Choose a path" dropdown and 3 cards, each with an image that has loaded (not an empty or broken image) and a title. "Upcoming Events", "Upcoming Training Programs", "Connect to our Services" and "CareerForce Blog" each list at least 1 item, and link to their full list: "Find a filterable list of all events, workshops and appointments" (`/education-and-training/events`), "Find a filterable list of all training programs" (`/training-programs`), "Find a filterable list of all programs and services" (`/programs-services`), "Find more posts" (`/careerforce-blog`). |
 | HP-2 | Login page offers all 3 logins | `/user/login` | Open the login page. Click "CareerForce partner organization or a training program provider" to open it. Then click "DEED Staff Member" to open it. Don't fill in or submit anything. | **Job Seekers:** the "Job Seekers" heading, a list of what registering lets them do (at least 1 item; its wording isn't checked), a "Log In or Register with LoginMN" button, and a "Data Privacy Notice" with a link to DEED's data privacy policies (`https://mn.gov/deed/about/what-guides-us/data-practices/`). **Partners:** the section starts closed; once opened it shows a "Log In" heading, "Email address" and "Password" boxes, a "Forgot your password?" link to `/user/password`, a "Submit" button, and a "Request one today" link to `/user/register-partner`. **DEED staff:** the section starts closed; once opened it shows 2 buttons on QA and Stage, "Log In" and "PWW Staff Log In", and only the "Log In" button on Production. |
-| HP-3 | Tracking code is present | `/` | Open the homepage. | The page includes the Google Tag Manager code for this environment: `GTM-WL36T6M` on Production, `GTM-P8D2THV` on QA and Stage. |
+| HP-3 | Tracking code is present | `/`, `/job-search`, `/user/login` | Open the homepage, Job Search, and the login page, one at a time. | Each page loads (no error or "Page not found" page) and its Google Tag Manager tracking code loads the container for this environment, and no other container: `GTM-WL36T6M` on Production, `GTM-P8D2THV` on QA and Stage. A "GTM-…" text elsewhere on the page (in an article or a link) doesn't count. |
 | HP-4 | Decision Tree works | `/` | In "What brings you here today?", open "Choose a path" and click the first option. Then click "Reset selections". | After picking: "Choose a path" shows the chosen option, a "Tell us more." question appears, the 3 cards change, and a "Reset selections" button shows. After Reset: back to "Choose a path" and the original 3 cards, with no "Tell us more." and no Reset button. |
 | SR-1 | Site search returns results | `/search` | Search with no words. Then search for "job fair", "networking", and "farmer", one at a time. Then search for a made-up word ("zzqxnotaword"). Finally, on the homepage, type "networking" in the header's "Search CareerForce" box and press Enter (on a phone, tap the header's "Search" button first). | Every real search shows at least 1 result. The 3 keyword searches show "Search results 1-N of N", and their first result is a page on this site. The made-up word shows "No results found." and no results. The header box opens `/search?k=networking` with results. |
 | SR-2 | Career search returns results | `/explore/careers` | Search for "Nursing", "taxi driver", and "project manager", one at a time. Then, on the homepage, type "Nursing" in the Explore Careers box and click "Search". | Every search shows at least 1 result. The homepage box opens `/explore/careers?otitle=Nursing`. |
@@ -289,13 +289,14 @@ To run the mobile tests, see [Running the mobile tests](#running-the-mobile-test
 
 ## Expected result
 
-The terminal ends with `48 passed`. The desktop run has 30 test cases (all
+The terminal ends with `50 passed`. The desktop run has 30 test cases (all
 but MB-1, which is phone only), but some are repeated with different inputs,
-so they add up to 48 runs:
+so they add up to 50 runs:
 
 | Test case | Runs | Why |
 |---|---|---|
-| HP-1, HP-2, HP-3, HP-4 | 4 | once each |
+| HP-1, HP-2, HP-4 | 3 | once each |
+| HP-3 | 3 | Homepage, Job Search, login page |
 | SR-1 | 6 | an empty search; "job fair", "networking", "farmer"; a word with no matches; the header search box |
 | SR-2 | 4 | "Nursing", "taxi driver", "project manager"; the homepage Explore Careers box |
 | SR-3 | 1 | once |
@@ -307,12 +308,12 @@ so they add up to 48 runs:
 | FL-1 to FL-8 | 8 | once each |
 | GN-1, GN-2, GN-4 | 3 | once each |
 | GN-3 | 5 | the 5 main menu pages |
-| **Total** | **48** | |
+| **Total** | **50** | |
 
-If the total is anything other than 48, or anything fails, see
+If the total is anything other than 50, or anything fails, see
 [When something fails](README.md#when-something-fails).
 
-The mobile run (`--project=smoke-mobile`) has 40 runs: the same 48 minus
-HP-3 and the 8 FL cases, plus MB-1. A successful run ends with `40 passed`.
+The mobile run (`--project=smoke-mobile`) has 40 runs: the same 50 minus
+the 3 HP-3 runs and the 8 FL cases, plus MB-1. A successful run ends with `40 passed`.
 JS-4 counts as passed there while it fails as expected ([Known issues](#known-issues)).
 
