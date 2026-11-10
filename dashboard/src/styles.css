@@ -1,5 +1,5 @@
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
   /* Width of the page content; the top bar's contents use it too, so the
      nav lines up with the page below. */
   --page-width: 1100px;
@@ -38,33 +38,6 @@
   --fs-lg: 1.1875rem; /* 19px: section and card headings */
   --fs-xl: 1.75rem; /* 28px: page title */
   --fs-2xl: 1.875rem; /* 30px: tile numbers */
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* The site has no dark theme; these keep its blues and greens,
-       lightened enough to read on a dark background. */
-    --bg: #121417;
-    --surface: #1c1f23;
-    --border: #30343a;
-    --control-border: #7a7f86;
-    --text: #f1f1f1;
-    --muted: #b5b5b5;
-    --accent: #6aaeec;
-    --accent-hover: #9cc8f3;
-    --brand-blue: #4f9be0;
-    --brand-green: #77b259;
-    --good-bg: #1d3417;
-    --good-fg: #a3d48a;
-    --bad-bg: #3d1a12;
-    --bad-fg: #f7a593;
-    --warn-bg: #3a2b0c;
-    --warn-fg: #f4c96e;
-    --neutral-bg: #222b38;
-    --neutral-fg: #c7cfdb;
-    --code-bg: #262a30;
-    --on-accent: #0b1a2b;
-  }
 }
 
 * {
@@ -139,14 +112,14 @@ html {
   }
 }
 
-/* The suite page widens to 1600px while its side panel is open, which leaves
-   no gutter for the picker until the window is much wider. */
+/* Wide pages are 1600px wide, which leaves no gutter for the picker until
+   the window is much wider. */
 @media (min-width: 1920px) and (max-width: 2399px) {
-  body:has(.split-open) .topbar {
+  body:has(.split, .page-wide) .topbar {
     display: flex;
   }
 
-  body:has(.split-open) .topbar .nav {
+  body:has(.split, .page-wide) .topbar .nav {
     padding: 0;
   }
 }
@@ -163,19 +136,6 @@ html {
   display: block;
   width: auto;
   height: 36px;
-}
-
-/* The logo's dark blue is hard to see on the dark bar, so it sits on a
-   light pill there. */
-@media (prefers-color-scheme: dark) {
-  /* Padding included in the 36px, so the bar keeps its height. */
-  .brand-logo {
-    height: 28px;
-    padding: 4px 8px;
-    border-radius: 6px;
-    background: #ffffff;
-    box-sizing: content-box;
-  }
 }
 
 @media (max-width: 560px) {
@@ -349,10 +309,6 @@ code {
   color: var(--muted);
 }
 
-.actions {
-  margin-top: 16px;
-}
-
 /* Site buttons: square-ish corners, bold label, darker blue on hover. */
 button {
   padding: 7px 14px;
@@ -387,7 +343,7 @@ button:disabled {
 
 button.ghost {
   padding: 4px 10px;
-  background: transparent;
+  background: var(--surface);
   border-color: var(--control-border);
   color: var(--text);
 }
@@ -413,7 +369,7 @@ a.button {
 }
 
 a.button.ghost {
-  background: transparent;
+  background: var(--surface);
   border-color: var(--control-border);
   color: var(--text);
 }
@@ -436,6 +392,7 @@ button.link {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-top: 16px;
 }
 
 .section-head {
@@ -538,6 +495,29 @@ button.link {
   white-space: nowrap;
 }
 
+/* A test's file path under its title: long paths wrap rather than widen
+   the results table past a phone screen. */
+.test-file {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* Table columns marked `wideOnly` drop out on phones; a `narrow-only`
+   element in the row shows their values instead. */
+.narrow-only {
+  display: none;
+}
+
+@media (max-width: 560px) {
+  .wide-only {
+    display: none;
+  }
+
+  .narrow-only {
+    display: block;
+  }
+}
+
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -566,8 +546,23 @@ button.link {
   white-space: pre-wrap;
 }
 
-.facts-plain {
+/* The summary and facts at the top of a suite or plan page, on white so
+   they are easy to read. */
+.intro-card {
   margin: 0 0 24px;
+}
+
+.intro-card .lede {
+  margin: 0;
+  color: var(--text);
+}
+
+.intro-card + .actions {
+  margin-top: 0;
+}
+
+.intro-card .facts:first-child {
+  margin-top: 0;
   padding-top: 0;
   border-top: 0;
 }
@@ -609,6 +604,11 @@ tbody tr:last-child td {
   white-space: nowrap;
 }
 
+/* A short value that reads as one phrase, kept on one line. */
+.cell-nowrap {
+  white-space: nowrap;
+}
+
 .run-link {
   color: inherit;
   text-decoration: none;
@@ -647,7 +647,7 @@ legend {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 12px;
-  margin-bottom: 16px;
+  margin: 24px 0 16px;
 }
 
 .tile {
@@ -680,11 +680,6 @@ legend {
   font-size: var(--fs-sm);
 }
 
-.output {
-  margin-top: 24px;
-}
-
-.output summary,
 td summary {
   cursor: pointer;
   color: var(--muted);
@@ -707,8 +702,12 @@ pre.error {
   overflow-wrap: anywhere;
 }
 
+/* The run's output: white like the cards above it, so long logs are easier
+   to read. The border keeps its edge on the grey page. */
 .log {
   max-height: 480px;
+  background: var(--surface);
+  border: 1px solid var(--border);
 }
 
 @media (max-width: 560px) {
@@ -737,10 +736,6 @@ pre.error {
 .command button {
   flex-shrink: 0;
   white-space: nowrap;
-}
-
-.tiles {
-  margin-top: 24px;
 }
 
 /* ---- environment picker ------------------------------------------------ */
@@ -861,6 +856,11 @@ body.env-production .topbar {
   margin-top: 0;
 }
 
+/* A plan step's command sits right above its tiles. */
+.step-body .command {
+  margin-bottom: 16px;
+}
+
 .findings {
   margin: 8px 0 16px;
   padding-left: 20px;
@@ -898,6 +898,7 @@ body.env-production .topbar {
   border: 1px solid var(--control-border);
   border-radius: 6px;
   overflow: hidden;
+  background: var(--surface);
 }
 
 .segmented button {
@@ -939,12 +940,14 @@ body.env-production .topbar {
 
 /* ---- suite page: plan details beside the steps ------------------------- */
 
-/* The page widens while the side panel is open, so the steps keep room. */
-body:has(.split-open) {
+/* Wide pages: the two-column pages (suite, run) and any page wrapped in
+   .page-wide. The two-column pages are always this wide, so they don't
+   change width when the right column fills: it stays empty until then. */
+body:has(.split, .page-wide) {
   --page-width: 1600px;
 }
 
-.split-open {
+.split {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 24px;
@@ -1009,10 +1012,91 @@ button.small {
   font-size: var(--fs-sm);
 }
 
+/* Loading ring shown in front of a busy label, sized to the text. */
+.spinner {
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  margin-right: 0.35em;
+  vertical-align: -0.1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spinner-turn 0.8s linear infinite;
+}
+
+@keyframes spinner-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2.4s;
+  }
+}
+
 /* Too narrow for two columns: the panel covers the page instead. */
+/* The run page's right column: the output, with a case's details above it
+   while one is open. It stays in view while the results on the left scroll
+   and is never taller than the window; the case and the output scroll
+   together inside it. */
+.run-side {
+  position: sticky;
+  top: 16px;
+  min-width: 0;
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+}
+
+.run-side-case .output-panel .section-title {
+  margin-top: 24px;
+}
+
+/* Under a case, the log keeps a fixed height so it still follows its end. */
+.run-side-case .output-panel .log {
+  max-height: 480px;
+}
+
+.output-panel .section-title {
+  margin-top: 0;
+}
+
+.output-panel .log {
+  max-height: calc(100vh - 80px);
+  margin: 0;
+}
+
 @media (max-width: 960px) {
-  .split-open {
+  .split {
     display: block;
+  }
+
+  .run-side {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .run-side .side-panel {
+    position: static;
+    width: auto;
+    box-shadow: none;
+    border-radius: 10px;
+    margin-top: 24px;
+  }
+
+  .output-panel {
+    margin-top: 24px;
+  }
+
+  .output-panel .log {
+    max-height: 480px;
+  }
+
+  .split-empty {
+    display: none;
   }
 
   .side-panel {
@@ -1047,6 +1131,14 @@ button.small {
   color: var(--accent);
 }
 
+tbody tr.row-expandable {
+  cursor: pointer;
+}
+
+tbody tr.row-expandable:hover .row-toggle {
+  color: var(--accent);
+}
+
 tbody tr.row-open td {
   border-bottom: 0;
 }
@@ -1054,6 +1146,19 @@ tbody tr.row-open td {
 tr.row-details td {
   padding-top: 0;
   background: var(--surface);
+}
+
+/* A `below` row: reads as part of the row above it. */
+tr.row-below td {
+  padding-top: 0;
+}
+
+/* Phone: the Project and Took columns are hidden, so drop the empty lead
+   cell too and let the row's content take the full width. */
+@media (max-width: 560px) {
+  tr.row-below .below-lead {
+    display: none;
+  }
 }
 
 .case-details {
@@ -1197,28 +1302,115 @@ tr.row-details td {
   color: var(--good-fg);
 }
 
-.case-explain-notes {
-  margin: 8px 0;
-  padding-left: 18px;
-  font-size: var(--fs-sm);
-}
-
-/* Model, tokens and cost under an explanation: a caption set off by a rule,
-   like the label above it, wrapping as whole items separated by dots. */
-.case-explain .case-explain-usage {
+/* Model, tokens and cost under a Claude answer (ClaudeUsageNote.tsx): a
+   caption wrapping as whole items separated by dots. */
+.claude-usage {
   display: flex;
   flex-wrap: wrap;
   gap: 2px 8px;
-  margin: 10px 0 0;
-  padding-top: 6px;
-  border-top: 1px solid var(--border);
+  margin: 0;
   font-size: var(--fs-xs);
   font-variant-numeric: tabular-nums;
 }
 
-.case-explain-usage > span + span::before {
+.claude-usage > span + span::before {
   content: '·';
   margin-right: 8px;
+}
+
+/* Under "What the code does", set off by a rule like the label above it. */
+.case-explain .claude-usage {
+  margin: 10px 0 0;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
+.case-review-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+/* Review against the plan: under the explanation, set off by a rule. */
+.case-review {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.case-review-verdict {
+  display: inline-block;
+  margin: 0;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.case-review-verdict.tone-good {
+  background: var(--good-bg);
+  color: var(--good-fg);
+}
+
+.case-review-verdict.tone-warn {
+  background: var(--warn-bg);
+  color: var(--warn-fg);
+}
+
+.case-review-verdict.tone-bad {
+  background: var(--bad-bg);
+  color: var(--bad-fg);
+}
+
+/* Small uppercase labels inside a Claude answer. */
+.case-review-group h6,
+.failure-explanation h6 {
+  margin: 10px 0 4px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+
+.case-review-group ul {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.case-review-group li {
+  margin: 4px 0;
+  padding-left: 1.3em;
+  text-indent: -1.3em;
+}
+
+.case-review-group li::before {
+  display: inline-block;
+  width: 1.3em;
+  text-indent: 0;
+}
+
+.kind-missing li::before {
+  content: '✗';
+  color: var(--bad-fg);
+}
+
+.kind-different li::before {
+  content: '≠';
+  color: var(--warn-fg);
+}
+
+.kind-extra li::before {
+  content: '+';
+  color: var(--muted);
+}
+
+.kind-covered li::before {
+  content: '✓';
+  color: var(--good-fg);
 }
 
 /* A plan's overview, folded to its first paragraph until expanded. */
@@ -1240,6 +1432,69 @@ tr.row-details td {
   margin: 4px 0;
 }
 
+/* "Why did it fail?" under a failed test in a run's results. */
+/* In its own row under the test, spanning the Test, Project and Took
+   columns (TestResults.tsx). */
+.failure-explain {
+  margin-top: 0;
+}
+
+.failure-explain > .note {
+  margin: 6px 0 0;
+}
+
+.failure-explain > .callout {
+  margin: 6px 0 0;
+}
+
+.failure-explanation {
+  margin-top: 6px;
+  padding: 8px 12px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  line-height: 1.5;
+}
+
+.failure-explanation p {
+  margin: 6px 0;
+}
+
+.failure-explanation-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.failure-explanation h6 {
+  margin-bottom: 2px;
+}
+
+.failure-explanation ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.failure-explanation li {
+  margin: 3px 0;
+}
+
+.failure-explanation-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
+/* Beats `.failure-explanation p`; the footer sets the spacing. */
+.failure-explanation .claude-usage {
+  margin: 0;
+}
+
 /* A centred show more / show less button (ToggleButton.tsx). */
 .toggle-button {
   display: flex;
@@ -1249,7 +1504,8 @@ tr.row-details td {
 }
 
 /* At the bottom of "What the code does", folding it from that end. */
-.case-explain-usage + .toggle-button {
+.claude-usage + .toggle-button,
+.case-review-actions + .toggle-button {
   margin-top: 8px;
 }
 
@@ -1375,4 +1631,13 @@ tr.row-details td {
 
 .logins-list > .note {
   margin: 0;
+}
+
+/* "Run SR-1 again" under a test's title in the results table
+   (TestResults.tsx). */
+.rerun-case {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 0.35rem;
 }

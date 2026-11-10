@@ -45,12 +45,6 @@ const SCHEMA = {
         },
       },
     },
-    notes: {
-      type: 'array',
-      items: { type: 'string' },
-      description:
-        'Anything else worth knowing: differences per project (e.g. phone), environment-specific behaviour, known issues allowed for, waits or retries, differences from the plan.',
-    },
   },
 };
 
@@ -70,12 +64,12 @@ ${planRow || '(no more detail in the plan)'}
 Its code:
 ${where}
 
-Read those tests, and the helpers, fixtures and page objects they call (under tests/), so you know what really happens. Then explain the steps the test performs, in order, as actions on the site ("Opens /user/login", "Clicks 'DEED Staff Member'") and, for each, what it checks. Name the real pages, buttons, texts and values from the code. If there are several tests or the test loops over data, say what varies. Do not quote code or name functions. Note where the code differs from the plan's description.
+Read those tests, and the helpers, fixtures and page objects they call (under tests/), so you know what really happens. Then explain the steps the test performs, in order, as actions on the site ("Opens /user/login", "Clicks 'DEED Staff Member'") and, for each, what it checks. Name the real pages, buttons, texts and values from the code. If there are several tests or the test loops over data, say what varies. Do not quote code or name functions.
 
 Answer only with the JSON the schema asks for.`;
 }
 
-const hashFiles = async (files) => {
+export const hashFiles = async (files) => {
   const h = createHash('sha256');
   for (const f of [...files].sort())
     h.update(f).update(await readFile(f, 'utf8').catch(() => ''));
@@ -84,7 +78,7 @@ const hashFiles = async (files) => {
 
 const cacheFile = (plan, id) => join(cacheDir, plan.slug, `${id}.json`);
 
-function findCase(plan, id) {
+export function findCase(plan, id) {
   const testCase = plan.cases.find((c) => c.id === id);
   if (!testCase) throw new RunError(404, `${id} is not a case of this plan.`);
   if (!testCase.locations?.length)
@@ -126,21 +120,12 @@ async function generate(plan, id, refresh) {
     if (saved && !saved.stale) return saved;
   }
 
-  const result = await runClaude(prompt(plan, testCase));
-  let answer = result.structured_output ?? null;
-  if (!answer && typeof result.result === 'string') {
-    try {
-      answer = JSON.parse(result.result.match(/\{[\s\S]*\}/)?.[0] ?? '');
-    } catch {
-      // Not JSON.
-    }
-  }
+  const result = await runClaude(prompt(plan, testCase), SCHEMA);
+  const answer = answerOf(result);
   if (!answer?.steps)
-    throw new RunError(
-      502,
-      result.is_error
-        ? `Claude stopped: ${result.subtype ?? 'error'}${result.result ? ` (${String(result.result).slice(0, 300)})` : ''}`
-        : 'Claude answered without an explanation. Try again.',
+    throw claudeError(
+      result,
+      'Claude answered without an explanation. Try again.',
     );
 
   const saved = {
@@ -148,7 +133,6 @@ async function generate(plan, id, refresh) {
     case: id,
     summary: answer.summary ?? '',
     steps: answer.steps,
-    notes: answer.notes ?? [],
     files,
     hash,
     createdAt: new Date().toISOString(),
@@ -160,12 +144,34 @@ async function generate(plan, id, refresh) {
   return { ...saved, stale: false };
 }
 
+// The JSON answer from a `claude -p` result: the structured output, or the
+// first {...} in its text.
+export function answerOf(result) {
+  if (result.structured_output) return result.structured_output;
+  if (typeof result.result !== 'string') return null;
+  try {
+    return JSON.parse(result.result.match(/\{[\s\S]*\}/)?.[0] ?? '');
+  } catch {
+    return null;
+  }
+}
+
+// The error to show when Claude stopped or answered off-schema.
+export function claudeError(result, fallback) {
+  return new RunError(
+    502,
+    result.is_error
+      ? `Claude stopped: ${result.subtype ?? 'error'}${result.result ? ` (${String(result.result).slice(0, 300)})` : ''}`
+      : fallback,
+  );
+}
+
 // The model that wrote the answer and the tokens it took, from the
 // `claude -p` JSON result. `modelUsage` has one entry per model (Claude Code
 // may also call a small model on the side); the one with the most output is
 // the one that answered. Tokens in counts cached input too, since a long
 // read of the code is mostly cache reads.
-function usageOf(result) {
+export function usageOf(result) {
   const perModel = Object.entries(result.modelUsage ?? {});
   if (!perModel.length) {
     const u = result.usage;
@@ -201,15 +207,16 @@ const tokens = (input = 0, cacheRead = 0, cacheWrite = 0, output = 0) => ({
   out: output,
 });
 
-// Run `claude -p` with read-only tools; resolve with its JSON result.
-function runClaude(text) {
+// Run `claude -p` with read-only tools, answering in the given JSON schema;
+// resolve with its JSON result. review.mjs uses it too.
+export function runClaude(text, schema) {
   const args = [
     '-p',
     text,
     '--output-format',
     'json',
     '--json-schema',
-    JSON.stringify(SCHEMA),
+    JSON.stringify(schema),
     '--allowedTools',
     'Read,Grep,Glob',
     '--disallowedTools',

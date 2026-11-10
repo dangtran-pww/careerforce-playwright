@@ -1,12 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 
-// A shell command with a Copy button. `small` shows the button as an icon,
-// for tight spots such as an expanded test case.
-export function Command({ text, small }: { text: string; small?: boolean }) {
+// A shell command with an icon button that copies it.
+export function Command({ text }: { text: string }) {
   return (
     <div className="command">
       <code>{text}</code>
-      <CopyButton text={text} small={small} />
+      <CopyButton text={text} />
     </div>
   );
 }
@@ -19,7 +18,7 @@ const LABEL: Record<CopyState, string> = {
   failed: 'Copy failed',
 };
 
-export function CopyButton({ text, small }: { text: string; small?: boolean }) {
+export function CopyButton({ text }: { text: string }) {
   const [state, setState] = useState<CopyState>('idle');
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
@@ -36,21 +35,15 @@ export function CopyButton({ text, small }: { text: string; small?: boolean }) {
   }
 
   const label = LABEL[state];
-  if (small)
-    return (
-      <button
-        type="button"
-        className="ghost icon-button"
-        onClick={copy}
-        aria-label={label}
-        title={label}
-      >
-        <CopyIcon state={state} />
-      </button>
-    );
   return (
-    <button type="button" className="ghost" onClick={copy}>
-      {label}
+    <button
+      type="button"
+      className="ghost icon-button"
+      onClick={copy}
+      aria-label={label}
+      title={label}
+    >
+      <CopyIcon state={state} />
     </button>
   );
 }

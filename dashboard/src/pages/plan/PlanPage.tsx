@@ -47,35 +47,36 @@ function PlanDetails({ plan, site, runs, activeRun }: PlanResponse) {
         <span className="kind-label">{plan.type}</span>
         <Badge map={PLAN_STATUS} value={plan.status} />
       </TitleRow>
-      {plan.summary && <p className="lede">{plan.summary}</p>}
+      <div className="card intro-card">
+        {plan.summary && <p className="lede">{plan.summary}</p>}
+        <Facts
+          items={[
+            ['Plan', <code>{plan.file}</code>],
+            [
+              'Tests',
+              plan.files.length
+                ? plan.files.map((f) => (
+                    <div key={f}>
+                      <code>{f}</code>
+                    </div>
+                  ))
+                : '—',
+            ],
+            [
+              'Environment',
+              <>
+                <EnvTag env={currentEnv} /> {site}
+              </>,
+            ],
+          ]}
+        />
+      </div>
       {plan.notes.map((n) => (
         <p key={n} className="callout callout-warn">
           {n}
         </p>
       ))}
       <ActiveRunBanner runId={activeRun} />
-      <Facts
-        plain
-        items={[
-          ['Plan', <code>{plan.file}</code>],
-          [
-            'Tests',
-            plan.files.length
-              ? plan.files.map((f) => (
-                  <div key={f}>
-                    <code>{f}</code>
-                  </div>
-                ))
-              : '—',
-          ],
-          [
-            'Environment',
-            <>
-              <EnvTag env={currentEnv} /> {site}
-            </>,
-          ],
-        ]}
-      />
       <div className="grid">
         {plan.runnable ? (
           <RunPanel

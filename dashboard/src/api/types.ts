@@ -1,5 +1,5 @@
 // The shapes the dashboard API returns. The server builds them in
-// dashboard/server/{index,plans,suites,runs,suite-runs}.mjs;
+// dashboard/server/{index,plans,suites,runs,suite-runs,explain,review,failure}.mjs;
 // keep these in step when you change what it sends.
 
 // ---- environments and sessions ---------------------------------------------
@@ -81,7 +81,6 @@ export interface CaseExplanation {
   case: string;
   summary: string;
   steps: { action: string; checks: string[] }[];
-  notes: string[];
   files: string[];
   createdAt: string;
   // Left out of explanations saved before these were recorded.
@@ -97,6 +96,41 @@ export interface CaseExplanation {
 
 export interface ExplanationResponse {
   explanation: CaseExplanation | null;
+}
+
+// Who answered a Claude request, when, and what it took.
+export interface ClaudeUsage {
+  createdAt: string;
+  model?: string;
+  tokens?: { in: number; cached: number; out: number };
+  costUsd: number | null;
+}
+
+// GET/POST /api/plans/:slug/cases/:id/review: Claude's review of a case's
+// code against its plan row (dashboard/server/review.mjs). Kept in the
+// server's memory, never on disk.
+export type ReviewVerdict = 'matches' | 'partial' | 'differs';
+export type ReviewFindingKind = 'missing' | 'different' | 'extra' | 'covered';
+
+export interface CaseReview extends ClaudeUsage {
+  plan: string;
+  case: string;
+  verdict: ReviewVerdict;
+  summary: string;
+  findings: { kind: ReviewFindingKind; text: string }[];
+  files: string[];
+  stale: boolean; // the spec files changed since
+}
+
+// POST
+export interface ReviewResponse {
+  review: CaseReview;
+}
+
+// GET
+export interface LatestReviewResponse {
+  review: CaseReview | null;
+  reviewing: boolean; // one is running now
 }
 
 // One row of GET /api/plans.
@@ -231,6 +265,42 @@ export interface TestReport {
   errors?: string[];
 }
 
+// Names one test of a run; `step` is the suite step's number (plan runs
+// have none).
+export interface TestRef {
+  step: number | null;
+  project: string;
+  file: string;
+  line: number;
+  title: string;
+}
+
+// GET/POST /api/runs/:id/explanations: Claude's account of why a test
+// failed (dashboard/server/failure.mjs), saved in the run's folder.
+export type FailureCause =
+  'site' | 'test' | 'environment' | 'flaky' | 'unclear';
+
+export interface FailureExplanation extends TestRef, ClaudeUsage {
+  run: string;
+  cause: FailureCause;
+  confidence: 'high' | 'medium' | 'low';
+  headline: string;
+  whatHappened: string;
+  why: string;
+  evidence: string[];
+  nextSteps: string[];
+}
+
+// GET
+export interface FailureExplanationsResponse {
+  explanations: FailureExplanation[];
+}
+
+// POST
+export interface FailureExplanationResponse {
+  explanation: FailureExplanation;
+}
+
 export interface Finding {
   severity: 'problem' | 'note';
   text: string;
@@ -248,6 +318,8 @@ export interface SuiteStep extends TestReport {
   error?: string;
   skipReason?: string;
   // plan steps
+  plan?: string; // plan slug
+  projects?: string[];
   command?: string;
   // prompt steps
   role?: string;
@@ -273,6 +345,7 @@ export interface Run extends TestReport {
   site?: string; // old runs only recorded the host
   cases: string[];
   projects: string[];
+  headed?: boolean;
   steps?: SuiteStep[];
   command?: string;
 }

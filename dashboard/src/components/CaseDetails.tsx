@@ -49,7 +49,7 @@ export function CaseDetails({
           <div>
             <dt>Command</dt>
             <dd>
-              <Command text={command} small />
+              <Command text={command} />
             </dd>
           </div>
         )}

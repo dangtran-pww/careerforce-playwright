@@ -23,15 +23,31 @@
 //   POST /api/plans/:slug/cases/:id/explanation
 //                              ask Claude Code to explain it ({ refresh? });
 //                              waits for the answer (about a minute)
+//   GET  /api/plans/:slug/cases/:id/review
+//                              the latest review of that case, kept in memory
+//                              only ({ review: null } if none), and whether
+//                              one is running ({ reviewing })
+//   POST /api/plans/:slug/cases/:id/review
+//                              ask Claude Code to review that case's code
+//                              against the plan; never written to disk
+//                              (about a minute)
 //   GET  /api/suites           every suite in test-suites/ (?env=<id>)
 //   GET  /api/suites/:slug     one suite, its steps and recent runs
 //   POST /api/suites/:slug/run run it: { env, plans?, prompts?, headed? }
 //   GET  /api/runs             run history, newest first
 //   GET  /api/runs/:id         one run (?logFrom=N: output from character N)
+//   GET  /api/runs/:id/explanations
+//                              the saved explanations of that run's failed
+//                              tests
+//   POST /api/runs/:id/explanations
+//                              ask Claude Code why a test failed:
+//                              { step?, project, file, line, title, refresh? };
+//                              saved in the run's folder (about a minute)
 //   POST /api/runs/:id/stop    stop a run in progress
 //   GET  /runs/:id/report/...  that run's Playwright HTML report
 //
-// See plans.mjs, suites.mjs, runs.mjs and suite-runs.mjs.
+// See plans.mjs, suites.mjs, runs.mjs and suite-runs.mjs; explain.mjs,
+// review.mjs and failure.mjs ask Claude Code.
 //
 // The session check asks the site, the same way
 // useRole in tests/helpers/roles.ts does: request /admin/reports/status with
@@ -63,6 +79,12 @@ import {
   siteRequest,
 } from '../../scripts/lib/site.mjs';
 import { explainCase, savedExplanation } from './explain.mjs';
+import {
+  explainFailure,
+  savedFailureExplanations,
+  testRef,
+} from './failure.mjs';
+import { latestReview, reviewCase } from './review.mjs';
 import { loadPlan, loadPlans } from './plans.mjs';
 import { loadSuite, loadSuites } from './suites.mjs';
 import { startSuiteRun } from './suite-runs.mjs';
@@ -410,6 +432,19 @@ async function api(req, res, pathname, searchParams) {
     }
   }
 
+  if (
+    (m = pathname.match(
+      /^\/api\/plans\/([\w-]+)\/cases\/([A-Z][A-Z0-9]*-\d+)\/review$/,
+    ))
+  ) {
+    const plan = await loadPlan(m[1]);
+    if (!plan) return sendJson(res, 404, { error: 'No such plan.' });
+    if (req.method === 'GET')
+      return sendJson(res, 200, await latestReview(plan, m[2]));
+    if (req.method === 'POST')
+      return sendJson(res, 200, { review: await reviewCase(plan, m[2]) });
+  }
+
   if (pathname === '/api/suites' && req.method === 'GET') {
     const env = envParam(searchParams.get('env'));
     const suites = await loadSuites({ refresh: searchParams.has('refresh') });
@@ -468,6 +503,21 @@ async function api(req, res, pathname, searchParams) {
     return run
       ? sendJson(res, 200, run)
       : sendJson(res, 404, { error: 'No such run.' });
+  }
+
+  if ((m = pathname.match(/^\/api\/runs\/([\w-]+)\/explanations$/))) {
+    if (req.method === 'GET')
+      return sendJson(res, 200, {
+        explanations: await savedFailureExplanations(m[1]),
+      });
+    if (req.method === 'POST') {
+      const body = await readJsonBody(req);
+      return sendJson(res, 200, {
+        explanation: await explainFailure(m[1], testRef(body), {
+          refresh: body.refresh === true,
+        }),
+      });
+    }
   }
 
   if (

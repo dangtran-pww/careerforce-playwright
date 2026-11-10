@@ -7,7 +7,8 @@ import { useApi } from '../hooks/useApi';
 import { useEnv } from '../hooks/useEnv';
 import { plural } from '../lib/format';
 
-// #/suites — every suite in test-suites/, with its last run here.
+// #/suites — every suite in test-suites/, with its last run here. Wide, like
+// the suite pages it links to.
 export function SuitesPage() {
   const { currentEnv } = useEnv();
   const { data, error } = useApi<SuitesResponse>(
@@ -15,7 +16,7 @@ export function SuitesPage() {
   );
 
   return (
-    <>
+    <div className="page-wide">
       <h1>Suites</h1>
       <p className="lede">
         A suite is one run made of several steps: test plans and checks Claude
@@ -38,7 +39,7 @@ export function SuitesPage() {
           )}
         </div>
       )}
-    </>
+    </div>
   );
 }
 
@@ -64,6 +65,7 @@ function SuiteTable({ suites }: { suites: SuiteSummary[] }) {
         },
         {
           head: 'Steps',
+          className: 'cell-nowrap',
           cell: (suite) =>
             [
               plural(suite.plans.length, 'plan'),

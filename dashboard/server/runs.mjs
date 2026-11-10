@@ -291,38 +291,49 @@ export async function startRun(
 // relative to the run folder (served at /runs/<id>/...).
 const rel = (path) => relative(resolve(runsDir), path).split('\\').join('/');
 
-export function summarize(report) {
-  const results = [];
+/**
+ * Call fn(spec, test, title) for every test in a Playwright JSON report.
+ * `title` is the spec's title under its describe blocks, joined with " › ";
+ * with project, file and line it names a test in summarize()'s results.
+ */
+export function eachTest(report, fn) {
   const walk = (suite, path) => {
-    for (const spec of suite.specs ?? []) {
-      for (const t of spec.tests) {
-        const last = t.results.at(-1);
-        const error = last?.errors?.[0]?.message ?? last?.error?.message;
-        results.push({
-          project: t.projectName,
-          file: spec.file,
-          title: [...path, spec.title].join(' › '),
-          line: spec.line,
-          tags: spec.tags ?? [],
-          // expected | unexpected | flaky | skipped
-          outcome: t.status,
-          duration: t.results.reduce((sum, r) => sum + (r.duration ?? 0), 0),
-          retries: Math.max(0, t.results.length - 1),
-          error: error
-            ? error.replace(ansi, '').split('\n').slice(0, 6).join('\n')
-            : null,
-          expectedToFail: t.expectedStatus === 'failed',
-          // Image attachments (screenshots), path relative to
-          // reports/dashboard-runs/.
-          images: (last?.attachments ?? [])
-            .filter((a) => a.path && a.contentType?.startsWith('image/'))
-            .map((a) => ({ name: a.name, path: rel(a.path) })),
-        });
-      }
-    }
+    for (const spec of suite.specs ?? [])
+      for (const t of spec.tests)
+        fn(spec, t, [...path, spec.title].join(' › '));
     for (const child of suite.suites ?? []) walk(child, [...path, child.title]);
   };
   for (const file of report.suites ?? []) walk(file, []);
+}
+
+export const stripAnsi = (text) => text.replace(ansi, '');
+
+export function summarize(report) {
+  const results = [];
+  eachTest(report, (spec, t, title) => {
+    const last = t.results.at(-1);
+    const error = last?.errors?.[0]?.message ?? last?.error?.message;
+    results.push({
+      project: t.projectName,
+      file: spec.file,
+      title,
+      line: spec.line,
+      tags: spec.tags ?? [],
+      // expected | unexpected | flaky | skipped
+      outcome: t.status,
+      duration: t.results.reduce((sum, r) => sum + (r.duration ?? 0), 0),
+      retries: Math.max(0, t.results.length - 1),
+      error: error
+        ? error.replace(ansi, '').split('\n').slice(0, 6).join('\n')
+        : null,
+      expectedToFail: t.expectedStatus === 'failed',
+      // Image attachments (screenshots), path relative to
+      // reports/dashboard-runs/.
+      images: (last?.attachments ?? [])
+        .filter((a) => a.path && a.contentType?.startsWith('image/'))
+        .map((a) => ({ name: a.name, path: rel(a.path) })),
+    });
+  });
   const {
     expected = 0,
     unexpected = 0,
@@ -357,7 +368,8 @@ export function stopActiveRun() {
 export const activeRunId = () => active?.meta.id ?? null;
 export const newRunId = (now, ...parts) => [stamp(now), ...parts].join('-');
 
-async function readMeta(id) {
+// The run's run.json (or the run in progress), without its output.
+export async function readMeta(id) {
   if (!/^[\w-]+$/.test(id)) return null;
   if (active?.meta.id === id) return active.meta;
   try {

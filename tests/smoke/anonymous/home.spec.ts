@@ -49,6 +49,7 @@ test('HP-1: homepage loads for an anonymous visitor', async ({ page }) => {
   await expect(home.jobSearchDistanceSelect).toBeVisible();
   await expect(home.jobSearchButton).toBeVisible();
   await expect(home.whatBringsYouHereHeading).toBeVisible();
+  await expect(home.decisionTreeToggle()).toBeVisible();
   await expect(home.decisionTreeToggle()).toHaveText('Choose a path');
   await expect(home.decisionTreeCards()).toHaveCount(3);
   for (const card of await home.decisionTreeCards().all()) {
@@ -69,10 +70,9 @@ test('HP-1: homepage loads for an anonymous visitor', async ({ page }) => {
   for (const section of HOME_SECTIONS) {
     await test.step(`${section.name} lists items`, async () => {
       await expect(home.sectionItems(section.view).first()).toBeVisible();
-      await expect(home.main.getByRole('link', { name: section.moreLink })).toHaveAttribute(
-        'href',
-        section.moreHref,
-      );
+      const moreLink = home.sectionMoreLink(section.view, section.moreLink);
+      await expect(moreLink).toBeVisible();
+      await expect(moreLink).toHaveAttribute('href', section.moreHref);
     });
   }
 });

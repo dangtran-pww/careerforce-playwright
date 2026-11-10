@@ -74,19 +74,23 @@ function PlanStep({ run, step }: { run: Run; step: SuiteStep }) {
       {step.stats ? (
         <>
           <TestResults
+            runId={run.id}
+            step={step.n}
+            planSlug={step.plan}
             stats={step.stats}
             results={step.results}
             errors={step.errors}
           />
-          <p>
+          <div className="actions">
             <a
+              className="button ghost"
               href={runFile(`${run.id}/${step.dir}/report/`)}
               target="_blank"
               rel="noopener"
             >
               Open Playwright report
             </a>
-          </p>
+          </div>
         </>
       ) : (
         step.status === 'running' && (

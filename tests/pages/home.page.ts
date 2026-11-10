@@ -21,7 +21,9 @@ export class HomePage {
   constructor(page: Page) {
     this.page = page;
     this.main = page.locator('main');
-    this.jobSearchHeading = page.getByRole('heading', { name: 'Job Search' });
+    // The heading's name starts with a search icon drawn as an icon-font
+    // character (U+F002), so allow that before an otherwise exact match.
+    this.jobSearchHeading = page.getByRole('heading', { name: /^\W*Job Search$/ });
     // The page has several other "Search" buttons (header, site search), so
     // everything in the Job Search block is scoped to its component root.
     // The field labels are visually hidden but still give accessible names.
@@ -44,23 +46,29 @@ export class HomePage {
     });
     this.whatBringsYouHereHeading = page.getByRole('heading', {
       name: 'What brings you here today?',
+      exact: true,
     });
     this.upcomingEventsHeading = page.getByRole('heading', {
       name: 'Upcoming Events',
+      exact: true,
     });
     this.exploreCareersHeading = page.getByRole('heading', {
       name: 'Explore Careers',
+      exact: true,
     });
     this.upcomingTrainingProgramsHeading = page.getByRole('heading', {
       name: 'Upcoming Training Programs',
+      exact: true,
     });
     this.createAccountCta = page.getByRole('heading', {
       name: 'Get the most out of CareerForce, create an account',
+      exact: true,
     });
     this.connectToServicesHeading = page.getByRole('heading', {
       name: 'Connect to our Services',
+      exact: true,
     });
-    this.blogHeading = page.getByRole('heading', { name: 'CareerForce Blog' });
+    this.blogHeading = page.getByRole('heading', { name: 'CareerForce Blog', exact: true });
   }
 
   async goto() {
@@ -129,6 +137,17 @@ export class HomePage {
   // Training load after the page does, so wait for their items.
   sectionItems(viewClass: string): Locator {
     return this.page.locator(`main ${viewClass} article`);
+  }
+
+  // A listing section's link to its full list, inside that section's view.
+  // Some of these links end with an arrow icon added by CSS (::after, an
+  // icon-font character), which counts as part of the link's name, so allow
+  // that after an otherwise exact match.
+  sectionMoreLink(viewClass: string, name: string): Locator {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    return this.page
+      .locator(`main ${viewClass}`)
+      .getByRole('link', { name: new RegExp(`^${escaped}\\W*$`) });
   }
 
   // The Explore Careers box: a GET form to /explore/careers?otitle=...

@@ -54,7 +54,8 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
       openPanel();
     }
   });
-  // The plan whose details show in the right-hand panel; none hides it.
+  // The plan whose details show in the right-hand column; none leaves it
+  // empty (the column is always there, so the page never changes width).
   const [shownPlan, setShownPlan] = useState<string | null>(null);
   const closePanel = useCallback(() => setShownPlan(null), []);
 
@@ -71,14 +72,16 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
   useNeededLogins(logins.map((l) => l.role));
 
   return (
-    <div className={shownPlan ? 'split split-open' : 'split'}>
+    <div className="split">
       <div className="split-main">
         <BackLink to="/suites">← Suites</BackLink>
         <TitleRow title={suite.name}>
           <span className="kind-label">Suite</span>
         </TitleRow>
-        {suite.summary && <p className="lede">{suite.summary}</p>}
-        <Facts plain items={[['Suite file', <code>{suite.file}</code>]]} />
+        <div className="card intro-card">
+          {suite.summary && <p className="lede">{suite.summary}</p>}
+          <Facts items={[['Suite file', <code>{suite.file}</code>]]} />
+        </div>
         {suite.problems.map((p) => (
           <p key={p} className="callout callout-warn">
             {p}
@@ -159,7 +162,7 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
         <h2 className="section-title">Recent runs</h2>
         <RunsTable runs={runs} showPlan={false} />
       </div>
-      {shownPlan && (
+      {shownPlan ? (
         <PlanPanel
           key={shownPlan}
           slug={shownPlan}
@@ -170,6 +173,8 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
           headed={choice.headed}
           activeRun={activeRun}
         />
+      ) : (
+        <div className="split-empty" aria-hidden="true" />
       )}
     </div>
   );

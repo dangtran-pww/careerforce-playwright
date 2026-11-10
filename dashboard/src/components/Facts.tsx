@@ -6,13 +6,11 @@ export type Fact = readonly [label: string, value: ReactNode];
 // `cond && ['Label', value]` adds a fact only when it applies.
 export function Facts({
   items,
-  plain = false,
 }: {
   items: (Fact | false | '' | null | undefined)[];
-  plain?: boolean;
 }) {
   return (
-    <dl className={plain ? 'facts facts-plain' : 'facts'}>
+    <dl className="facts">
       {items.filter(Boolean).map((fact) => {
         const [label, value] = fact as Fact;
         return (

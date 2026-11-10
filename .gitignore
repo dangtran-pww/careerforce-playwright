@@ -6,3 +6,4 @@ playwright/.auth/
 .playwright-mcp/
 reports/
 dashboard/dist/
+*.tsbuildinfo

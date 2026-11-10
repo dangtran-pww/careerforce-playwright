@@ -60,3 +60,12 @@ export const TEST_OUTCOME: StatusMap = {
   flaky: { label: 'Flaky', tone: 'warn' },
   skipped: { label: 'Skipped', tone: 'neutral' },
 };
+
+// Claude's guess at why a test failed (server/failure.mjs).
+export const FAILURE_CAUSE: StatusMap = {
+  site: { label: 'Looks like the site', tone: 'bad' },
+  test: { label: 'Looks like the test', tone: 'warn' },
+  environment: { label: 'Looks like the environment', tone: 'warn' },
+  flaky: { label: 'Looks like timing', tone: 'warn' },
+  unclear: { label: 'Cause unclear', tone: 'neutral' },
+};
