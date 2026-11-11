@@ -23,6 +23,10 @@
   --good-fg: #236216;
   --bad-bg: #fcebe7;
   --bad-fg: #a51b00;
+  /* Danger button hover: a darker --bad-fg. */
+  --bad-hover: #7a1400;
+  /* Keyboard focus ring on buttons: 3:1 against white and --bg. */
+  --focus-ring: #0877d9;
   --warn-bg: #fbf0d9;
   --warn-fg: #734c00;
   --neutral-bg: #eef3fb;
@@ -330,12 +334,6 @@ a.button:where(:not(.ghost)):hover {
   background: var(--accent-hover);
 }
 
-button:where(.ghost:not(:disabled)):hover,
-a.button:where(.ghost):hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
 button:disabled {
   opacity: 0.6;
   cursor: progress;
@@ -400,6 +398,34 @@ button.link {
   background: none;
   color: var(--accent);
   text-decoration: underline;
+}
+
+/* Hover rules sit after the base rules above: they have the same
+   specificity, so they only win by coming later in the file. */
+button:where(.ghost:not(:disabled)):hover,
+a.button:where(.ghost):hover {
+  border-color: var(--accent);
+  background: var(--neutral-bg);
+  color: var(--accent);
+}
+
+button:where(.danger:not(:disabled)):hover {
+  border-color: var(--bad-hover);
+  background: var(--bad-hover);
+}
+
+button:where(.link:not(:disabled)):hover {
+  color: var(--accent-hover);
+}
+
+/* Keyboard focus on every button and button-styled link. :focus-visible
+   leaves mouse clicks without a ring. The offset keeps the ring clear of the
+   button's own border, so it shows on filled and ghost buttons alike. */
+button:focus-visible,
+a.button:focus-visible,
+.nav a:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
 }
 
 .actions {
@@ -920,6 +946,15 @@ body.env-production .topbar {
   border-radius: 0;
   background: transparent;
   color: var(--muted);
+}
+
+.segmented button:hover {
+  color: var(--text);
+}
+
+/* The picker clips its overflow, so draw the ring inside the button. */
+.segmented button:focus-visible {
+  outline-offset: -2px;
 }
 
 .segmented button[aria-pressed='true'] {
