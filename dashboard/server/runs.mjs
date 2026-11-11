@@ -385,10 +385,17 @@ export function stopActiveRun() {
 export const activeRunId = () => active?.meta.id ?? null;
 export const newRunId = (now, ...parts) => [stamp(now), ...parts].join('-');
 
+// run.json of runs that are over, by id. A finished run's run.json never
+// changes again (only the run in progress is written to, and that one is
+// read from `active`), so it is read from disk once.
+const metaCache = new Map();
+
 // The run's run.json (or the run in progress), without its output.
 export async function readMeta(id) {
   if (!/^[\w-]+$/.test(id)) return null;
   if (active?.meta.id === id) return active.meta;
+  const cached = metaCache.get(id);
+  if (cached) return cached;
   try {
     const meta = JSON.parse(
       await readFile(join(runsDir, id, 'run.json'), 'utf8'),
@@ -398,6 +405,8 @@ export async function readMeta(id) {
     for (const step of meta.steps ?? [])
       if (step.status === 'running') step.status = 'interrupted';
     meta.kind ??= 'plan';
+    // Unless it started while being read (beginRun saves run.json first).
+    if (active?.meta.id !== id) metaCache.set(id, meta);
     return meta;
   } catch {
     return null;
@@ -419,25 +428,32 @@ export async function getRun(id, { logFrom = 0 } = {}) {
 // Newest first, without per-test results or output. `plan` / `suite` /
 // `env` narrow it down.
 export async function listRuns({ plan, suite, env, limit = 50 } = {}) {
-  const names = await readdir(runsDir).catch(() => []);
+  const names = (await readdir(runsDir).catch(() => [])).sort().reverse();
   const runs = [];
-  for (const name of names.sort().reverse()) {
-    if (runs.length >= limit) break;
-    const meta = await readMeta(name);
-    if (!meta) continue;
-    if (plan && meta.plan !== plan) continue;
-    if (suite && meta.suite !== suite) continue;
-    if (env && (meta.env?.id ?? 'qa') !== env) continue;
-    runs.push({
-      ...meta,
-      results: undefined,
-      steps: meta.steps?.map((s) => ({
-        id: s.id,
-        kind: s.kind,
-        title: s.title,
-        status: s.status,
-      })),
-    });
+  // A batch of run.json files is read at once, newest first, until there
+  // are `limit` matches.
+  const BATCH = 32;
+  for (let i = 0; i < names.length && runs.length < limit; i += BATCH) {
+    const metas = await Promise.all(
+      names.slice(i, i + BATCH).map((name) => readMeta(name)),
+    );
+    for (const meta of metas) {
+      if (runs.length >= limit) break;
+      if (!meta) continue;
+      if (plan && meta.plan !== plan) continue;
+      if (suite && meta.suite !== suite) continue;
+      if (env && (meta.env?.id ?? 'qa') !== env) continue;
+      runs.push({
+        ...meta,
+        results: undefined,
+        steps: meta.steps?.map((s) => ({
+          id: s.id,
+          kind: s.kind,
+          title: s.title,
+          status: s.status,
+        })),
+      });
+    }
   }
   return runs;
 }

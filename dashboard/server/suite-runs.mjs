@@ -11,7 +11,8 @@
 //     plan:    results.json, report/, test-results/
 //     prompt:  mcp.json, stream.jsonl (Claude's own log), screenshots/
 
-import { appendFile, mkdir, readdir, writeFile } from 'node:fs/promises';
+import { createWriteStream } from 'node:fs';
+import { mkdir, readdir, writeFile } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
 import { loadPlan } from './plans.mjs';
 import {
@@ -229,7 +230,8 @@ async function planStep(step, stepDir, plan, env, headed) {
 
 const MCP = 'mcp__playwright-test__';
 // Looking and clicking only: no file writes, no test generation, no
-// arbitrary code.
+// arbitrary code (so no browser_evaluate: page JS could send requests that
+// change data with the session's login).
 const PROMPT_TOOLS = [
   'planner_setup_page',
   'browser_navigate',
@@ -246,7 +248,6 @@ const PROMPT_TOOLS = [
   'browser_tabs',
   'browser_console_messages',
   'browser_network_requests',
-  'browser_evaluate',
 ].map((t) => MCP + t);
 
 const VERDICT_SCHEMA = {
@@ -334,7 +335,9 @@ async function promptStep(step, stepDir, env) {
     ),
   );
 
-  const streamFile = join(stepDir, 'stream.jsonl');
+  // One stream, so the lines stay in order.
+  const stream = createWriteStream(join(stepDir, 'stream.jsonl'));
+  stream.on('error', () => {}); // Claude's own log only; never fails the step
   let buffer = '';
   let result = null;
   const onStdout = (text) => {
@@ -343,7 +346,7 @@ async function promptStep(step, stepDir, env) {
     buffer = lines.pop();
     for (const line of lines) {
       if (!line.trim()) continue;
-      appendFile(streamFile, `${line}\n`).catch(() => {});
+      stream.write(`${line}\n`);
       let event;
       try {
         event = JSON.parse(line);
@@ -387,6 +390,7 @@ async function promptStep(step, stepDir, env) {
     { env: serverEnv, onStdout },
   ).finally(() => clearTimeout(timer));
   if (buffer.trim()) onStdout('\n');
+  await new Promise((done) => stream.end(done));
 
   step.exitCode = code;
   step.costUsd = result?.total_cost_usd ?? null;

@@ -67,8 +67,10 @@
 // SANDBOX_URL, LOCAL_URL, DASHBOARD_PORT (default 4400), HTTPS_PROXY (used if set).
 
 import { createServer } from 'node:http';
+import { createReadStream } from 'node:fs';
 import { readFile, readdir, stat } from 'node:fs/promises';
-import { dirname, extname, join, normalize, resolve } from 'node:path';
+import { dirname, extname, join, normalize, resolve, sep } from 'node:path';
+import { pipeline } from 'node:stream/promises';
 import { chromium } from '@playwright/test';
 import { build as viteBuild, createServer as createViteServer } from 'vite';
 import {
@@ -82,7 +84,7 @@ import {
   loginCommand as loginCommandFor,
   siteRequest,
 } from '../../scripts/lib/site.mjs';
-import { explainCase, savedExplanation } from './explain.mjs';
+import { explainCase, savedExplanation, stopClaudes } from './explain.mjs';
 import {
   explainFailure,
   savedFailureExplanations,
@@ -128,6 +130,7 @@ async function checkSession(role, env) {
   };
 
   let state;
+  let savedMs;
   try {
     const [text, info] = await Promise.all([
       readFile(authFile, 'utf8'),
@@ -135,6 +138,7 @@ async function checkSession(role, env) {
     ]);
     state = JSON.parse(text);
     result.savedAt = info.mtime.toISOString();
+    savedMs = info.mtimeMs;
   } catch (err) {
     if (err.code === 'ENOENT') {
       return {
@@ -161,6 +165,16 @@ async function checkSession(role, env) {
 
   const started = Date.now();
   const ctx = await siteRequest(state, env);
+  // The account behind a session file doesn't change until the file is
+  // saved again, so its email is looked up once per save.
+  const emailKey = `${env.id}:${role}`;
+  const emailOf = async (userPage) => {
+    const hit = emailCache.get(emailKey);
+    if (hit?.savedMs === savedMs) return hit.email;
+    const email = await accountEmail(ctx, userPage);
+    if (email) emailCache.set(emailKey, { savedMs, email });
+    return email;
+  };
   try {
     // Other roles: Drupal sends a logged-in user from /user to their own
     // page, and a logged-out one to /user/login.
@@ -175,7 +189,7 @@ async function checkSession(role, env) {
           ...result,
           status: 'valid',
           message: `Logged in as ${role}.`,
-          email: await accountEmail(ctx, location),
+          email: await emailOf(location),
         };
       if (redirected || res.status() === 200)
         return {
@@ -212,7 +226,7 @@ async function checkSession(role, env) {
         ...result,
         status: 'no-access',
         message: `Logged in, but this account can't open the status report, so it isn't an admin.`,
-        email: await accountEmail(ctx),
+        email: await emailOf(),
       };
     }
     if (res.status() === 200 && (await res.text()).includes('Status report')) {
@@ -220,7 +234,7 @@ async function checkSession(role, env) {
         ...result,
         status: 'valid',
         message: 'Logged in as an admin.',
-        email: await accountEmail(ctx),
+        email: await emailOf(),
       };
     }
     return {
@@ -257,10 +271,18 @@ async function accountEmail(ctx, userPage) {
     if (res.status() !== 200) return undefined;
     const html = await res.text();
     // CareerForce shows the email as text with a "change email" link
-    // (fam-operation-link--edit-email) instead of the core input.
-    const shown = html.match(
-      /fam-operation-link--edit-email[\s\S]*?<label[^>]*>[\s\S]*?<\/label>\s*<div>\s*([^<\s][^<]*?)\s*<\/div>/,
-    )?.[1];
+    // (fam-operation-link--edit-email) instead of the core input. Only the
+    // part of the page after that link is searched, so the lazy matches
+    // can't backtrack over the whole page.
+    const at = html.indexOf('fam-operation-link--edit-email');
+    const shown =
+      at < 0
+        ? undefined
+        : html
+            .slice(at, at + EMAIL_WINDOW)
+            .match(
+              /<label[^>]*>[\s\S]*?<\/label>\s*<div>\s*([^<\s][^<]*?)\s*<\/div>/,
+            )?.[1];
     const input = html.match(/<input\b[^>]*\bname="mail"[^>]*>/);
     const value = shown ?? input?.[0].match(/\bvalue="([^"]*)"/)?.[1];
     return value ? decodeHtml(value) : undefined;
@@ -269,11 +291,20 @@ async function accountEmail(ctx, userPage) {
   }
 }
 
+// How far past the "change email" link the email is looked for.
+const EMAIL_WINDOW = 20_000;
+// The email last read for each saved session: `${env}:${role}` →
+// { savedMs: the session file's mtime, email }.
+const emailCache = new Map();
+
 // Enough HTML entity decoding for an attribute value that holds an email.
+// An invalid code point throws a RangeError; accountEmail catches it.
 function decodeHtml(text) {
   return text
-    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
-    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCharCode(parseInt(n, 16)))
+    .replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) =>
+      String.fromCodePoint(parseInt(n, 16)),
+    )
     .replace(/&quot;/g, '"')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
@@ -357,11 +388,16 @@ function sendJson(res, status, body) {
 }
 
 async function readJsonBody(req) {
-  let body = '';
+  // Joined as bytes, then decoded once: decoding each chunk on its own breaks
+  // a UTF-8 character split between two chunks.
+  const chunks = [];
+  let size = 0;
   for await (const chunk of req) {
-    body += chunk;
-    if (body.length > 100_000) throw new RunError(413, 'Request too large.');
+    size += chunk.length;
+    if (size > 100_000) throw new RunError(413, 'Request too large.');
+    chunks.push(chunk);
   }
+  const body = Buffer.concat(chunks).toString('utf8');
   try {
     return body ? JSON.parse(body) : {};
   } catch {
@@ -369,23 +405,29 @@ async function readJsonBody(req) {
   }
 }
 
-// The API starts test runs, so only this page may call it: no other website
-// open in the same browser (no CORS headers, a JSON body forces a preflight,
-// and the Origin must be us), and no DNS-rebound hostname (Host must be
-// localhost).
-function allowed(req) {
+// No DNS-rebound hostname: Host must be localhost. Checked for every
+// request, not only the API, since run files hold traces of logged-in
+// sessions.
+function hostAllowed(req) {
   const host = (req.headers.host ?? '').replace(/:\d+$/, '');
-  if (!['localhost', '127.0.0.1'].includes(host)) return false;
-  if (req.method === 'GET') return true;
+  return host === 'localhost' || host === '127.0.0.1';
+}
+
+// The API starts test runs, so only this page may change anything: no other
+// website open in the same browser (no CORS headers, a JSON body forces a
+// preflight, and the Origin must be us; "null" from a sandboxed frame or a
+// file:// page isn't).
+function writeAllowed(req) {
+  if (req.method === 'GET' || req.method === 'HEAD') return true;
   const origin = req.headers.origin;
-  if (origin && new URL(origin).host !== req.headers.host) return false;
+  if (origin && origin !== `http://${req.headers.host}`) return false;
   return (req.headers['content-type'] ?? '').startsWith('application/json');
 }
 
 const planSummary = (plan) => ({ ...plan, changesData: changesData(plan) });
 
 async function api(req, res, pathname, searchParams) {
-  if (!allowed(req)) return sendJson(res, 403, { error: 'Forbidden' });
+  if (!writeAllowed(req)) return sendJson(res, 403, { error: 'Forbidden' });
   let m;
 
   if (pathname === '/api/environments' && req.method === 'GET') {
@@ -615,16 +657,58 @@ async function api(req, res, pathname, searchParams) {
   return sendJson(res, 404, { error: 'Not found' });
 }
 
-async function sendFile(res, file) {
-  const body = await readFile(file);
-  res.writeHead(200, {
-    'content-type': contentTypes[extname(file)] ?? 'application/octet-stream',
-    'cache-control': 'no-store',
-  });
-  res.end(body);
+function sendText(res, status, text) {
+  res.writeHead(status, { 'content-type': 'text/plain; charset=utf-8' });
+  res.end(text);
 }
 
-const server = createServer(async (req, res) => {
+// "bytes=a-b", "bytes=a-" or "bytes=-n" → { start, end }, null for no (or an
+// unsupported) Range, or false when it's past the end of the file.
+function byteRange(header, size) {
+  const m = /^bytes=(\d*)-(\d*)$/.exec(header ?? '');
+  if (!m || (!m[1] && !m[2])) return null;
+  let start;
+  let end = size - 1;
+  if (m[1]) {
+    start = Number(m[1]);
+    if (m[2]) end = Math.min(Number(m[2]), end);
+  } else {
+    start = Math.max(0, size - Number(m[2]));
+  }
+  return start <= end ? { start, end } : false;
+}
+
+/**
+ * Stream a file, with Range support (the trace viewer and <video> ask for
+ * parts of a file). Throws, before anything is sent, when the file can't be
+ * read, so the caller can answer 404.
+ */
+async function sendFile(req, res, file) {
+  const info = await stat(file);
+  if (!info.isFile()) throw new Error(`Not a file: ${file}`);
+  const headers = {
+    'content-type': contentTypes[extname(file)] ?? 'application/octet-stream',
+    'cache-control': 'no-store',
+    'accept-ranges': 'bytes',
+  };
+  const range = byteRange(req.headers.range, info.size);
+  if (range === false) {
+    res.writeHead(416, { 'content-range': `bytes */${info.size}` });
+    return res.end();
+  }
+  const { start, end } = range ?? { start: 0, end: info.size - 1 };
+  if (range) headers['content-range'] = `bytes ${start}-${end}/${info.size}`;
+  headers['content-length'] = Math.max(0, end - start + 1);
+  res.writeHead(range ? 206 : 200, headers);
+  if (req.method === 'HEAD' || info.size === 0) return res.end();
+  // The headers are sent: a read error now can only cut the response short.
+  await pipeline(createReadStream(file, { start, end }), res).catch(() =>
+    res.destroy(),
+  );
+}
+
+async function handle(req, res) {
+  if (!hostAllowed(req)) return sendJson(res, 403, { error: 'Forbidden' });
   const { pathname, searchParams } = new URL(req.url, 'http://localhost');
 
   if (pathname.startsWith('/api/')) {
@@ -644,21 +728,24 @@ const server = createServer(async (req, res) => {
   // A run's files: /runs/<id>/report/ is its HTML report.
   const runFile = pathname.match(/^\/runs\/([\w-]+)\/(.+)$/);
   if (runFile) {
-    const file = normalize(
-      join(runFilesDir, runFile[1], decodeURIComponent(runFile[2])),
-    );
-    if (file.startsWith(runFilesDir + '/')) {
+    let rest;
+    try {
+      rest = decodeURIComponent(runFile[2]);
+    } catch {
+      return sendText(res, 400, 'Bad path');
+    }
+    const file = normalize(join(runFilesDir, runFile[1], rest));
+    if (file.startsWith(runFilesDir + sep)) {
       try {
         const target = (await stat(file)).isDirectory()
           ? join(file, 'index.html')
           : file;
-        return await sendFile(res, target);
+        return await sendFile(req, res, target);
       } catch {
         // fall through to 404
       }
     }
-    res.writeHead(404, { 'content-type': 'text/plain' });
-    return res.end('Not found');
+    return sendText(res, 404, 'Not found');
   }
 
   // In dev mode Vite serves the app.
@@ -669,14 +756,26 @@ const server = createServer(async (req, res) => {
     join(staticDir, pathname === '/' ? 'index.html' : pathname),
   );
   const target =
-    file.startsWith(staticDir) && extname(file)
+    file.startsWith(staticDir + sep) && extname(file)
       ? file
       : join(staticDir, 'index.html');
   try {
-    await sendFile(res, target);
+    await sendFile(req, res, target);
   } catch {
-    res.writeHead(404, { 'content-type': 'text/plain' });
-    res.end('Not found');
+    sendText(res, 404, 'Not found');
+  }
+}
+
+// Nothing a request does may take the dashboard down: an error that escapes
+// is answered with a 500 (or the connection closed, once the answer has
+// started) instead of becoming an unhandled rejection that ends the process.
+const server = createServer(async (req, res) => {
+  try {
+    await handle(req, res);
+  } catch (err) {
+    console.error(err);
+    if (!res.headersSent) sendJson(res, 500, { error: 'Internal error' });
+    else res.destroy();
   }
 });
 
@@ -703,10 +802,12 @@ async function openWindow(url) {
   await page.goto(url);
 }
 
-// A test run, or a UI mode window, started from the dashboard ends with it.
+// A test run, a UI mode window, or a question to Claude started from the
+// dashboard ends with it.
 function shutdown() {
   stopActiveRun();
   closeUiMode();
+  stopClaudes();
   server.close();
   process.exit(0);
 }
@@ -744,5 +845,9 @@ server.listen(port, '127.0.0.1', () => {
   );
   if (process.argv.includes('--no-open')) return;
   console.log('Opening it in a browser window. Close the window to stop.');
-  openWindow(url);
+  openWindow(url).catch((err) =>
+    console.log(
+      `Couldn't open the dashboard in the window (${err.message.split('\n')[0]}). Open ${url} yourself.`,
+    ),
+  );
 });

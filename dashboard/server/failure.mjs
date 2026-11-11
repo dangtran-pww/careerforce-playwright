@@ -97,12 +97,13 @@ export async function savedFailureExplanations(runId) {
   return all.filter(Boolean);
 }
 
-// One request per failure at a time: a second click joins the first.
+// One request per failure at a time: a second click joins the first. A
+// refresh doesn't join a request that may return the saved answer.
 const pending = new Map();
 
 /** Ask Claude why the test failed (or reuse the saved answer), and save it. */
 export function explainFailure(runId, ref, { refresh = false } = {}) {
-  const key = keyOf(runId, ref);
+  const key = `${keyOf(runId, ref)}${refresh ? '#refresh' : ''}`;
   if (!pending.has(key))
     pending.set(
       key,
@@ -218,7 +219,8 @@ function attemptLine(r, i) {
 
 function prompt({ run, ref, test, testCase }) {
   // The attempt to look at: the last failed one (a flaky test passed after).
-  const failed = test.results.findLast((r) => r.status !== 'passed');
+  const failed = test.results.findLast((r) => r.status !== 'passed') ??
+    test.results.at(-1) ?? { status: 'unknown' };
   const error = stripAnsi(
     (failed.errors ?? [failed.error])
       .filter(Boolean)

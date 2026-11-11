@@ -11,7 +11,7 @@
 // picked up without changing this file. Test titles start with the case ID
 // ("AR-1: status report ..."), which is how cases are matched to tests.
 
-import { readFile, readdir } from 'node:fs/promises';
+import { readFile, readdir, stat } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { join } from 'node:path';
@@ -285,18 +285,39 @@ function attachTests(plan, all) {
   };
 }
 
+// Every plan lookup (loadPlan) reads all plans again, so what's read from a
+// file is kept until the file changes: file → { mtimeMs, value }.
+const fileCache = new Map();
+
+// compute(text) for the file's text, from the cache while its mtime is
+// unchanged. A missing file reads as ''.
+async function fromFile(file, compute) {
+  const mtimeMs = await stat(file).then(
+    (s) => s.mtimeMs,
+    () => null,
+  );
+  const hit = fileCache.get(file);
+  if (hit && hit.mtimeMs === mtimeMs) return hit.value;
+  const text =
+    mtimeMs === null ? '' : await readFile(file, 'utf8').catch(() => '');
+  const value = compute(text);
+  fileCache.set(file, { mtimeMs, value });
+  return value;
+}
+
 // Roles a plan logs in as: `useRole('<role>')` or
 // `storageState: authFile('<role>')` (or an old
 // 'playwright/.auth/<role>.json') in its spec files.
+const rolesIn = (text) => [
+  ...text.matchAll(
+    /(?:useRole|authFile)\(\s*['"]([a-z-]+)['"]|playwright\/\.auth\/([a-z-]+)\.json/g,
+  ),
+].map((m) => m[1] ?? m[2]);
+
 async function rolesFor(files) {
   const roles = new Set();
-  for (const file of files) {
-    const text = await readFile(file, 'utf8').catch(() => '');
-    for (const m of text.matchAll(
-      /(?:useRole|authFile)\(\s*['"]([a-z-]+)['"]|playwright\/\.auth\/([a-z-]+)\.json/g,
-    ))
-      roles.add(m[1] ?? m[2]);
-  }
+  for (const file of files)
+    for (const role of await fromFile(file, rolesIn)) roles.add(role);
   return [...roles];
 }
 
@@ -318,10 +339,9 @@ export async function loadPlans({ refresh = false } = {}) {
       .filter((n) => n.endsWith('.md') && n !== 'README.md')
       .map(async (n) => {
         const slug = n.slice(0, -3);
-        const plan = attachTests(
-          parsePlan(slug, await readFile(join(plansDir, n), 'utf8')),
-          tests,
-        );
+        // Parsed again each time (cheap): attachTests fills in its cases.
+        const text = await fromFile(join(plansDir, n), (t) => t);
+        const plan = attachTests(parsePlan(slug, text), tests);
         plan.roles = await rolesFor(plan.files);
         return plan;
       }),

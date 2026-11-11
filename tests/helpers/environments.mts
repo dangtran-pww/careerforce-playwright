@@ -89,21 +89,31 @@ export async function isActive(
   timeoutMs = 2_000,
 ): Promise<boolean> {
   if (!env.local) return true;
-  const { request } = await import('node:https');
+  // LOCAL_URL may be http:// as well as https://; node:https refuses http.
+  const { request } =
+    new URL(env.baseURL).protocol === 'http:'
+      ? await import('node:http')
+      : await import('node:https');
   return new Promise((resolve) => {
-    const req = request(
-      env.baseURL,
-      { method: 'HEAD', rejectUnauthorized: false, timeout: timeoutMs },
-      (res) => {
-        res.resume();
-        const status = res.statusCode ?? 0;
-        // 401: the site's own Basic Auth gate, so it's up.
-        resolve((status >= 200 && status < 400) || status === 401);
-      },
-    );
-    req.on('timeout', () => req.destroy());
-    req.on('error', () => resolve(false));
-    req.end();
+    try {
+      const req = request(
+        env.baseURL,
+        // rejectUnauthorized only matters (and is only read) for https.
+        { method: 'HEAD', rejectUnauthorized: false, timeout: timeoutMs },
+        (res) => {
+          res.resume();
+          const status = res.statusCode ?? 0;
+          // 401: the site's own Basic Auth gate, so it's up.
+          resolve((status >= 200 && status < 400) || status === 401);
+        },
+      );
+      req.on('timeout', () => req.destroy());
+      req.on('error', () => resolve(false));
+      req.end();
+    } catch {
+      // A URL request() can't use at all: not a site to test.
+      resolve(false);
+    }
   });
 }
 

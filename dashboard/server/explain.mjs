@@ -17,6 +17,12 @@ const CLAUDE = process.env.CLAUDE_BIN ?? 'claude';
 // EXPLAIN_MODEL (e.g. haiku, opus) picks another.
 const EXPLAIN_MODEL = process.env.EXPLAIN_MODEL || 'sonnet';
 const EXPLAIN_TIMEOUT_MS = Number(process.env.EXPLAIN_TIMEOUT_MS ?? 5 * 60_000);
+// At most this many `claude -p` answers at once (explanations, reviews and
+// failure explanations together); the rest wait their turn.
+const CLAUDE_CONCURRENCY = Math.max(
+  1,
+  Number(process.env.CLAUDE_CONCURRENCY) || 2,
+);
 const cacheDir = join('reports', 'explanations');
 
 const SCHEMA = {
@@ -97,12 +103,13 @@ export async function savedExplanation(plan, id) {
   return { ...saved, stale: saved.hash !== hash };
 }
 
-// One request per case at a time: a second click waits for the first.
+// One request per case at a time: a second click waits for the first. A
+// refresh doesn't join a request that may return the saved answer.
 const pending = new Map();
 
 /** Ask Claude for an explanation (or reuse the saved one), and save it. */
 export function explainCase(plan, id, { refresh = false } = {}) {
-  const key = `${plan.slug}/${id}`;
+  const key = `${plan.slug}/${id}${refresh ? '#refresh' : ''}`;
   if (!pending.has(key))
     pending.set(
       key,
@@ -207,9 +214,58 @@ const tokens = (input = 0, cacheRead = 0, cacheWrite = 0, output = 0) => ({
   out: output,
 });
 
+// ---- running claude --------------------------------------------------------
+
+let running = 0;
+const waiting = [];
+// The `claude` processes running now, so the dashboard can end them when it
+// stops.
+const children = new Set();
+
+// Take one of the CLAUDE_CONCURRENCY slots, waiting for one if needed. A
+// released slot is handed straight to the next waiter, so no new caller can
+// slip in between.
+async function acquire() {
+  if (running < CLAUDE_CONCURRENCY) {
+    running++;
+    return;
+  }
+  await new Promise((resolve) => waiting.push(resolve));
+}
+
+function release() {
+  const next = waiting.shift();
+  if (next) next();
+  else running--;
+}
+
+// End a `claude` process and the MCP servers and tools it started (it runs
+// in its own process group).
+function killGroup(child) {
+  try {
+    process.kill(-child.pid, 'SIGTERM');
+  } catch {
+    child.kill('SIGTERM');
+  }
+}
+
+/** End every `claude -p` still running (when the dashboard stops). */
+export function stopClaudes() {
+  for (const child of children) killGroup(child);
+}
+
 // Run `claude -p` with read-only tools, answering in the given JSON schema;
-// resolve with its JSON result. review.mjs uses it too.
-export function runClaude(text, schema) {
+// resolve with its JSON result. review.mjs and failure.mjs use it too.
+export async function runClaude(text, schema) {
+  await acquire();
+  try {
+    return await spawnClaude(text, schema);
+  } finally {
+    release();
+  }
+}
+
+function spawnClaude(text, schema) {
   const args = [
     '-p',
     text,
@@ -229,16 +285,25 @@ export function runClaude(text, schema) {
   ];
   return new Promise((resolve, reject) => {
     const child = spawn(CLAUDE, args, {
+      // Own process group, so a timeout ends Claude and everything it
+      // started. That also keeps Ctrl+C from reaching it: stopClaudes() does.
+      detached: true,
       stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...process.env, FORCE_COLOR: '0' },
     });
+    children.add(child);
     let out = '';
     let err = '';
+    let timedOut = false;
     child.stdout.on('data', (c) => (out += c));
     child.stderr.on('data', (c) => (err += c));
-    const timer = setTimeout(() => child.kill(), EXPLAIN_TIMEOUT_MS);
+    const timer = setTimeout(() => {
+      timedOut = true;
+      killGroup(child);
+    }, EXPLAIN_TIMEOUT_MS);
     child.on('error', () => {
       clearTimeout(timer);
+      children.delete(child);
       reject(
         new RunError(
           500,
@@ -248,13 +313,16 @@ export function runClaude(text, schema) {
     });
     child.on('close', (code, signal) => {
       clearTimeout(timer);
-      if (signal)
+      children.delete(child);
+      if (timedOut)
         return reject(
           new RunError(
             504,
             `Claude took longer than ${EXPLAIN_TIMEOUT_MS / 60000} minutes.`,
           ),
         );
+      if (signal)
+        return reject(new RunError(502, `Claude was stopped (${signal}).`));
       try {
         resolve(JSON.parse(out));
       } catch {
