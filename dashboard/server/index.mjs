@@ -64,7 +64,7 @@
 //
 // The environment is picked on the page; BASE_URL (from .env) is only the
 // default. Env: BASE_URL, BASIC_AUTH_USER/PASSWORD (and _<ENV> overrides),
-// SANDBOX_URL, DASHBOARD_PORT (default 4400), HTTPS_PROXY (used if set).
+// SANDBOX_URL, LOCAL_URL, DASHBOARD_PORT (default 4400), HTTPS_PROXY (used if set).
 
 import { createServer } from 'node:http';
 import { readFile, readdir, stat } from 'node:fs/promises';
@@ -77,6 +77,7 @@ import {
   environmentById,
   environments,
   hostOf,
+  isActive,
   isDrupalSession,
   loginCommand as loginCommandFor,
   siteRequest,
@@ -170,7 +171,12 @@ async function checkSession(role, env) {
       const location = res.headers().location ?? '';
       const redirected = res.status() >= 300 && res.status() < 400;
       if (redirected && !location.includes('/user/login'))
-        return { ...result, status: 'valid', message: `Logged in as ${role}.` };
+        return {
+          ...result,
+          status: 'valid',
+          message: `Logged in as ${role}.`,
+          email: await accountEmail(ctx, location),
+        };
       if (redirected || res.status() === 200)
         return {
           ...result,
@@ -206,10 +212,16 @@ async function checkSession(role, env) {
         ...result,
         status: 'no-access',
         message: `Logged in, but this account can't open the status report, so it isn't an admin.`,
+        email: await accountEmail(ctx),
       };
     }
     if (res.status() === 200 && (await res.text()).includes('Status report')) {
-      return { ...result, status: 'valid', message: 'Logged in as an admin.' };
+      return {
+        ...result,
+        status: 'valid',
+        message: 'Logged in as an admin.',
+        email: await accountEmail(ctx),
+      };
     }
     return {
       ...result,
@@ -226,6 +238,46 @@ async function checkSession(role, env) {
   } finally {
     await ctx.dispose();
   }
+}
+
+// The email of the account a logged-in session belongs to, read from the
+// Email block of its edit form (<user page>/edit). Users log in with
+// their email, and it's also their display name. `userPage` is where /user
+// redirected to, when already known. Undefined when it can't be read; that
+// never changes the session's status.
+async function accountEmail(ctx, userPage) {
+  try {
+    if (!userPage) {
+      const res = await ctx.get('/user', { maxRedirects: 0 });
+      userPage = res.headers().location;
+      if (!userPage || userPage.includes('/user/login')) return undefined;
+    }
+    const path = new URL(userPage, 'http://site').pathname.replace(/\/$/, '');
+    const res = await ctx.get(`${path}/edit`, { maxRedirects: 0 });
+    if (res.status() !== 200) return undefined;
+    const html = await res.text();
+    // CareerForce shows the email as text with a "change email" link
+    // (fam-operation-link--edit-email) instead of the core input.
+    const shown = html.match(
+      /fam-operation-link--edit-email[\s\S]*?<label[^>]*>[\s\S]*?<\/label>\s*<div>\s*([^<\s][^<]*?)\s*<\/div>/,
+    )?.[1];
+    const input = html.match(/<input\b[^>]*\bname="mail"[^>]*>/);
+    const value = shown ?? input?.[0].match(/\bvalue="([^"]*)"/)?.[1];
+    return value ? decodeHtml(value) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+// Enough HTML entity decoding for an attribute value that holds an email.
+function decodeHtml(text) {
+  return text
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCharCode(parseInt(n, 16)))
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
 }
 
 // One check per role and environment at a time: a second request while one
@@ -338,11 +390,18 @@ async function api(req, res, pathname, searchParams) {
 
   if (pathname === '/api/environments' && req.method === 'GET') {
     // The default is BASE_URL's environment, even when it isn't in the list
-    // (a local site).
-    const list = environments();
-    if (!list.some((e) => e.id === defaultEnv.id)) list.push(defaultEnv);
+    // (some other host). The local DDEV site is listed only while it's
+    // running; checked on each page load, so starting DDEV and reloading
+    // brings it back.
+    const all = environments();
+    if (!all.some((e) => e.id === defaultEnv.id)) all.push(defaultEnv);
+    const up = await Promise.all(all.map((e) => isActive(e)));
+    const list = all.filter((_, i) => up[i]);
+    const fallback = list.some((e) => e.id === defaultEnv.id)
+      ? defaultEnv.id
+      : list[0]?.id;
     return sendJson(res, 200, {
-      default: defaultEnv.id,
+      default: fallback,
       environments: list.map(publicEnv),
     });
   }

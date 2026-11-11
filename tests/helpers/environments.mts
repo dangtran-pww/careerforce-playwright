@@ -17,6 +17,13 @@ export type Environment = {
   baseURL: string;
   /** Production: plans that create, edit or delete content never run here. */
   production: boolean;
+  /**
+   * A site on this machine (DDEV). Its HTTPS certificate is DDEV's own
+   * (mkcert), which Node and Playwright don't trust, and it's reached
+   * directly, never through HTTPS_PROXY. Only offered while it's running
+   * (isActive below).
+   */
+  local?: boolean;
 };
 
 const KNOWN: Environment[] = [
@@ -33,6 +40,24 @@ const KNOWN: Environment[] = [
     production: false,
   },
   {
+    id: 'sandbox',
+    name: 'Sandbox',
+    baseURL: (
+      process.env.SANDBOX_URL ?? 'https://sandbox.careerforce.link'
+    ).replace(/\/$/, ''),
+    production: false,
+  },
+  {
+    id: 'local',
+    name: 'Local',
+    baseURL: (
+      process.env.LOCAL_URL ?? 'https://careerforcemn.ddev.site'
+    ).replace(/\/$/, ''),
+    production: false,
+    local: true,
+  },
+  // Last in the picker, after every test environment.
+  {
     id: 'prod',
     name: 'Production',
     baseURL: 'https://careerforce.mn.gov',
@@ -45,18 +70,41 @@ const DEFAULT_BASE_URL = 'https://qa.careerforce.link';
 // Hostnames that also mean production (the old domain redirects there).
 const PROD_HOSTS = ['careerforce.mn.gov', 'careerforcemn.com'];
 
-/** Every environment offered. Sandbox only when SANDBOX_URL is set. */
+/**
+ * Every environment known, Local included whether or not it's running. The
+ * dashboard's picker lists only the ones isActive() says are up.
+ */
 export function environments(): Environment[] {
-  const list = [...KNOWN];
-  if (process.env.SANDBOX_URL) {
-    list.push({
-      id: 'sandbox',
-      name: 'Sandbox',
-      baseURL: process.env.SANDBOX_URL.replace(/\/$/, ''),
-      production: false,
-    });
-  }
-  return list;
+  return [...KNOWN];
+}
+
+/**
+ * Is this environment there to test? Always true for the remote sites. A
+ * local (DDEV) site counts only when it answers: when the project is stopped,
+ * the connection is refused (router down) or DDEV's router answers 404/503
+ * for the unknown host. The certificate isn't checked (see `local`).
+ */
+export async function isActive(
+  env: Environment,
+  timeoutMs = 2_000,
+): Promise<boolean> {
+  if (!env.local) return true;
+  const { request } = await import('node:https');
+  return new Promise((resolve) => {
+    const req = request(
+      env.baseURL,
+      { method: 'HEAD', rejectUnauthorized: false, timeout: timeoutMs },
+      (res) => {
+        res.resume();
+        const status = res.statusCode ?? 0;
+        // 401: the site's own Basic Auth gate, so it's up.
+        resolve((status >= 200 && status < 400) || status === 401);
+      },
+    );
+    req.on('timeout', () => req.destroy());
+    req.on('error', () => resolve(false));
+    req.end();
+  });
 }
 
 /** The environment with this id, or undefined. */
@@ -75,7 +123,7 @@ export function envFor(baseURL: string): Environment {
   );
   if (known) return known;
   const production = PROD_HOSTS.some((h) => host.endsWith(h));
-  if (production) return { ...KNOWN[2], baseURL: baseURL.replace(/\/$/, '') };
+  if (production) return { ...KNOWN.find((e) => e.production)!, baseURL: baseURL.replace(/\/$/, '') };
   return {
     id: host.replace(/[^a-z0-9-]/gi, '-').toLowerCase(),
     name: host,
@@ -131,7 +179,7 @@ export function loginCommand(role: string, env: Environment | string): string {
 // ---- What differs between environments ------------------------------------
 
 // GTM container ID differs by environment: one ID for prod, one shared across
-// the lower environments (QA, stage, sandbox) per the source smoke-testing
+// the lower environments (QA, stage, sandbox, local) per the source smoke-testing
 // checklist. Confirmed on prod, QA, and stage (HP-3 run against stage,
 // 2026-10-30); sandbox uses the same ID as QA.
 const PROD_GTM_ID = 'GTM-WL36T6M';

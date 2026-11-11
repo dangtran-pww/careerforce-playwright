@@ -62,6 +62,7 @@ export function SessionCard({
       {session?.checkedAt && (
         <Facts
           items={[
+            session.email && ['Logged in as', session.email],
             ['Site', session.baseURL ?? '—'],
             ['Checked', <TimeAgo iso={session.checkedAt} />],
             ['Session saved', <TimeAgo iso={session.savedAt} />],
@@ -95,6 +96,7 @@ function useSessionCheck(role: string, env: Env) {
     let cancelled = false;
     fetchSession(role, env.id).then((next) => {
       if (cancelled) return;
+      console.info(`[session] ${role} on ${env.id}:`, next);
       setSession(next);
       setChecking(false);
     });

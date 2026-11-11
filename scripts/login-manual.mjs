@@ -9,7 +9,7 @@
 // protocol, at browser level only. It never attaches to a page, so the
 // sign-in pages can't see it, and it never touches the login itself.
 //
-// Run: npm run login:manual -- <role> [--env qa|stage|prod|sandbox]
+// Run: npm run login:manual -- <role> [--env qa|stage|prod|sandbox|local]
 //      (role defaults to "partner", env to the one BASE_URL points at)
 // e.g. npm run login:manual -- admin --env stage
 //

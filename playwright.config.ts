@@ -16,7 +16,7 @@ import { credentialsFor, currentEnv } from './tests/helpers/environments.mjs';
 //   SCREENSHOT=on BASE_URL=https://qa.careerforce.link npx playwright test
 //
 // BASE_URL picks the environment (tests/helpers/environments.mts): QA,
-// Stage, Production or Sandbox. The dashboard (`npm run dashboard`) sets it
+// Stage, Production, Sandbox or Local (DDEV). The dashboard (`npm run dashboard`) sets it
 // for you from its environment picker.
 //
 // QA/stage sit behind HTTP Basic Auth in front of Drupal; set
@@ -68,6 +68,8 @@ export default defineConfig({
   use: {
     baseURL: env.baseURL,
     httpCredentials,
+    // A local DDEV site uses DDEV's own (mkcert) certificate.
+    ignoreHTTPSErrors: !!env.local,
     trace: 'on-first-retry',
     // SCREENSHOT=on saves a full-page screenshot at the end of every test,
     // passed or failed. Off (failures only) unless set.

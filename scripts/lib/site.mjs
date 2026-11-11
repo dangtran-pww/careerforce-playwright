@@ -20,6 +20,7 @@ export {
   environmentById,
   environments,
   envFor,
+  isActive,
   loginCommand,
 } from '../../tests/helpers/environments.mts';
 
@@ -62,7 +63,9 @@ export function siteRequest(storageState, env = defaultEnv) {
     baseURL: env.baseURL,
     httpCredentials: credentialsFor(env),
     storageState,
-    proxy: proxyFromEnv(),
+    // A local DDEV site: reached directly, with DDEV's own certificate.
+    proxy: env.local ? undefined : proxyFromEnv(),
+    ignoreHTTPSErrors: !!env.local,
     timeout: 20_000,
   });
 }

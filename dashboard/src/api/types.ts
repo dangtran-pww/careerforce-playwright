@@ -31,6 +31,9 @@ export interface Session {
   checkedAt: string;
   savedAt?: string;
   baseURL?: string;
+  // The logged-in account's email; only when the site accepts the session
+  // and the account's edit form shows it.
+  email?: string;
   message?: string;
   loginCommand?: string;
 }

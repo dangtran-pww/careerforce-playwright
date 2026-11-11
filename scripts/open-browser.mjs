@@ -63,6 +63,7 @@ const context = await browser.newContext({
   httpCredentials: credentialsFor(env),
   storageState,
   viewport: null,
+  ignoreHTTPSErrors: !!env.local,
 });
 // The browser-level block can't match paths; this adds the tracking paths on
 // www.google.com and www.linkedin.com, for every tab in this window.

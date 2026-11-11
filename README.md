@@ -79,7 +79,7 @@ profile. CareerForce's roles:
 ```bash
 npm run login:manual              # default role (partner), on BASE_URL's environment
 npm run login:manual -- admin
-npm run login:manual -- admin --env stage   # qa | stage | prod | sandbox
+npm run login:manual -- admin --env stage   # qa | stage | prod | sandbox | local
 ```
 
 Cookies belong to one site, so each environment has its own logins:
@@ -248,8 +248,10 @@ terminal).
 
 A local page for seeing and running the tests:
 
-- **Environment picker** (top right): QA, Stage, Production, and Sandbox when
-  `SANDBOX_URL` is set. Every page and run uses the picked environment; `.env`'s
+- **Environment picker** (top right): QA, Stage, Production, Sandbox
+  (`https://sandbox.careerforce.link`, or `SANDBOX_URL`), and Local
+  (`https://careerforcemn.ddev.site`, or `LOCAL_URL`), which is listed only
+  while the DDEV site is running: start it with `ddev start` and reload. Every page and run uses the picked environment; `.env`'s
   `BASE_URL` is only the default. Production shows a red bar. Plans that change
   data can't run on Production. Each run records its environment, and its
   command starts with `BASE_URL=...` so it can be run the same way by hand.
