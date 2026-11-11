@@ -119,8 +119,26 @@ function PlanRow({
           <span className="badge badge-neutral small">No tests yet</span>
         )
       )}
-      {p.changesData && (
-        <span className="badge badge-warn small">Changes data</span>
+      {p.allNoProd ? (
+        <span
+          className="badge badge-warn small"
+          title={
+            p.noProd
+              ? 'The plan is no-prod, so it is skipped on Production'
+              : 'Every case is no-prod, so the plan is skipped on Production'
+          }
+        >
+          Not on prod
+        </span>
+      ) : (
+        (p.noProdCases?.length ?? 0) > 0 && (
+          <span
+            className="badge badge-warn small"
+            title={`Left out on Production: ${p.noProdCases?.join(', ')}`}
+          >
+            {p.noProdCases?.length} not on prod
+          </span>
+        )
       )}
     </label>
   );

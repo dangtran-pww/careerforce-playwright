@@ -1,7 +1,8 @@
-# [Stage] - Resume Builder - Test Plan
+# [Smoke] - Resume Builder - Test Plan
 
 Status: ready to generate
 Implemented test: —
+Prod: No: creates, edits and uploads resumes on the job seeker account.
 
 Split out from [deed-smoke-test-plan.md](../docs/deed-smoke-test-plan.md)
 §14, Phase 2.
@@ -10,7 +11,7 @@ Split out from [deed-smoke-test-plan.md](../docs/deed-smoke-test-plan.md)
 
 ```bash
 npm run login:manual -- jobseeker
-BASE_URL=https://qa.careerforce.link npx playwright test tests/stage/resume-builder
+BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/resume-builder --project=smoke-desktop
 ```
 
 ## Scope
@@ -60,7 +61,7 @@ tests/
   fixtures/
     sample-resume.docx
     sample.pdf
-  stage/resume-builder/
+  smoke/resume-builder/
     resume-builder.spec.ts   # RB-1 .. RB-5 (serial)
     resume-upload.spec.ts    # RB-6, RB-7
   pages/

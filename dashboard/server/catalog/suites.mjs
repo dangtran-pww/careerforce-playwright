@@ -12,7 +12,7 @@ import {
   PROMPTS_DIR as promptsDir,
   SUITES_DIR as suitesDir,
 } from '../paths.mjs';
-import { changesData, clean, loadPlans, tableRows } from './plans.mjs';
+import { allNoProd, clean, loadPlans, tableRows } from './plans.mjs';
 const ANONYMOUS = ['', '-', '—', 'anonymous', 'none'];
 
 const role = (cell) =>
@@ -199,8 +199,10 @@ function resolve(suite, allPlans, allPrompts) {
       runnable: plan.runnable,
       caseCount: plan.cases.length,
       testCount: projectTests.reduce((n, p) => n + p.testCount, 0),
-      // A Stage plan changes data even before its tests exist.
-      changesData: changesData(plan) || plan.type === 'Stage',
+      // Left out on production; all of them means the plan is skipped there.
+      noProd: plan.noProd,
+      noProdCases: plan.noProdCases,
+      allNoProd: allNoProd(plan),
       roles: plan.roles,
       projects,
       projectTests,
@@ -224,7 +226,6 @@ function resolve(suite, allPlans, allPrompts) {
     plans,
     prompts,
     roles,
-    changesData: plans.some((p) => p.changesData),
     problems,
   };
 }

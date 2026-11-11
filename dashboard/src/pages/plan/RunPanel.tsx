@@ -3,7 +3,8 @@ import type { Plan } from '../../api/types';
 import { Command } from '../../components/Command';
 import { PlanRunButton } from '../../components/PlanRunButton';
 import { useEnv } from '../../hooks/useEnv';
-import { hostOf, plural } from '../../lib/format';
+import { plural } from '../../lib/format';
+import { offProdReason } from '../../lib/prod';
 import { toggled } from '../../lib/sets';
 import { planCommand, runBody, type PlanChoice } from './choice';
 
@@ -16,19 +17,37 @@ interface Props {
 }
 
 // Projects, "show the browser", the command, and the Run button.
-export function RunPanel({ plan, site, choice, setChoice, activeRun }: Props) {
+export function RunPanel({ plan, choice, setChoice, activeRun }: Props) {
   const { currentEnv } = useEnv();
   const n = choice.cases.size;
-  const blocked = plan.changesData && currentEnv.production;
+  const blocked = currentEnv.production
+    ? offProdReason(plan, [...choice.cases])
+    : null;
+  const noProd = plan.noProdCases;
 
   return (
     <section className="card" aria-labelledby="run-heading">
       <h2 id="run-heading">Run this plan</h2>
-      {plan.changesData && (
-        <p className="callout callout-warn">
-          These tests create, edit or delete content on {currentEnv.name} (
-          {hostOf(site)}). Run them on QA or Stage only, never production.
+      {plan.noProd ? (
+        <p className={currentEnv.production ? 'callout callout-bad' : 'note'}>
+          Not on Production
+          {plan.noProdReason ? `: ${plan.noProdReason}` : ''}.
+          {currentEnv.production && ' Pick another environment in the header.'}
         </p>
+      ) : (
+        noProd.length > 0 &&
+        (currentEnv.production ? (
+          <p className="callout callout-warn">
+            {noProd.join(', ')} {noProd.length > 1 ? 'are' : 'is'} no-prod, so{' '}
+            {noProd.length > 1 ? 'they are' : 'it is'} left out on{' '}
+            {currentEnv.name}.
+          </p>
+        ) : (
+          <p className="note">
+            Not on Production: {noProd.join(', ')}. A run there leaves{' '}
+            {noProd.length > 1 ? 'them' : 'it'} out.
+          </p>
+        ))
       )}
       <fieldset>
         <legend>Projects</legend>
@@ -81,7 +100,10 @@ export function RunPanel({ plan, site, choice, setChoice, activeRun }: Props) {
         <PlanRunButton
           plan={plan}
           body={runBody(choice)}
-          disabled={Boolean(activeRun) || blocked || choice.projects.size === 0}
+          disabled={
+            Boolean(activeRun) || Boolean(blocked) || choice.projects.size === 0
+          }
+          title={blocked ?? undefined}
         >
           {activeRun
             ? 'Another run is in progress'

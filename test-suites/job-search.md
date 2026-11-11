@@ -1,17 +1,18 @@
 # [Suite] - Job Search
 
-In-depth checks of the Job Search feature (`/job-search`) as a visitor who
-isn't logged in, on desktop and on a phone. Read-only and prod-safe, but it
-makes too many searches for the post-deploy smoke run, so it runs on its own.
+Will run in-depth checks of the Job Search feature (`/job-search`). A
+placeholder for now: no plans or prompts yet, so there is nothing to run.
+The read-only part of `smoke-job-search` (search, results and filters) is in
+the Smoke suite.
 
 **Order:** 2
 
+<!-- Add steps as they are ready. See README.md → Format:
 ## Plans
-
-Read-only plans only. `smoke-job-search` (saved searches as a job seeker)
-changes data, so it doesn't belong here: one Stage plan would stop this suite
-from running on Production.
-
 | Plan | Projects |
 |---|---|
-| job-search | functional-desktop, functional-mobile |
+
+## Prompts
+| ID | Prompt |
+|---|---|
+-->

@@ -37,10 +37,10 @@ the command.
 |---|---|---|
 | QA | `https://qa.careerforce.link` | every plan |
 | Stage | `https://stage.careerforce.link` | every plan |
-| Production | `https://careerforce.mn.gov` | smoke plans only (read-only) |
+| Production | `https://careerforce.mn.gov` | every plan and case not marked no-prod |
 
-Never run a stage plan against Production. Stage plans create and delete
-content.
+Never run a no-prod plan or case on Production (see
+[Keeping tests off Production](#keeping-tests-off-production)).
 
 The test dashboard (`npm run dashboard`) has an environment picker, so you
 don't need `BASE_URL` there. Several plans can also run together as a suite
@@ -156,12 +156,19 @@ here. See the phase-1 plan below for a worked example.
 
 ## Smoke plans
 
-Smoke tests run after every deploy, including on production. A smoke run
-means every case in every `smoke-*.md`, and one command runs them
-all:
+Every `smoke-*.md` is a smoke plan: quick checks to run after each deploy.
+Its tests live in `tests/smoke/<area>/`, and the `smoke-desktop` and
+`smoke-mobile` Playwright projects run that folder. Most of them also run on Production after a deploy; the plans and cases
+that must not are marked no-prod (see
+[Keeping tests off Production](#keeping-tests-off-production)).
+
+The Smoke suite (`test-suites/smoke.md`) lists every smoke plan. On
+Production the dashboard runs it without the no-prod plans and cases.
+`npm run test:smoke` leaves out every test tagged `@no-prod`, on any
+environment:
 
 ```bash
-npm run test:smoke                              # all smoke plans, desktop and phone
+npm run test:smoke                              # prod-safe smoke tests, desktop and phone
 npx playwright test tests/smoke/admin-reports   # one plan
 npx playwright test --project=smoke-mobile      # phone only
 ```
@@ -169,21 +176,30 @@ npx playwright test --project=smoke-mobile      # phone only
 Every smoke plan runs on desktop (`smoke-desktop`) and on a phone
 (`smoke-mobile`), except the admin and editor areas, which are desktop only
 (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`). See
-[smoke-anonymous.md → Mobile](smoke-anonymous.md#mobile) and the README's
+[smoke-public-site.md → Mobile](smoke-public-site.md#mobile) and the README's
 "Desktop and mobile" section.
 
 Conventions:
 
 - **Naming:** `test-plans/smoke-<area>.md` ↔ `tests/smoke/<area>/`.
   Every spec from a smoke plan lives under `tests/smoke/`, and nothing else
-  does. The `smoke-desktop` and `smoke-mobile` Playwright projects run that
-  folder.
-- **Read-only and prod-safe:** no creating, editing, or deleting. Tests that
-  write data belong outside `tests/smoke/`.
+  does.
+- **Prod-safe unless marked:** a smoke test may run on Production unless
+  its plan or case is marked no-prod (see below).
 - **Login is per spec, not per project:** a plan that needs a logged-in role
   calls `useRole('<role>')` (from `tests/helpers/roles.ts`, which loads
   `playwright/.auth/<env>/<role>.json` and checks the session still works) in
   each spec or `describe` block. Run `npm run login:manual -- <role>` first.
+- **Required login column:** when a plan mixes cases that need a login with
+  cases that don't, add a **Required login** column to its case tables, just
+  before **Prod**. Put the role each case logs in as (the name used with
+  `npm run login:manual`, e.g. `jobseeker`, `admin`, `content-manager`).
+  Leave the cell empty for a visitor who isn't logged in.
+
+  | ID | Test | … | Required login | Prod |
+  |---|---|---|---|---|
+  | JS-1 | Job Search loads | … | | Yes |
+  | SS-1 | Save a search | … | `jobseeker` | No: saves a search on the job seeker account |
 - **Devices:** a new area runs on desktop and phone. If it's an admin or
   editor area, add it to `DESKTOP_ONLY_SMOKE_AREAS` and put
   `Devices: desktop only` in the plan's header.
@@ -195,21 +211,55 @@ Adding a new smoke plan:
    `tests/seed.spec.ts` as the seed.
 3. Update the status and the list below. No config change is needed.
 
-## Stage plans
+### Keeping tests off Production
 
-Stage plans are Phase 2 of `docs/deed-smoke-test-plan.md`: interactive
-flows that create, edit, or delete data. They need no test inbox and no
-LoginMN.
+Whether a test may run on Production is decided per plan or per case, not
+by whether it changes data: a case that creates something and cleans it up
+can be fine there. Mark it no-prod when it would, for example:
+
+- change something real visitors see and not fully undo it,
+- send email or notifications to real people,
+- run a heavy site-wide job (reindex, permissions rebuild, cache clear),
+- touch real user accounts.
+
+There are two levels:
+
+- **The whole plan:** put `Prod: No: <reason>` under `Implemented test:`,
+  e.g. `Prod: No: rebuilds permissions and reindexes the search indexes.`
+  Every case of the plan is then no-prod, and every test of the plan is
+  tagged `@no-prod`.
+- **One case:** add a **Prod** column to the plan's case table, with `Yes`
+  or `No: <reason>` in each row, and tag that case's tests `@no-prod`. A
+  plan without the column and without a `Prod:` line runs everything on
+  Production.
+
+| ID | Test | … | Prod |
+|---|---|---|---|
+| SS-1 | Save a search | … | No: saves a search on the job seeker account |
+| JS-1 | Job Search loads | … | Yes |
+
+Put the tag on the `test` or on its top-level `test.describe`, e.g.
+`test.describe('SS-1: …', { tag: '@no-prod' }, () => { … })`. When
+`BASE_URL` is Production, `playwright.config.ts` leaves `@no-prod` tests out
+of every project, whatever the command. The dashboard also reads the plan,
+so it keeps a no-prod plan or case off Production even before its tests
+exist or are tagged (it shows "untagged" in red when the plan says No but a
+test isn't tagged). A plain `playwright test` only knows the tag, so the
+tag is not optional.
+
+On Production the dashboard refuses a no-prod plan, and runs any other plan
+without its no-prod cases. A suite run there skips no-prod plans.
 
 ```bash
-npx playwright test --project=stage                # all stage plans
-npx playwright test tests/stage/content-lifecycle  # one plan
+BASE_URL=https://qa.careerforce.link npx playwright test --project=smoke-desktop --grep @no-prod         # only the no-prod tests
+BASE_URL=https://careerforce.mn.gov npx playwright test --project=smoke-desktop                       # Production: @no-prod left out
 ```
 
-Conventions:
+Conventions for tests that create, edit or delete data, on any environment:
 
-- **Naming:** `test-plans/smoke-<area>.md` ↔ `tests/stage/<area>/`.
-  A `stage` Playwright project runs that folder, on desktop only.
+- **Desktop only by default:** also tag them `@desktop-only`, unless the
+  phone is what's being tested. Each phone run would change the data again.
+  Admin and editor areas are already desktop only.
 - **Clean up in `finally`:** every test deletes or reverts what it created,
   even when an assertion fails. Created content is titled
   `Playwright test <timestamp>`.
@@ -221,15 +271,14 @@ Conventions:
   the `jobseeker`, `content-manager`, or `admin` session from
   `npm run login:manual -- <role>`.
 
-The `stage` project was added with the first
-stage spec (`tests/stage/admin-maintenance/`). `tests/fixtures/` is
-added with the first stage spec that needs fixture files.
+`tests/fixtures/` is added with the first data-changing spec that needs
+fixture files.
 
 ## Functional plans
 
-Deeper checks of one feature, as an anonymous visitor: more cases and more
-searches than a smoke test. They are read-only and prod-safe, but they make
-too many requests for the post-deploy smoke run.
+In-depth tests of one big feature area, such as Job Search, Resume Builder or
+Job Seeker Registration: many more cases than its smoke plan. Too long for the
+post-deploy run, so they run on their own. There are none yet.
 
 ```bash
 npx playwright test --project=functional-desktop --project=functional-mobile   # all functional plans
@@ -238,33 +287,28 @@ npx playwright test tests/functional/job-search --project=functional-desktop   #
 
 Conventions:
 
-- **Naming:** one plan per feature, `test-plans/<area>.md` ↔
-  `tests/functional/<area>/`, e.g. `job-search.md` ↔
-  `tests/functional/job-search/`. Each part of the feature is its own spec
-  file in that folder, e.g. `search.spec.ts`.
-- **Tags and projects:** wrap every functional suite in a `test.describe` tagged
-  with its feature, e.g. `{ tag: '@job-search' }`, so `--grep @job-search`
-  picks it out. All features run in the `functional-desktop` and
-  `functional-mobile` projects; pick one feature by its folder or tag.
+- **Naming:** one plan per feature, `test-plans/functional-<feature>.md` ↔
+  `tests/functional/<feature>/`. Each part of the feature is its own spec
+  file in that folder, e.g. `search.spec.ts`, `saved-searches.spec.ts`.
+- **Projects:** `functional-desktop` and `functional-mobile` run
+  `tests/functional/`.
+- **Production:** the same rules as smoke, see
+  [Keeping tests off Production](#keeping-tests-off-production): a
+  `Prod: No` line or Prod column, the `@no-prod` tag, and cleanup in
+  `finally` for tests that write.
 - **Known bugs are `test.fail`.** A case that checks a known bug is marked as
   expected to fail, with the bug in a comment, so the run stays green. Once the
   bug is fixed, the run reports "expected to fail, but passed".
 
 ## Plans
 
-- `job-search.md` — Status: implemented.
-  Implemented test: `tests/functional/job-search/search.spec.ts`.
-  Job Search part 1, search: form, keyword and location, location formats,
-  distance, empty and occupation searches, bad input, location suggestions.
-  3 known bugs are marked `test.fail`.
-
-- `smoke-anonymous.md` — Status: implemented.
+- `smoke-public-site.md` — Status: implemented.
   Implemented tests: `tests/smoke/anonymous/*.spec.ts`.
 - `smoke-admin-reports.md` — Status: implemented.
   Implemented test: `tests/smoke/admin-reports/admin-reports.spec.ts`.
 - `smoke-admin-maintenance.md` — Status: partially implemented (AM-1,
   AM-2 not yet verified). Implemented tests:
-  `tests/stage/admin-maintenance/*.spec.ts`.
+  `tests/smoke/admin-maintenance/*.spec.ts`. No-prod plan.
   Permissions rebuild, search-api rebuild tracking and reindex, and
   search checks (site, events, appointments, similar events, occupations).
 - `smoke-content-lifecycle.md` — Status: ready to generate.
@@ -272,8 +316,12 @@ Conventions:
 - `smoke-ckeditor.md` — Status: ready to generate.
 - `smoke-media.md` — Status: ready to generate.
 - `smoke-block-placement.md` — Status: ready to generate.
-- `smoke-job-search.md` — Status: ready to generate.
-  Filters, saved searches, dashboard management.
+- `smoke-job-search.md` — Status: partially implemented (JF-3 to JF-5,
+  SS-1 to SS-3, MD-1 to MD-6 pending). Implemented tests:
+  `tests/smoke/job-search/*.spec.ts`. Search and results, filters and sort
+  (read-only, in the smoke run), plus saved searches and My Job Search on the
+  dashboard as a job seeker (no-prod cases: tagged `@no-prod`, QA and Stage
+  only).
 - `smoke-jobseeker-tools.md` — Status: ready to generate.
   Skills Matcher / Interest Profiler / Employment Readiness as a job seeker.
 - `smoke-resume-builder.md` — Status: ready to generate.

@@ -63,7 +63,6 @@ export function SessionCard({
         <Facts
           items={[
             session.email && ['Logged in as', session.email],
-            ['Site', session.baseURL ?? '—'],
             ['Checked', <TimeAgo iso={session.checkedAt} />],
             ['Session saved', <TimeAgo iso={session.savedAt} />],
           ]}

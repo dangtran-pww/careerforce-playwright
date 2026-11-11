@@ -5,7 +5,7 @@
 import { mkdir, readFile } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
 import { hostOf } from '../../../scripts/lib/site.mjs';
-import { caseGrep, changesData } from '../catalog/plans.mjs';
+import { allNoProd, caseGrep } from '../catalog/plans.mjs';
 import { ApiError } from '../errors.mjs';
 import { quote } from '../lib/processes.mjs';
 import { RUNS_DIR } from '../paths.mjs';
@@ -19,16 +19,10 @@ export const stripAnsi = (text) => text.replace(ansi, '');
 
 // ---- what to run -----------------------------------------------------------
 
-/** Refuse plans that can't run on this environment. */
-export function checkPlanRunnable(plan, env) {
+/** Refuse plans that have nothing to run. */
+export function checkPlanRunnable(plan) {
   if (!plan.runnable)
     throw new ApiError(400, `${plan.name} has no implemented tests to run.`);
-  if (changesData(plan) && env.production) {
-    throw new ApiError(
-      400,
-      `${plan.name} creates, edits or deletes content, and ${env.name} (${hostOf(env)}) is production. Stage plans never run there.`,
-    );
-  }
 }
 
 /** Whether `project` has a test for any of the `cases` (ids). */
@@ -37,8 +31,15 @@ const runsAnyCase = (plan, project, cases) =>
     (c) => cases.includes(c.id) && c.projects?.some((p) => p.name === project),
   );
 
-/** Playwright arguments that run a plan's chosen projects and cases. */
-export function planArgs(plan, { projects, cases = [], headed = false } = {}) {
+/**
+ * Playwright arguments that run a plan's chosen projects and cases on `env`.
+ * On production the plan's no-prod cases are left out (and refused when they
+ * are all that was asked for).
+ */
+export function planArgs(
+  plan,
+  { env, projects, cases = [], headed = false } = {},
+) {
   const known = new Set(plan.projects.map((p) => p.name));
   const chosen = (
     projects ?? plan.projects.filter((p) => p.selected).map((p) => p.name)
@@ -48,20 +49,49 @@ export function planArgs(plan, { projects, cases = [], headed = false } = {}) {
       400,
       `Pick at least one project to run for ${plan.name}.`,
     );
+  if (env?.production && plan.noProd)
+    throw new ApiError(
+      400,
+      `${plan.name} is marked no-prod, so it never runs on ${env.name} (${hostOf(env)}).`,
+    );
   const caseIds = new Set(plan.cases.map((c) => c.id));
-  const chosenCases = cases.filter((c) => caseIds.has(c));
-  if (cases.length && !chosenCases.length)
+  const asked = cases.filter((c) => caseIds.has(c));
+  if (cases.length && !asked.length)
     throw new ApiError(400, 'None of those cases are in this plan.');
-  // With cases picked, only the projects that run at least one of them: a
-  // @desktop-only case such as HP-3 has no tests in smoke-mobile, and
-  // Playwright fails a project/grep pair that matches nothing.
-  const projectsForCases = chosenCases.length
-    ? chosen.filter((p) => runsAnyCase(plan, p, chosenCases))
+
+  // Production: drop the no-prod cases. The config already leaves out tests
+  // tagged @no-prod there; --grep-invert also catches a case the plan marks
+  // "No" whose tests aren't tagged yet.
+  const noProd = env?.production ? (plan.noProdCases ?? []) : [];
+  const chosenCases = asked.filter((c) => !noProd.includes(c));
+  const offProd = (ids) =>
+    new ApiError(
+      400,
+      `${ids.join(', ')} ${ids.length > 1 ? 'are' : 'is'} marked no-prod, so ${ids.length > 1 ? 'they never run' : 'it never runs'} on ${env.name} (${hostOf(env)}).`,
+    );
+  if (asked.length && !chosenCases.length) throw offProd(asked);
+  if (!asked.length && noProd.length && allNoProd(plan))
+    throw new ApiError(
+      400,
+      `Every case of ${plan.name} is marked no-prod, so it never runs on ${env.name} (${hostOf(env)}).`,
+    );
+  const runnableCases = chosenCases.length
+    ? chosenCases
+    : noProd.length
+      ? plan.cases.filter((c) => !c.noProd).map((c) => c.id)
+      : [];
+
+  // With cases picked (or no-prod ones left out), only the projects that run
+  // at least one of them: a @desktop-only case such as HP-3 has no tests in
+  // smoke-mobile, and Playwright fails a project/grep pair that matches
+  // nothing.
+  const projectsForCases = runnableCases.length
+    ? chosen.filter((p) => runsAnyCase(plan, p, runnableCases))
     : chosen;
   if (!projectsForCases.length)
     throw new ApiError(
       400,
-      `${chosenCases.join(', ')} ${chosenCases.length > 1 ? "don't" : "doesn't"} run in ${chosen.join(' or ')}.`,
+      `${runnableCases.join(', ')} ${runnableCases.length > 1 ? "don't" : "doesn't"} run in ${chosen.join(' or ')}.`,
     );
   return {
     projects: projectsForCases,
@@ -70,6 +100,7 @@ export function planArgs(plan, { projects, cases = [], headed = false } = {}) {
       ...plan.runPaths,
       ...projectsForCases.flatMap((p) => ['--project', p]),
       ...(chosenCases.length ? ['-g', caseGrep(chosenCases)] : []),
+      ...(noProd.length ? ['--grep-invert', caseGrep(noProd)] : []),
       ...(headed ? ['--headed'] : []),
     ],
   };

@@ -224,8 +224,8 @@ auto-population, use synthetic values only — never real identifiers.
    matcher/interest profiler as a logged-in job seeker, permissions
    rebuild, search-api reindex. Planned in
    `test-plans/smoke-<area>.md` (see
-   [test-plans/README.md](../test-plans/README.md#stage-plans)), specs go
-   in `tests/stage/<area>/`.
+   [test-plans/README.md](../test-plans/README.md#keeping-tests-off-production)), specs go
+   in `tests/smoke/<area>/`.
 3. **Phase 3 — email- and third-party-dependent flows**: everything gated
    ✉️ above (system emails, LoginMN registration, event/appointment
    registration & cancellation, groups/connections, location events).

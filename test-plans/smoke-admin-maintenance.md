@@ -1,7 +1,8 @@
 # [Smoke] - Admin Maintenance - Test Plan
 
 Status: partially implemented
-Implemented test: tests/stage/admin-maintenance/*.spec.ts
+Implemented test: tests/smoke/admin-maintenance/*.spec.ts
+Prod: No: rebuilds permissions and reindexes the search indexes.
 Pending cases: AM-1, AM-2 — generated but not yet verified against a live
 admin session (the saved admin session had expired). AM-3, AM-4, AM-5
 verified on QA, 2026-10-29.
@@ -23,21 +24,23 @@ out because they change site state.
 | **How to log in** | By hand, once per environment: `npm run login:manual -- admin --env <qa\|stage>` (without `--env`, it uses the environment `BASE_URL` in `.env` points at). A Chromium window opens on the login page. Click "PWW Staff Log In" and finish the Google sign-in. The session is saved as soon as you're back on the site, then close the window. The tests can't log in themselves: Google blocks sign-in from a browser Playwright controls. |
 | **Saved session** | `playwright/.auth/<env>/admin.json`, one file per environment, shared with [smoke-admin-reports](smoke-admin-reports.md). A QA session doesn't work on Stage. |
 | **Site password gate** | QA and Stage also ask for the Basic Auth username and password. The tests and the login window both take it from `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` in `.env` ([one-time setup](README.md#one-time-setup)). |
-| **When it expires** | Run the login command again. The `stage` project has no session check before it starts, so an expired session shows up as every case failing on the login page; a missing file fails with a storage state / ENOENT error. Drupal can also end the session early, e.g. when the same account logs in somewhere else. AM-1 and AM-2 are still unverified because the session had expired. |
-| **Environments** | QA and Stage only. Never Production: AM-1 and AM-2 change site state. |
+| **When it expires** | Run the login command again. Each spec calls `useRole('admin')`, which checks the session before the first test; if it has expired, the tests fail with the login command to fix it. Drupal can also end the session early, e.g. when the same account logs in somewhere else. AM-1 and AM-2 are still unverified because the session had expired. |
+| **Environments** | QA and Stage only. The plan is no-prod (`Prod: No` in the header): AM-1 and AM-2 change site state, and AM-3 to AM-5 run after AM-2. |
 
 ## Running it
 
 ```bash
 npm run login:manual -- admin
-BASE_URL=https://qa.careerforce.link npx playwright test tests/stage/admin-maintenance
+BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/admin-maintenance --project=smoke-desktop
 
 # Only the read-only search checks, no reindex:
-npx playwright test tests/stage/admin-maintenance --grep "AM-3|AM-4|AM-5"
+npx playwright test tests/smoke/admin-maintenance --grep "AM-3|AM-4|AM-5" --project=smoke-desktop
 ```
 
-Runs in the `stage` project (see
-[README → Stage plans](README.md#stage-plans)).
+Runs in the `smoke-desktop` project (admin-maintenance is desktop only). The
+plan is no-prod and every test is tagged `@no-prod`, so it never runs on
+Production, and `npm run test:smoke` leaves it out (see
+[README → Keeping tests off Production](README.md#keeping-tests-off-production)).
 
 ## Scope
 
@@ -289,7 +292,7 @@ the permission rebuild, then the reindex, then the searches.
 
 ```
 tests/
-  stage/admin-maintenance/
+  smoke/admin-maintenance/
     01-permissions.spec.ts          # AM-1
     02-search-api.spec.ts           # AM-2, AM-3
     03-events-search.spec.ts        # AM-4

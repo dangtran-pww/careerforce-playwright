@@ -40,8 +40,8 @@ export function isKnownIssue(
   );
 }
 
-// Allowlist of JavaScript errors already known on public pages, so JS-5
-// (test-plans/smoke-anonymous.md) fails only on a *new* error. `path` is
+// Allowlist of JavaScript errors already known on public pages, so GN-5
+// (test-plans/smoke-public-site.md) fails only on a *new* error. `path` is
 // matched against the start of the page's path, `message` as a substring of
 // the error message. Remove an entry once its bug is fixed, so the test
 // guards against it coming back.
@@ -51,14 +51,7 @@ export type KnownPageError = {
   reason: string;
 };
 
-const KNOWN_PAGE_ERRORS: KnownPageError[] = [
-  {
-    path: '/job-search',
-    message: "Cannot read properties of null (reading '1')",
-    reason:
-      'Thrown by the footer JS aggregate on every Job Search load (found on QA, 2026-11-04). Not yet ticketed.',
-  },
-];
+const KNOWN_PAGE_ERRORS: KnownPageError[] = [];
 
 export function isKnownPageError(pagePath: string, message: string): boolean {
   return KNOWN_PAGE_ERRORS.some(

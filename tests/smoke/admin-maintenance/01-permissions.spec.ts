@@ -11,7 +11,7 @@ import { waitForBatch } from '../../pages/search-api-index.page';
 
 useRole('admin');
 
-test('AM-1: permissions rebuild completes', async ({ page }) => {
+test('AM-1: permissions rebuild completes', { tag: '@no-prod' }, async ({ page }) => {
   test.setTimeout(15 * 60_000);
 
   await page.goto('/admin/reports/status/rebuild');

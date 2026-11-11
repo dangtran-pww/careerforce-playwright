@@ -1,7 +1,8 @@
-# [Stage] - Media Browser - Test Plan
+# [Smoke] - Media Browser - Test Plan
 
 Status: ready to generate
 Implemented test: —
+Prod: No: uploads to and deletes from the media library.
 
 Devices: desktop only. Admin and editor screens are not tested on a phone (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`).
 
@@ -12,7 +13,7 @@ Split out from [deed-smoke-test-plan.md](../docs/deed-smoke-test-plan.md)
 
 ```bash
 npm run login:manual -- content-manager
-BASE_URL=https://qa.careerforce.link npx playwright test tests/stage/media
+BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/media --project=smoke-desktop
 ```
 
 ## Scope
@@ -56,7 +57,7 @@ tests/
   fixtures/
     sample.jpg
     sample.pdf
-  stage/media/
+  smoke/media/
     media-library.spec.ts   # MB-1 .. MB-4
   pages/
     media-library.page.ts   # dialog: browse, upload, insert

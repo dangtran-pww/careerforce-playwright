@@ -1,7 +1,9 @@
-import type { PlanCase } from '../api/types';
+import type { CaseDetail, PlanCase } from '../api/types';
 import { CaseExplain } from './CaseExplain';
 import { Command } from './Command';
 import { inline } from '../lib/inline';
+import { splitNumbered } from '../lib/numbered';
+import { StepList } from './StepList';
 import { Tags } from './Tags';
 
 // How a test case is performed and what it expects: the rest of its row in
@@ -18,8 +20,8 @@ export function CaseDetails({
   testCase: PlanCase;
   command?: string; // runs only this case; left out when it has no tests
 }) {
-  const details = testCase.details ?? [];
   const locations = testCase.locations ?? [];
+  const details = withSteps(testCase.details ?? []);
   if (!details.length && !locations.length && !command) return null;
   return (
     <div className="case-details">
@@ -27,7 +29,7 @@ export function CaseDetails({
         {details.map((d) => (
           <div key={d.label}>
             <dt>{d.label}</dt>
-            <dd>{inline(d.text)}</dd>
+            <dd>{d.body}</dd>
           </div>
         ))}
         {locations.length > 0 && (
@@ -59,4 +61,16 @@ export function CaseDetails({
       )}
     </div>
   );
+}
+
+// The details ready to show, each in its own section. Numbered text (e.g.
+// Steps, Expected result) becomes a list.
+function withSteps(details: CaseDetail[]) {
+  return details.map((d) => {
+    const n = splitNumbered(d.text);
+    return {
+      label: d.label,
+      body: n ? <StepList numbered={n} /> : inline(d.text),
+    };
+  });
 }

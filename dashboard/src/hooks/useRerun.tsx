@@ -2,7 +2,7 @@
 // environment picked in the header.
 //
 // <RerunProvider> wraps the run page and loads every plan on the current
-// environment once (for "changes data" and whether another run is going);
+// environment once (for its no-prod cases and whether another run is going);
 // <RerunButton> and the per-test buttons read it with useRerun(). The page
 // is remounted when the environment changes (App.tsx), so this follows the
 // header's pick.

@@ -26,7 +26,7 @@ const isRemote = (s: Slot) => s.formats.some((f) => REMOTE.includes(f));
 // A city far (> 10 mi) from `city`, for radius checks.
 const farFrom = (city: string) => (city === 'Duluth' ? 'Bloomington' : 'Duluth');
 
-test.describe('AM-5: appointments search date strip and filters', () => {
+test.describe('AM-5: appointments search date strip and filters', { tag: '@no-prod' }, () => {
   test.describe.configure({ timeout: 3 * 60_000 });
 
   let today: string;

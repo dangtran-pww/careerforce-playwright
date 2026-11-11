@@ -67,7 +67,17 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
     }));
 
   const total = choice.plans.size + choice.prompts.size;
-  const blocked = suite.changesData && env.production;
+  // On production the chosen plans run without their no-prod cases; a plan
+  // whose cases are all no-prod is skipped.
+  const chosenPlans = suite.plans.filter((p) => choice.plans.has(p.slug));
+  const offProd = env.production
+    ? chosenPlans.filter((p) => (p.noProdCases?.length ?? 0) > 0)
+    : [];
+  const blocked =
+    env.production &&
+    choice.prompts.size === 0 &&
+    chosenPlans.length > 0 &&
+    chosenPlans.every((p) => p.allNoProd);
   const logins = neededLogins(suite, choice, env);
   useNeededLogins(logins.map((l) => l.role));
 
@@ -94,11 +104,25 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
               Run on <EnvTag env={env} />
             </h2>
           </div>
-          {blocked && (
+          {blocked ? (
             <p className="callout callout-bad">
-              This suite has plans that change data, so it never runs on
+              Every case of the chosen plans is no-prod, so nothing would run on
               Production. Pick another environment in the header.
             </p>
+          ) : (
+            offProd.length > 0 && (
+              <p className="callout callout-warn">
+                On Production, the no-prod cases are left out:{' '}
+                {offProd
+                  .map((p) =>
+                    p.allNoProd
+                      ? `${p.name} (skipped)`
+                      : `${p.noProdCases?.join(', ')}`,
+                  )
+                  .join('; ')}
+                .
+              </p>
+            )
           )}
           <PlanChecklist
             suite={suite}

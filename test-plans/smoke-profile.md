@@ -1,7 +1,8 @@
-# [Stage] - Profile - Test Plan
+# [Smoke] - Profile - Test Plan
 
 Status: ready to generate
 Implemented test: —
+Prod: No: edits user profiles.
 
 Split out from [deed-smoke-test-plan.md](../docs/deed-smoke-test-plan.md)
 §22, Phase 2.
@@ -11,7 +12,7 @@ Split out from [deed-smoke-test-plan.md](../docs/deed-smoke-test-plan.md)
 ```bash
 npm run login:manual -- jobseeker
 npm run login:manual -- admin
-BASE_URL=https://qa.careerforce.link npx playwright test tests/stage/profile
+BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/profile --project=smoke-desktop
 ```
 
 ## Scope
@@ -58,7 +59,7 @@ BASE_URL=https://qa.careerforce.link npx playwright test tests/stage/profile
 
 ```
 tests/
-  stage/profile/
+  smoke/profile/
     own-profile.spec.ts     # PF-1 .. PF-3
     admin-profile.spec.ts   # PF-4, PF-5
   pages/

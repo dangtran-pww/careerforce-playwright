@@ -4,6 +4,7 @@ import type { PlanResponse } from '../../api/types';
 import { Badge } from '../../components/Badge';
 import { CaseDetails } from '../../components/CaseDetails';
 import { CaseProjects } from '../../components/CaseProjects';
+import { NoProdBadge, PlanNoProdBadge } from '../../components/NoProdBadge';
 import { ErrorBox, Loading } from '../../components/Callouts';
 import { Facts } from '../../components/Facts';
 import { PlanOverview } from '../../components/PlanOverview';
@@ -58,7 +59,6 @@ export function PlanPanel({
   }, [onClose]);
 
   const plan = data?.plan;
-  const blocked = Boolean(plan?.changesData && currentEnv.production);
 
   return (
     <aside
@@ -88,9 +88,7 @@ export function PlanPanel({
           <p className="side-panel-tags">
             <span className="note">{plan.type}</span>
             <Badge map={PLAN_STATUS} value={plan.status} />
-            {plan.changesData && (
-              <span className="badge badge-warn small">Changes data</span>
-            )}
+            <PlanNoProdBadge plan={plan} />
           </p>
           <PlanOverview plan={plan} />
           {plan.notes.map((n) => (
@@ -163,7 +161,15 @@ export function PlanPanel({
             expandLabel={(c) => `Details of ${c.id}`}
             columns={[
               { head: 'ID', className: 'mono', cell: (c) => c.id },
-              { head: 'Case', cell: (c) => c.title },
+              {
+                head: 'Case',
+                cell: (c) => (
+                  <>
+                    {c.title}
+                    {!plan.noProd && <NoProdBadge testCase={c} />}
+                  </>
+                ),
+              },
               plan.runnable && {
                 head: 'Projects',
                 cell: (c) => <CaseProjects testCase={c} only={projects} />,
@@ -186,12 +192,15 @@ export function PlanPanel({
                         headed,
                       }}
                       className="ghost small"
-                      disabled={Boolean(activeRun) || blocked}
+                      disabled={
+                        Boolean(activeRun) ||
+                        Boolean(currentEnv.production && c.noProd)
+                      }
                       title={
                         activeRun
                           ? 'Another run is in progress'
-                          : blocked
-                            ? 'This plan changes data, so it never runs on Production'
+                          : currentEnv.production && c.noProd
+                            ? `${c.id} is no-prod, so it never runs on Production`
                             : `Run ${c.id} on ${currentEnv.name}`
                       }
                     >

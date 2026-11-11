@@ -3,7 +3,7 @@
 
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { changesData, loadPlan, loadPlans } from '../catalog/plans.mjs';
+import { loadPlan, loadPlans } from '../catalog/plans.mjs';
 import { explainCase, savedExplanation } from '../claude/explain.mjs';
 import { latestReview, reviewCase } from '../claude/review.mjs';
 import { envParam, publicEnv } from '../environments.mjs';
@@ -15,8 +15,6 @@ import { openUiMode } from '../ui-mode.mjs';
 import { CASE_ID, SLUG, envField, flag, jsonBody, strings } from './shared.mjs';
 
 export const planRoutes = new Hono();
-
-const planSummary = (plan) => ({ ...plan, changesData: changesData(plan) });
 
 async function planOf(c) {
   const plan = await loadPlan(c.req.param('slug'));
@@ -41,7 +39,7 @@ planRoutes.get('/', async (c) => {
     site: env.baseURL,
     activeRun: activeRunId(),
     listErrors,
-    plans: plans.map((p) => ({ ...planSummary(p), lastRun: lastRun(p.slug) })),
+    plans: plans.map((p) => ({ ...p, lastRun: lastRun(p.slug) })),
   });
 });
 
@@ -53,7 +51,7 @@ planRoutes.get(PLAN, async (c) => {
     env: publicEnv(env),
     site: env.baseURL,
     activeRun: activeRunId(),
-    plan: planSummary(plan),
+    plan,
     runs: await listRuns({ plan: plan.slug, limit: 10 }),
   });
 });

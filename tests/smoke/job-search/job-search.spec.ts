@@ -1,10 +1,9 @@
 import { test, expect } from '../../helpers/fixtures';
-import { isKnownPageError } from '../../helpers/known-issues';
 import { HomePage } from '../../pages/home.page';
 import { JobSearchPage } from '../../pages/job-search.page';
 
-// [Smoke] - Anonymous - Test Plan, JS-1 to JS-5.
-// See test-plans/smoke-anonymous.md.
+// [Smoke] - Job Search - Test Plan, JS-2 to JS-5 (JS-1 not generated yet).
+// See test-plans/smoke-job-search.md.
 //
 // The jobs come from an outside feed, so the tests never name a job,
 // company or city: they take whatever the search returns.
@@ -13,7 +12,11 @@ import { JobSearchPage } from '../../pages/job-search.page';
 
 const KEYWORD = 'nurse';
 
-test('JS-1: homepage Job Search opens Job Search results', async ({ page }) => {
+// JS-2 checks only that the homepage block hands its search over to Job
+// Search. That Job Search itself loads, lists jobs and has no JavaScript
+// errors is JS-1; the homepage's JavaScript errors are GN-5 in
+// test-plans/smoke-public-site.md.
+test('JS-2: homepage Job Search opens Job Search with the keyword', async ({ page }) => {
   const home = new HomePage(page);
   const jobs = new JobSearchPage(page);
   await home.goto();
@@ -24,12 +27,10 @@ test('JS-1: homepage Job Search opens Job Search results', async ({ page }) => {
   const params = new URL(page.url()).searchParams;
   expect(params.get('title')).toBe(KEYWORD);
   expect(params.get('radius'), 'the default distance, 20 miles').toBe('20');
-  await expect(jobs.heading).toBeVisible();
   await expect(jobs.keywordInput).toHaveValue(KEYWORD);
-  expect(await jobs.resultCount()).toBeGreaterThan(0);
 });
 
-test('JS-2: each job in the results has a title and its links', async ({ page }) => {
+test('JS-3: each job in the results has a title and its links', async ({ page }) => {
   const jobs = new JobSearchPage(page);
   await jobs.search({ title: KEYWORD });
   const cards = await jobs.cards.all();
@@ -52,7 +53,7 @@ test('JS-2: each job in the results has a title and its links', async ({ page })
   }
 });
 
-test('JS-3: Read more opens the job on its own', async ({ page }) => {
+test('JS-4: Read more opens the job on its own', async ({ page }) => {
   const jobs = new JobSearchPage(page);
   await jobs.search({ title: KEYWORD });
   const first = jobs.cards.first();
@@ -69,16 +70,7 @@ test('JS-3: Read more opens the job on its own', async ({ page }) => {
   await expect(jobs.fullDescription(job)).not.toBeEmpty();
 });
 
-test('JS-4: Save search and Bookmark ask an anonymous visitor to log in', async ({
-  page,
-  isMobile,
-}) => {
-  // Known bug (found on QA, 2026-11-04): on a phone, Save search is in the
-  // full-screen filters drawer, and its login dialog opens *behind* that
-  // drawer, so the visitor sees nothing happen. Remove this line once it's
-  // fixed: Playwright then reports "expected to fail, but passed".
-  test.fail(isMobile, 'Phone: Save search login dialog opens behind the filters drawer');
-
+test('JS-5: Save search and Bookmark ask an anonymous visitor to log in', async ({ page }) => {
   const jobs = new JobSearchPage(page);
   await jobs.search({ title: KEYWORD });
 
@@ -114,33 +106,3 @@ test('JS-4: Save search and Bookmark ask an anonymous visitor to log in', async 
     });
   }
 });
-
-// Uncaught JavaScript errors only. Console messages are not checked: the
-// tests block analytics and the AWS WAF script on purpose, and those
-// blocked loads show up in the console as errors.
-const PAGES = [
-  { name: 'Homepage', path: '/' },
-  { name: 'Job Search', path: `/job-search?title=${KEYWORD}` },
-  { name: 'Site search', path: '/search?k=job' },
-  { name: 'Explore Careers', path: '/explore/careers?otitle=Nursing' },
-];
-
-for (const { name, path } of PAGES) {
-  test(`JS-5: ${name} loads without JavaScript errors`, async ({ page }) => {
-    const errors: string[] = [];
-    page.on('pageerror', (error) => errors.push(error.message));
-    await page.goto(path);
-    await page.waitForLoadState('networkidle');
-
-    const pagePath = new URL(page.url()).pathname;
-    const unknown = errors.filter((message) => !isKnownPageError(pagePath, message));
-    const known = errors.filter((message) => isKnownPageError(pagePath, message));
-    if (known.length > 0) {
-      test.info().annotations.push({
-        type: 'known issue',
-        description: `Known JavaScript error(s), see tests/helpers/known-issues.ts: ${known.join(' | ')}`,
-      });
-    }
-    expect(unknown, `New JavaScript errors on ${path}`).toEqual([]);
-  });
-}

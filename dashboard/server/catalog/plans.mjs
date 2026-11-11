@@ -6,6 +6,15 @@
 // and titles from its test-case tables (rows whose first cell is an ID such as
 // HP-1 or JSS-2). See test-plans/README.md → "Status on every plan".
 //
+// What must never run on production is marked at one of two levels, with an
+// optional reason after "No":
+//  - the whole plan: a "Prod: No: <reason>" line in its header. Every case
+//    is then no-prod, and every one of its tests is tagged @no-prod.
+//  - one case: "No: <reason>" in its table's Prod column, and that case's
+//    tests are tagged @no-prod.
+// The plan text or the tag is enough, so the dashboard keeps a case off
+// production even before its tests exist.
+//
 // Which tests and projects a plan runs comes from Playwright itself
 // (`playwright test --list --reporter=json`), so a new project or spec is
 // picked up without changing this file. Test titles start with the case ID
@@ -19,6 +28,8 @@ import { PLANS_DIR as plansDir } from '../paths.mjs';
 
 const run = promisify(execFile);
 const caseId = /^[A-Z][A-Z0-9]*-\d+$/;
+// "No", or "No: <reason>", in a Prod line or column.
+const NO_PROD = /^no\b[\s:.,;—–-]*(.*?)\.?$/i;
 
 export function clean(text) {
   return text
@@ -49,6 +60,13 @@ function parsePlan(slug, text) {
       .match(/Status:\**\s*([a-z ]+)/i)?.[1]
       .trim()
       .toLowerCase() ?? 'unknown';
+
+  // "Prod: No: <reason>" in the header: no case of the plan runs on
+  // production.
+  const planProd = clean(
+    head.find((l) => /^\**Prod:/i.test(l))?.replace(/^\**Prod:\**\s*/i, '') ??
+      '',
+  ).match(NO_PROD);
 
   const implementedLine =
     head.find((l) => /^\**Implemented tests?:/i.test(l)) ?? '';
@@ -123,16 +141,22 @@ function parsePlan(slug, text) {
     }
     if (seen.has(cells[0])) continue;
     seen.add(cells[0]);
+    // The Prod column: "No" or "No: <reason>" keeps the case off production.
+    const prodAt = header.findIndex((h) => /^prod(uction)?$/i.test(clean(h)));
+    const prod = clean(prodAt >= 2 ? (cells[prodAt] ?? '') : '');
+    const noProd = prod.match(NO_PROD);
     cases.push({
       id: cells[0],
       title: clean(cells[1] ?? '').replace(/`/g, ''),
+      noProd: Boolean(planProd || noProd),
+      noProdReason: noProd?.[1] || planProd?.[1] || null,
       details: cells
         .slice(2)
         .map((text, i) => ({
           label: clean(header[i + 2] ?? '') || `Column ${i + 3}`,
           text: text.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').trim(),
         }))
-        .filter((d) => d.text),
+        .filter((d, i) => d.text && i + 2 !== prodAt),
     });
   }
 
@@ -143,6 +167,8 @@ function parsePlan(slug, text) {
     name,
     status,
     testPaths,
+    noProd: Boolean(planProd),
+    noProdReason: planProd?.[1] || null,
     notes,
     summary,
     overview: overviewBlocks,
@@ -199,7 +225,7 @@ async function listTests() {
   };
 }
 
-// "tests/stage/admin-maintenance/*.spec.ts" or a folder → a matcher.
+// "tests/smoke/admin-maintenance/*.spec.ts" or a folder → a matcher.
 function pathMatcher(path) {
   const glob = path
     .replace(/[.+^${}()|[\]\\]/g, '\\$&')
@@ -210,9 +236,12 @@ function pathMatcher(path) {
 const hasCase = (test, id) =>
   test.path.some((title) => new RegExp(`^${id}(?!\\d)`).test(title));
 
-// Plans whose tests live in tests/stage/ create, edit or delete content.
-export const changesData = (plan) =>
-  plan.files.some((f) => f.startsWith('tests/stage/'));
+/** Whether nothing of `plan` runs on production. */
+export const allNoProd = (plan) => {
+  if (plan.noProd) return true;
+  const withTests = plan.cases.filter((c) => c.testCount > 0);
+  return withTests.length > 0 && withTests.every((c) => c.noProd);
+};
 
 // Playwright `-g` pattern that picks these cases' tests.
 export const caseGrep = (ids) => `\\b(?:${ids.join('|')})(?!\\d)`;
@@ -278,10 +307,24 @@ function attachTests(plan, all) {
     c.tags = [
       ...new Set(tests.filter((t) => hasCase(t, c.id)).flatMap((t) => t.tags)),
     ].sort();
+    // Off production when the plan says so or its tests are tagged
+    // @no-prod (the tag playwright.config.ts leaves out on production).
+    c.noProd = c.noProd || c.tags.includes('no-prod');
+    // Said "No" in the plan, but a test of it isn't tagged: the dashboard
+    // still keeps it off production, a plain `playwright test` wouldn't.
+    c.noProdUntagged =
+      c.noProd &&
+      c.locations.length > 0 &&
+      c.locations.some((l) => !l.tags?.includes('no-prod'));
   }
   return {
     ...plan,
     files,
+    // The cases that never run on production.
+    noProdCases: plan.cases.filter((c) => c.noProd).map((c) => c.id),
+    // A no-prod plan with a test that isn't tagged @no-prod.
+    noProdUntagged:
+      plan.noProd && tests.some((t) => !t.tags.includes('no-prod')),
     runPaths,
     projects,
     testCount: runTests.length,
@@ -351,7 +394,7 @@ export async function loadPlans({ refresh = false } = {}) {
         return plan;
       }),
   );
-  const order = ['Smoke', 'Functional', 'Stage'];
+  const order = ['Smoke'];
   const rank = (t) => (order.includes(t) ? order.indexOf(t) : order.length);
   plans.sort(
     (a, b) => rank(a.type) - rank(b.type) || a.name.localeCompare(b.name),

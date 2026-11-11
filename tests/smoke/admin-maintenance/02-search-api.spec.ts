@@ -30,7 +30,7 @@ const INDEXES = [
 // Occupations is ~26k items; a full reindex takes minutes.
 const BATCH_TIMEOUT = 25 * 60_000;
 
-test.describe('AM-2: rebuild tracking and reindex', () => {
+test.describe('AM-2: rebuild tracking and reindex', { tag: '@no-prod' }, () => {
   for (const { label, machineName } of INDEXES) {
     test(`AM-2: ${label}`, async ({ page }) => {
       test.setTimeout(2 * BATCH_TIMEOUT + 60_000);
@@ -61,7 +61,7 @@ test.describe('AM-2: rebuild tracking and reindex', () => {
   }
 });
 
-test.describe('AM-3: searches work after reindex', () => {
+test.describe('AM-3: searches work after reindex', { tag: '@no-prod' }, () => {
   test('site search "job fair" returns results', async ({ page }) => {
     const search = new SearchPage(page, '/search', 'k');
     await search.search('job fair');

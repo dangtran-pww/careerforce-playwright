@@ -15,7 +15,7 @@ import { createWriteStream } from 'node:fs';
 import { mkdir, readdir, writeFile } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
 import { authFile, hostOf } from '../../../scripts/lib/site.mjs';
-import { loadPlan } from '../catalog/plans.mjs';
+import { allNoProd, loadPlan } from '../catalog/plans.mjs';
 import {
   CLAUDE,
   NOT_STARTED,
@@ -73,6 +73,8 @@ export async function startSuiteRun(suite, choice) {
     throw new ApiError(400, 'Pick at least one plan or prompt to run.');
 
   // The plans that will actually run (a plan with no tests yet is skipped).
+  // On production a no-prod plan, or one whose cases are all no-prod, is
+  // skipped too; the others run without their no-prod cases.
   const planSteps = [];
   for (const entry of plans) {
     if (!entry.found || !entry.runnable) {
@@ -80,16 +82,21 @@ export async function startSuiteRun(suite, choice) {
       continue;
     }
     const plan = await loadPlan(entry.slug);
-    checkPlanRunnable(plan, env);
+    checkPlanRunnable(plan);
+    if (env.production && allNoProd(plan)) {
+      planSteps.push({
+        entry,
+        plan: null,
+        offProd: plan.noProd
+          ? 'The plan is no-prod.'
+          : 'Every case is no-prod.',
+      });
+      continue;
+    }
     // Check the projects now, so a bad suite file fails before anything runs.
-    planArgs(plan, { projects: entry.projects, headed });
+    planArgs(plan, { env, projects: entry.projects, headed });
     planSteps.push({ entry, plan });
   }
-  if (plans.some((p) => p.changesData) && env.production)
-    throw new ApiError(
-      400,
-      `This suite has plans that change data, and ${env.name} is production.`,
-    );
 
   // Every login the run needs must work on this environment right now:
   // `checkLogin(role, env)` asks the site (GET /api/sessions/:role does the
@@ -123,20 +130,20 @@ export async function startSuiteRun(suite, choice) {
       ...step,
     });
 
-  for (const { entry, plan } of planSteps) {
+  for (const { entry, plan, offProd } of planSteps) {
     add({
       id: entry.slug,
       kind: 'plan',
       title: plan ? `${plan.type} - ${plan.name}` : (entry.name ?? entry.slug),
       plan: entry.slug,
       projects: plan
-        ? planArgs(plan, { projects: entry.projects }).projects
+        ? planArgs(plan, { env, projects: entry.projects }).projects
         : [],
       skipReason: !entry.found
         ? 'Not in test-plans/.'
         : plan
           ? null
-          : 'No tests yet.',
+          : (offProd ?? 'No tests yet.'),
     });
   }
   for (const p of prompts)
@@ -223,7 +230,7 @@ function suiteStatus(meta) {
 }
 
 async function planStep(step, stepDir, plan, env, headed) {
-  const { args } = planArgs(plan, { projects: step.projects, headed });
+  const { args } = planArgs(plan, { env, projects: step.projects, headed });
   step.command = shownCommand(env, ['playwright', 'test', ...args]);
   const result = await runPlaywright({ dir: stepDir, env, args });
   Object.assign(step, result.summary ?? {});

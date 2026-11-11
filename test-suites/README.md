@@ -9,9 +9,9 @@ environment picked in the dashboard's header:
    (`claude -p` with the Playwright MCP). Each one ends with a verdict: pass,
    fail or unsure, with a summary, findings and screenshots.
 
-`smoke.md` is the post-deploy smoke suite. `job-search.md` runs the Job
-Search functional plan on desktop and phone. `jobseeker-registration.md`,
-`resume-builder.md`, `events.md` and `appointments.md` are placeholders with
+`smoke.md` is the smoke suite: every smoke plan, QA and Stage only.
+`job-search.md`, `jobseeker-registration.md`, `resume-builder.md`, `events.md` and
+`appointments.md` are placeholders with
 no steps yet. Add a suite by adding a `.md`
 file here. Each prompt is its own file in `prompts/`, so several suites can
 share one. The dashboard reads both the next time the Suites page loads.
@@ -29,7 +29,7 @@ One paragraph saying what the suite is for. The dashboard shows it.
 
 | Plan | Projects |
 |---|---|
-| smoke-anonymous | smoke-desktop, smoke-mobile |
+| smoke-public-site | smoke-desktop, smoke-mobile |
 | smoke-admin-reports | (default) |
 
 ## Prompts
@@ -54,9 +54,12 @@ a comma-separated list of Playwright projects, or `(default)` for the ones
 the plan page ticks by default. A plan with no tests yet is listed as "No
 tests yet" and skipped.
 
-A suite that targets Production must stay read-only. A suite that has a Stage
-plan (one that changes data, even before its tests exist) never runs on
-Production. Keep Stage plans in a suite of their own.
+On Production, a suite run skips its no-prod plans (`Prod: No` in the
+plan's header, or every case no-prod) and runs the other plans without
+their no-prod cases (a `No` in the plan's Prod column, or tests tagged
+`@no-prod`). This holds even before the tests exist, because the dashboard
+reads the plans. See
+[Keeping tests off Production](../test-plans/README.md#keeping-tests-off-production).
 
 ### Prompts
 

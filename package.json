@@ -31,7 +31,7 @@
         "login:manual": "node scripts/login-manual.mjs",
         "browser": "node scripts/open-browser.mjs",
         "test": "playwright test",
-        "test:smoke": "playwright test --project=smoke-desktop --project=smoke-mobile",
+        "test:smoke": "playwright test --project=smoke-desktop --project=smoke-mobile --grep-invert @no-prod",
         "dashboard": "node dashboard/server/index.mjs",
         "dashboard:dev": "node dashboard/server/index.mjs --dev",
         "test:debug": "playwright test --debug",

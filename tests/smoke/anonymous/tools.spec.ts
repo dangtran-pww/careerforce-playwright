@@ -3,8 +3,8 @@ import { SkillsMatcherPage } from '../../pages/skills-matcher.page';
 import { InterestProfilerPage } from '../../pages/interest-profiler.page';
 import { EmploymentReadinessPage } from '../../pages/employment-readiness.page';
 
-// [Smoke] - Anonymous - Test Plan, CT-1/CT-2/CT-3.
-// See test-plans/smoke-anonymous.md.
+// [Smoke] - Public Site - General - Test Plan, CT-1/CT-2/CT-3.
+// See test-plans/smoke-public-site.md.
 //
 // All three tools work for an anonymous visitor; none of this persists
 // anything server-side for an anon session. Stop short of "add to goals" /

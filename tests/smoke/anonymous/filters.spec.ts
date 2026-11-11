@@ -1,11 +1,11 @@
 import { test, expect } from '../../helpers/fixtures';
 import { expectFilterPairDiffers, type Results } from '../../helpers/results';
 import { EventsSearchPage } from '../../pages/events-search.page';
-import { JobSearchPage } from '../../pages/job-search.page';
 import { SearchPage } from '../../pages/search.page';
 
-// [Smoke] - Anonymous - Test Plan, FL-1 to FL-8.
-// See test-plans/smoke-anonymous.md.
+// [Smoke] - Public Site - General - Test Plan, FL-1 to FL-4, FL-7, FL-8.
+// See test-plans/smoke-public-site.md. FL-5 and FL-6 (Job Search) moved to
+// test-plans/smoke-job-search.md as JF-1 and JF-2.
 //
 // Given: an anonymous visitor on a filterable listing
 // When: they open it with no filter, then with filter X, then with filter Y
@@ -82,43 +82,6 @@ test.describe('filters', { tag: '@desktop-only' }, () => {
     expect(found.veterans.some((t) => /veteran/i.test(t)), `"veterans" titles: ${found.veterans}`).toBe(true);
     expect(found.youth.some((t) => /youth/i.test(t)), `"youth" titles: ${found.youth}`).toBe(true);
   });
-
-  // FL-5/FL-6: the jobs come from an outside feed, so the two companies or
-  // cities to compare are the two with the most jobs in the dropdown right
-  // now, read from the unfiltered page.
-  const JOB_FILTERS = [
-    { id: 'FL-5', label: 'company', param: 'company', select: 'companySelect' },
-    { id: 'FL-6', label: 'city', param: 'loc', select: 'citySelect' },
-  ] as const;
-
-  for (const { id, label, param, select } of JOB_FILTERS) {
-    test(`${id}: Job Search: two ${label} filters give different jobs`, async ({ page }) => {
-      const jobs = new JobSearchPage(page);
-      const keyword = { title: 'nurse' };
-      await jobs.search(keyword);
-      const all = await jobs.results();
-      const options = await jobs.topOptions(jobs[select], 2);
-      expect(options, `the ${label} dropdown should list at least 2 choices`).toHaveLength(2);
-
-      const results: Results[] = [];
-      for (const option of options) {
-        await test.step(`${label}: ${option.name}`, async () => {
-          await jobs.search({ ...keyword, [param]: option.value });
-          await expect(jobs[select]).toHaveValue(option.value);
-          // Each job on the page belongs to the chosen company or city.
-          for (const card of await jobs.cards.all()) {
-            await expect(card).toContainText(option.name);
-          }
-          results.push(await jobs.results());
-        });
-      }
-
-      expectFilterPairDiffers(all, results[0], results[1], [
-        options[0].name,
-        options[1].name,
-      ]);
-    });
-  }
 
   test('FL-7: Site search: newest and oldest first give a different order', async ({
     page,

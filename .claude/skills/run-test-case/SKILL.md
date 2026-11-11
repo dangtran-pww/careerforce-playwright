@@ -51,13 +51,14 @@ Specs title their tests with the case ID first, for example
 
 - The **project** is `<suite>-<device>`, from the folder under `tests/`:
   `tests/smoke/…` → `smoke-desktop`, `tests/functional/…` →
-  `functional-desktop`, `tests/stage/…` → `stage` (desktop only). Run on
-  desktop unless the user asks for the phone, then use `smoke-mobile` /
-  `functional-mobile`. Admin and editor smoke areas
+  `functional-desktop`. Run on desktop unless the user asks for the phone,
+  then use `smoke-mobile` or `functional-mobile`. Admin and editor smoke areas
   (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`) and tests
   tagged `@desktop-only` have no phone run.
-- `stage` tests change site state, for example a reindex or a permissions
-  rebuild. Never run them against production. If the target URL looks like
+- No-prod cases never run on production: the plan says `Prod: No` in its
+  header (every case), or `No` in the case's Prod column, and the tests are
+  tagged `@no-prod`. `playwright.config.ts` also leaves `@no-prod` tests out
+  there. Never run a no-prod case against production. If the target URL looks like
   production (not `qa.` or `stage.`), refuse and explain why.
 - If the plan's Scope warns about side effects or long runtimes (such as an
   index that is empty during a reindex, a run that takes minutes, or

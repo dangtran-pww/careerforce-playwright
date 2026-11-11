@@ -5,8 +5,8 @@ import { JobSearchPage } from '../../pages/job-search.page';
 import { HomePage } from '../../pages/home.page';
 import { SiteHeader } from '../../pages/site-header.page';
 
-// [Smoke] - Anonymous - Test Plan, SR-1/SR-2/SR-3.
-// See test-plans/smoke-anonymous.md.
+// [Smoke] - Public Site - General - Test Plan, SR-1/SR-2/SR-3.
+// See test-plans/smoke-public-site.md.
 
 test.describe('site search', () => {
   test('SR-1: empty keyword returns the full index', async ({ page }) => {

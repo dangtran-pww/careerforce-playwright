@@ -16,7 +16,7 @@ async function countFor(events: EventsSearchPage, query: EventsQuery) {
   return events.resultCount();
 }
 
-test.describe('AM-4: events search sort and filters', () => {
+test.describe('AM-4: events search sort and filters', { tag: '@no-prod' }, () => {
   let unfiltered = 0;
 
   test.beforeEach(async ({ page }) => {

@@ -11,7 +11,7 @@ Implemented test: `tests/smoke/admin-reports/admin-reports.spec.ts`
 **Devices: desktop only.** Admin and editor screens are not tested on a phone (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`).
 
 Split out from [deed-smoke-test-plan.md](../docs/deed-smoke-test-plan.md) /
-[smoke-anonymous.md](smoke-anonymous.md).
+[smoke-public-site.md](smoke-public-site.md).
 Covers read-only admin report checks that need a logged-in admin session, as
 opposed to the anonymous plan's fully-anonymous suite.
 

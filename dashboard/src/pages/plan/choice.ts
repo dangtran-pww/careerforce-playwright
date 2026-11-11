@@ -1,4 +1,5 @@
 import type { Env, Plan } from '../../api/types';
+import { noProdGrep } from '../../lib/prod';
 
 // What the user has picked on the plan page. The run panel and the cases
 // table both read and change it.
@@ -39,15 +40,18 @@ export function projectsForCases(plan: Plan, choice: PlanChoice): string[] {
   return forCases.length ? forCases : projects;
 }
 
-// The Playwright command for this choice, to copy and run by hand.
+// The Playwright command for this choice, to copy and run by hand. On
+// production it leaves out the no-prod cases, as the dashboard's run does.
 export function planCommand(plan: Plan, choice: PlanChoice, env: Env): string {
-  const cases = [...choice.cases];
+  const noProd = env.production ? plan.noProdCases : [];
+  const cases = [...choice.cases].filter((id) => !noProd.includes(id));
   return [
     `BASE_URL=${env.baseURL}`,
     'npx playwright test',
     ...plan.runPaths,
     ...projectsForCases(plan, choice).map((p) => `--project ${p}`),
     cases.length ? `-g '\\b(?:${cases.join('|')})(?!\\d)'` : null,
+    noProd.length ? `--grep-invert ${noProdGrep(noProd)}` : null,
     choice.headed ? '--headed' : null,
   ]
     .filter(Boolean)

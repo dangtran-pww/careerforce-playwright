@@ -4,11 +4,13 @@ import type { PlanSummary, PlansResponse } from '../api/types';
 import { Badge } from '../components/Badge';
 import { ActiveRunBanner, ErrorBox, Loading } from '../components/Callouts';
 import { LastRunLink } from '../components/LastRunLink';
+import { PlanNoProdBadge } from '../components/NoProdBadge';
 import { PlanRunButton } from '../components/PlanRunButton';
 import { Table, VisuallyHidden } from '../components/Table';
 import { useApi } from '../hooks/useApi';
 import { useEnv } from '../hooks/useEnv';
 import { testsSummary } from '../lib/format';
+import { offProdReason } from '../lib/prod';
 import { PLAN_STATUS } from '../lib/status';
 
 // #/plans — every test plan, grouped by type, with a Run button each.
@@ -132,14 +134,7 @@ function PlanName({ plan }: { plan: PlanSummary }) {
       <Link to={`/plans/${plan.slug}`} className="strong">
         {plan.name}
       </Link>
-      {plan.changesData && (
-        <span
-          className="badge badge-warn small"
-          title="Creates, edits or deletes content. QA/Stage only."
-        >
-          Changes data
-        </span>
-      )}
+      <PlanNoProdBadge plan={plan} />
       {plan.roles.length > 0 && (
         <div className="note small">Logs in as {plan.roles.join(', ')}</div>
       )}
@@ -157,7 +152,7 @@ function RunAction({
 }) {
   const { currentEnv } = useEnv();
   if (!plan.runnable) return <span className="note small">No tests yet</span>;
-  if (plan.changesData && currentEnv.production)
+  if (currentEnv.production && offProdReason(plan))
     return <span className="note small">Not on Production</span>;
   const projects = plan.projects
     .filter((p) => p.selected)

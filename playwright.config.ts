@@ -23,15 +23,20 @@ import { credentialsFor, currentEnv } from './tests/helpers/environments.mjs';
 // BASIC_AUTH_USER / BASIC_AUTH_PASSWORD (see .env.example) to get past it,
 // or BASIC_AUTH_USER_<ENV> / BASIC_AUTH_PASSWORD_<ENV> for one environment.
 //
-// Destructive tests (create/edit/delete) must point at staging, never production.
-// Read-only smoke tests are the only ones suitable for a post-deploy prod check.
+// Test cases that must never run on production are tagged `@no-prod` (their
+// plan says "No" in the case's Prod column). Whether a case is no-prod is
+// decided case by case: a test that changes data can still be fine on
+// production. When BASE_URL is production, every project leaves `@no-prod`
+// tests out, whatever the command.
 
 const env = currentEnv();
 const httpCredentials = credentialsFor(env);
+const NO_PROD_TAG = /@no-prod/;
 
 // One project per suite and device, named `<suite>-<device>`, e.g.
 // smoke-desktop and smoke-mobile. Each device skips the tests tagged for the
-// other (`@desktop-only` / `@mobile-only`, see tests/helpers/devices.mts).
+// other (`@desktop-only` / `@mobile-only`, see tests/helpers/devices.mts),
+// and on production every project also skips `@no-prod` tests.
 // `perDevice` adds settings for one device only.
 function suite(
   name: string,
@@ -48,7 +53,9 @@ function suite(
   return devices.map((device) => ({
     name: `${name}-${device}`,
     testDir,
-    grepInvert: SKIP_TAG[device],
+    grepInvert: env.production
+      ? [SKIP_TAG[device], NO_PROD_TAG]
+      : SKIP_TAG[device],
     ...perDevice[device],
     use: { ...DEVICES[device], ...perDevice[device]?.use },
   }));
@@ -111,13 +118,15 @@ export default defineConfig({
       }))(DEVICES.desktop),
     },
     // Smoke suite: every spec from a test-plans/smoke-*.md, one folder per
-    // plan (tests/smoke/<area>/). Read-only and prod-safe. No default login:
-    // a spec that needs a role calls `useRole('<role>')`
-    // (tests/helpers/roles.ts), which needs
-    // `npm run login:manual -- <role> --env <env>` to have been run first.
-    // Admin and editor areas run on desktop only (DESKTOP_ONLY_SMOKE_AREAS);
-    // on mobile, every test also fails if the page scrolls sideways
-    // (`noHorizontalScroll` in tests/helpers/fixtures.ts).
+    // plan (tests/smoke/<area>/): quick checks to run after each deploy.
+    // Most are prod-safe. The ones that aren't are tagged `@no-prod` and are
+    // left out on production (see the top of this file) and by
+    // `npm run test:smoke`. No default login: a spec that
+    // needs a role calls `useRole('<role>')` (tests/helpers/roles.ts), which
+    // needs `npm run login:manual -- <role> --env <env>` to have been run
+    // first. Admin and editor areas run on desktop only
+    // (DESKTOP_ONLY_SMOKE_AREAS); on mobile, every test also fails if the
+    // page scrolls sideways (`noHorizontalScroll` in tests/helpers/fixtures.ts).
     ...suite('smoke', {
       testDir: './tests/smoke',
       perDevice: {
@@ -126,20 +135,11 @@ export default defineConfig({
         },
       },
     }),
-    // Functional plans (test-plans/README.md → Functional plans): deeper,
-    // read-only checks of one feature, one folder per feature
-    // (tests/functional/<feature>/). Prod-safe like smoke, but too many
-    // requests for a post-deploy run. Run one feature by its folder:
-    // `npx playwright test tests/functional/job-search --project=functional-desktop`.
+    // Functional suites (test-plans/README.md → Functional plans): in-depth
+    // tests of one big feature area, one folder per feature
+    // (tests/functional/<feature>/), e.g. job-search, resume-builder,
+    // jobseeker-registration. Too long for a post-deploy run. Like smoke,
+    // tests that must stay off production are tagged `@no-prod`.
     ...suite('functional', { testDir: './tests/functional' }),
-    // Stage plans (test-plans/README.md → Stage plans): specs that create,
-    // edit, delete, or otherwise change site state. QA/stage only — never
-    // point this project at production. Desktop only. Login is per spec, as
-    // in smoke.
-    {
-      name: 'stage',
-      testDir: './tests/stage',
-      use: DEVICES.desktop,
-    },
   ],
 });

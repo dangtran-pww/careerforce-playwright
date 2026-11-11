@@ -30,8 +30,8 @@ export function closeUiMode() {
  * filter for the chosen cases. Resolves with { command } once it started.
  */
 export function openUiMode(plan, { env, projects, cases = [] } = {}) {
-  checkPlanRunnable(plan, env);
-  const { args } = planArgs(plan, { projects, cases });
+  checkPlanRunnable(plan);
+  const { args } = planArgs(plan, { env, projects, cases });
   const fullArgs = ['playwright', 'test', ...args, '--ui'];
   closeUiMode();
 

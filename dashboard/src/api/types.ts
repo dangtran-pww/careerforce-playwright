@@ -58,6 +58,13 @@ export interface PlanCase {
   projects: ProjectTests[];
   // Playwright tags on its tests, without the "@", e.g. "desktop-only".
   tags?: string[];
+  // Never runs on production: its plan is no-prod, it says "No" in the
+  // plan's Prod column, or its tests are tagged @no-prod. The reason is the
+  // text after "No".
+  noProd?: boolean;
+  noProdReason?: string | null;
+  // The plan says "No" but some of its tests aren't tagged @no-prod.
+  noProdUntagged?: boolean;
   // The rest of the case's row in the plan, e.g. Steps and Expected result.
   // The text may hold `code` and **bold**.
   details: CaseDetail[];
@@ -142,7 +149,11 @@ export interface PlanSummary {
   name: string;
   type: string;
   status: string; // a key of PLAN_STATUS
-  changesData: boolean;
+  // "Prod: No: <reason>" in the header: no case runs on production.
+  noProd: boolean;
+  noProdReason: string | null;
+  noProdUntagged?: boolean; // some of its tests aren't tagged @no-prod
+  noProdCases: string[]; // left out of runs on production
   roles: string[];
   cases: PlanCase[];
   runnable: boolean; // has tests
@@ -193,7 +204,9 @@ export interface SuitePlan {
   projects: string[];
   projectTests?: ProjectTests[];
   roles?: string[];
-  changesData?: boolean;
+  noProd?: boolean; // the whole plan is no-prod
+  noProdCases?: string[]; // left out of runs on production
+  allNoProd?: boolean; // so the plan is skipped on production
 }
 
 export interface SuitePrompt {
@@ -215,7 +228,6 @@ export interface SuiteSummary {
 export interface Suite extends SuiteSummary {
   file: string;
   problems: string[];
-  changesData: boolean;
 }
 
 export interface SuitesResponse {

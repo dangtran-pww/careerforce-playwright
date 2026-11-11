@@ -1,21 +1,32 @@
 # [Suite] - Smoke
 
-The post-deploy smoke check: the smoke plans and a few checks Claude does by
-looking at the pages. Read-only and prod-safe.
+The smoke check: every smoke plan and a few checks Claude does by looking at
+the pages. On Production the dashboard skips the no-prod plans and leaves out
+the no-prod cases of the others (see
+[Keeping tests off Production](../test-plans/README.md#keeping-tests-off-production)).
 
 **Order:** 1
 
 ## Plans
 
-Read-only plans only. Stage plans (test-plans/README.md → Stage plans), such
-as the job seeker tools and profile plans, change data, so they go in a
-suite of their own that never targets Production. A plan with no tests yet
-is shown as "No tests yet" and skipped.
+The no-prod plans and cases have their tests in `tests/smoke/` like the
+rest, tagged `@no-prod`; the ones that change data run on desktop only. A
+plan with no tests yet is listed with `(default)` projects, shown as "No tests
+yet" and skipped.
 
 | Plan | Projects |
 |---|---|
-| smoke-anonymous | smoke-desktop, smoke-mobile |
+| smoke-public-site | smoke-desktop, smoke-mobile |
+| smoke-job-search | smoke-desktop, smoke-mobile |
 | smoke-admin-reports | smoke-desktop |
+| smoke-admin-maintenance | smoke-desktop |
+| smoke-block-placement | (default) |
+| smoke-ckeditor | (default) |
+| smoke-content-lifecycle | (default) |
+| smoke-jobseeker-tools | (default) |
+| smoke-media | (default) |
+| smoke-profile | (default) |
+| smoke-resume-builder | (default) |
 
 ## Prompts
 

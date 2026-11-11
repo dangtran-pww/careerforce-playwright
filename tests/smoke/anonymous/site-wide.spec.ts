@@ -1,12 +1,14 @@
 import { test, expect } from '../../helpers/fixtures';
+import { isKnownPageError } from '../../helpers/known-issues';
 import { HomePage } from '../../pages/home.page';
 import { SiteFooter } from '../../pages/site-footer.page';
 
-// [Smoke] - Anonymous - Test Plan, GN-1 to GN-4.
-// See test-plans/smoke-anonymous.md.
+// [Smoke] - Public Site - General - Test Plan, GN-1 to GN-5.
+// See test-plans/smoke-public-site.md.
 //
 // Site-wide basics that every page relies on: the "page not found" page,
-// the footer, the main menu's pages, and the "Skip to main content" link.
+// the footer, the main menu's pages, the "Skip to main content" link, and
+// no JavaScript errors on the main public pages.
 
 test('GN-1: an unknown address shows the Page Not Found page', async ({ page }) => {
   const response = await page.goto('/pww-smoke-test-no-such-page');
@@ -121,3 +123,33 @@ test('GN-4: "Skip to main content" moves keyboard focus past the header', async 
   await page.keyboard.press('Tab');
   await expect(page.locator('#main-content :focus')).toHaveCount(1);
 });
+
+// Uncaught JavaScript errors only. Console messages are not checked: the
+// tests block analytics and the AWS WAF script on purpose, and those
+// blocked loads show up in the console as errors. Job Search is checked
+// by JS-1 in test-plans/smoke-job-search.md.
+const NO_ERROR_PAGES = [
+  { name: 'Homepage', path: '/' },
+  { name: 'Site search', path: '/search?k=job' },
+  { name: 'Explore Careers', path: '/explore/careers?otitle=Nursing' },
+];
+
+for (const { name, path } of NO_ERROR_PAGES) {
+  test(`GN-5: ${name} loads without JavaScript errors`, async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto(path);
+    await page.waitForLoadState('networkidle');
+
+    const pagePath = new URL(page.url()).pathname;
+    const unknown = errors.filter((message) => !isKnownPageError(pagePath, message));
+    const known = errors.filter((message) => isKnownPageError(pagePath, message));
+    if (known.length > 0) {
+      test.info().annotations.push({
+        type: 'known issue',
+        description: `Known JavaScript error(s), see tests/helpers/known-issues.ts: ${known.join(' | ')}`,
+      });
+    }
+    expect(unknown, `New JavaScript errors on ${path}`).toEqual([]);
+  });
+}

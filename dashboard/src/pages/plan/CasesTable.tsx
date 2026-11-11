@@ -2,6 +2,7 @@ import type { Dispatch, SetStateAction } from 'react';
 import type { Plan } from '../../api/types';
 import { CaseDetails } from '../../components/CaseDetails';
 import { CaseProjects } from '../../components/CaseProjects';
+import { NoProdBadge, otherTags } from '../../components/NoProdBadge';
 import { PlanRunButton } from '../../components/PlanRunButton';
 import { Table, VisuallyHidden } from '../../components/Table';
 import { Tags } from '../../components/Tags';
@@ -23,7 +24,6 @@ interface Props {
 export function CasesTable({ plan, choice, setChoice, activeRun }: Props) {
   const { currentEnv } = useEnv();
   const runnable = plan.runnable;
-  const blocked = plan.changesData && currentEnv.production;
 
   return (
     <Table
@@ -70,7 +70,8 @@ export function CasesTable({ plan, choice, setChoice, activeRun }: Props) {
           cell: (c) => (
             <>
               {c.title}
-              <Tags tags={c.tags} />
+              {!plan.noProd && <NoProdBadge testCase={c} />}
+              <Tags tags={otherTags(c)} />
             </>
           ),
         },
@@ -92,7 +93,14 @@ export function CasesTable({ plan, choice, setChoice, activeRun }: Props) {
                 plan={plan}
                 body={runBody(choice, [c.id])}
                 className="ghost"
-                disabled={Boolean(activeRun) || blocked}
+                disabled={
+                  Boolean(activeRun) || (currentEnv.production && c.noProd)
+                }
+                title={
+                  currentEnv.production && c.noProd
+                    ? `${c.id} is no-prod, so it never runs on Production`
+                    : undefined
+                }
               >
                 Run
               </PlanRunButton>

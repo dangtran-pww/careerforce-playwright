@@ -28,11 +28,12 @@ dashboard/                  # `npm run dashboard` — local test dashboard (see 
 reports/                    # generated test reports (gitignored)
 tests/
   pages/                    # Page objects for the CareerForce smoke suite below
-  smoke/                    # Post-deploy smoke suite: read-only, prod-safe.
-    anonymous/              #   one folder per test-plans/smoke-<area>.md
-    admin-reports/          #   (see test-plans/README.md, "Smoke plans")
-  functional/               # deeper read-only checks of one feature, one folder per
-    job-search/             #   feature (see test-plans/README.md, "Functional plans")
+  smoke/                    # Post-deploy smoke suite: quick checks, one folder
+    anonymous/              #   per test-plans/smoke-<area>.md (see
+    admin-reports/          #   test-plans/README.md, "Smoke plans"). Read-only and
+    admin-maintenance/      #   prod-safe, except tests tagged @no-prod
+  functional/               # in-depth suites, one folder per big feature
+                             # (job-search, resume-builder, ...); none yet
   helpers/environments.mts  # QA / Stage / Production / Sandbox, and where each
                              # environment's logins are saved
   helpers/devices.mts       # the devices (desktop, mobile) and desktop-only smoke areas
@@ -48,12 +49,13 @@ test-suites/                # suites for the dashboard: plans + Claude prompts
 npm install
 npx playwright install chromium
 
-# Smoke suite — every smoke test plan, read-only and prod-safe:
+# Smoke suite — every prod-safe smoke test:
 cp .env.example .env   # fill in BASIC_AUTH_USER/PASSWORD for QA's Basic Auth gate
 npm run login:manual -- admin   # once per session expiry; admin-reports needs it
                                 # (logs in to BASE_URL's environment; add --env stage for Stage)
-npm run test:smoke                               # desktop and phone
-npx playwright test --project=smoke-desktop      # desktop only
+npm run test:smoke                               # desktop and phone, no @no-prod tests
+npx playwright test --project=smoke-desktop      # desktop only; on QA/Stage this also
+                                                 # runs the @no-prod tests
 
 # Logged-in tests: log in by hand once per role (auth is SSO, so this step
 # can't be automated — and Google blocks sign-in from Playwright's own
@@ -132,7 +134,15 @@ them `<suite>-<device>`:
 |---|---|---|
 | `smoke-desktop`, `smoke-mobile` | `tests/smoke/` | desktop + Pixel 7 (Chromium) |
 | `functional-desktop`, `functional-mobile` | `tests/functional/` | desktop + Pixel 7 |
-| `stage` | `tests/stage/` | desktop only |
+
+- **Tests that must not run on production** are tagged `@no-prod`, in
+  either suite: every test of a no-prod plan (`Prod: No` in its header), or
+  the tests of a no-prod case (`No` in the plan's Prod column). It's decided
+  per plan or case, not by whether a test changes data. When `BASE_URL` is
+  production, every project leaves them out, whatever the command, and
+  `npm run test:smoke` leaves them out everywhere (see test-plans/README.md,
+  "Keeping tests off Production"). Tag tests that change data
+  `@desktop-only` too, unless the phone is what's being tested.
 
 - **Whole areas on desktop only:** admin and editor smoke areas
   (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`: admin-reports,
@@ -278,9 +288,9 @@ A local page for seeing and running the tests:
   projects, or open the plan to pick projects, tick only some cases (or run
   one case from its row), and show the browser. The page shows the exact
   `npx playwright test` command. Every device project that runs the plan's
-  tests is ticked by default (e.g. `smoke-desktop` and `smoke-mobile`). Plans
-  whose tests live in `tests/stage/` ask before they run, and are refused
-  when `BASE_URL` is production.
+  tests is ticked by default (e.g. `smoke-desktop` and `smoke-mobile`). On
+  Production, a no-prod plan is refused and any other plan runs without its
+  no-prod cases; the badges "Not on prod" and "N not on prod" show which.
 - **Runs:** one run at a time (the tests share accounts and a staging
   database). A run's page shows the output live, a **Stop run** button, then
   the passed/failed/flaky/skipped counts, each test's result and error, and

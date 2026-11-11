@@ -1,8 +1,6 @@
 import type { ReactNode } from 'react';
 import type { PlanSummary } from '../api/types';
-import { useEnv } from '../hooks/useEnv';
 import { useStartRun } from '../hooks/useStartRun';
-import { hostOf } from '../lib/format';
 import { AsyncButton } from './AsyncButton';
 
 interface Props {
@@ -15,19 +13,13 @@ interface Props {
   children: ReactNode;
 }
 
-// Starts a run of a plan on the current environment. Plans that change data
-// ask first.
+// Starts a run of a plan on the current environment. On production the
+// server leaves out the plan's no-prod cases.
 export function PlanRunButton({ plan, body = {}, children, ...props }: Props) {
-  const { currentEnv } = useEnv();
   const start = useStartRun();
   return (
     <AsyncButton
       {...props}
-      confirmMessage={
-        plan.changesData
-          ? `${plan.name} creates, edits or deletes content on ${currentEnv.name} (${hostOf(currentEnv.baseURL)}). Run it?`
-          : undefined
-      }
       onClick={() => start(`/api/plans/${plan.slug}/run`, body)}
     >
       {children}

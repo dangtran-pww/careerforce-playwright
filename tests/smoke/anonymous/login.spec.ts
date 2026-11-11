@@ -2,8 +2,8 @@ import { test, expect } from '../../helpers/fixtures';
 import { LoginPage } from '../../pages/login.page';
 import { isProd } from '../../helpers/environment';
 
-// [Smoke] - Anonymous - Test Plan, HP-2.
-// See test-plans/smoke-anonymous.md.
+// [Smoke] - Public Site - General - Test Plan, HP-2.
+// See test-plans/smoke-public-site.md.
 //
 // Given: an anonymous visitor
 // When: they open the login page

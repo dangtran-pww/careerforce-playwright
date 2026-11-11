@@ -1,12 +1,12 @@
 ---
 name: test-plan-report
-description: Run every case of one fully implemented test plan in test-plans/ (e.g. smoke-anonymous) and write a Markdown report that explains, case by case, how each test was performed, with a screenshot for each step taken from the Playwright trace. Use when the user asks for a test report, a run report, evidence, or screenshots of how a test plan was tested.
+description: Run every case of one fully implemented test plan in test-plans/ (e.g. smoke-public-site) and write a Markdown report that explains, case by case, how each test was performed, with a screenshot for each step taken from the Playwright trace. Use when the user asks for a test report, a run report, evidence, or screenshots of how a test plan was tested.
 argument-hint: <plan-name> [BASE_URL]
 ---
 
 # Test plan report with step screenshots
 
-The user names a test plan (for example `smoke-anonymous` or
+The user names a test plan (for example `smoke-public-site` or
 `test-plans/smoke-admin-reports.md`), and optionally an environment URL.
 Arguments: `$ARGUMENTS`
 
@@ -33,7 +33,7 @@ Read `test-plans/<plan>.md`. Note these parts:
 - **Running it**: the spec folder and the project. Projects are
   `<suite>-<device>`: `tests/smoke/…` → `smoke-desktop` (and `smoke-mobile`
   for a phone run), `tests/functional/…` → `functional-desktop` (and
-  `functional-mobile`), `tests/stage/…` → `stage`. Report on desktop
+  `functional-mobile`). Report on desktop
   (`<suite>-desktop`) unless the user asks for the phone. Admin and editor
   smoke areas are desktop only (`DESKTOP_ONLY_SMOKE_AREAS` in
   `tests/helpers/devices.mts`).
@@ -51,7 +51,10 @@ answered. Use the confirmed URL as `BASE_URL` in step 3 and as the
 Then follow steps 3 and 4 of `.claude/skills/run-test-case/SKILL.md`, applied to
 the whole plan:
 
-- Never run a `stage` project against production.
+- Never run a no-prod plan (`Prod: No` in its header) against production.
+  For any other plan on production, leave out its no-prod cases (`No` in
+  the Prod column, or tests tagged `@no-prod`) and say in the report that
+  they were left out.
 - Warn about long runtimes and side effects, and get confirmation first.
 - Make sure the `playwright/.auth/<env>/<role>.json` session exists for every
   role that the plan's specs pass to `useRole`.

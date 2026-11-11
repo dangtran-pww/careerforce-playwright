@@ -2,8 +2,8 @@ import { test, expect } from '../../helpers/fixtures';
 import { HomePage } from '../../pages/home.page';
 import { MobileHeader } from '../../pages/mobile-header.page';
 
-// [Smoke] - Anonymous - Test Plan, MB-1 (mobile only).
-// See test-plans/smoke-anonymous.md.
+// [Smoke] - Public Site - General - Test Plan, MB-1 (mobile only).
+// See test-plans/smoke-public-site.md.
 //
 // Given: an anonymous visitor on a phone
 // When: they tap the menu button in the header

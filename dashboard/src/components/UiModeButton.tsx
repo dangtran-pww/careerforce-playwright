@@ -3,6 +3,7 @@ import { post } from '../api/client';
 import { useEnv } from '../hooks/useEnv';
 import { useRerun } from '../hooks/useRerun';
 import { hostOf } from '../lib/format';
+import { offProdReason } from '../lib/prod';
 import { AsyncButton } from './AsyncButton';
 
 interface Props {
@@ -23,19 +24,20 @@ export function UiModeButton({ planSlug, body, className, children }: Props) {
   const plan = rerun?.planBySlug(planSlug);
   if (!rerun || !plan?.runnable) return null;
 
-  const blocked = plan.changesData && currentEnv.production;
+  const blocked = currentEnv.production
+    ? offProdReason(plan, body.cases)
+    : null;
   const busy = Boolean(rerun.activeRun);
   return (
     <AsyncButton
       className={className}
-      disabled={busy || blocked}
+      disabled={busy || Boolean(blocked)}
       busyLabel="Opening…"
       title={
         busy
           ? 'Another run is in progress'
-          : blocked
-            ? `${plan.name} changes data, so it never runs on Production`
-            : `Open Playwright UI mode on ${currentEnv.name} (${hostOf(currentEnv.baseURL)}). It opens in its own window.`
+          : (blocked ??
+            `Open Playwright UI mode on ${currentEnv.name} (${hostOf(currentEnv.baseURL)}). It opens in its own window.`)
       }
       onClick={() =>
         post(`/api/plans/${plan.slug}/ui`, {

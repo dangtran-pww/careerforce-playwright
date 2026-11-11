@@ -8,7 +8,8 @@ import { EnvTag } from './EnvTag';
 import { SessionCard } from './SessionCard';
 
 // The header's "Login Sessions" button and the panel it opens: one session card per
-// role (admin, and every role a plan, suite prompt or saved session uses)
+// role, in two columns (one on narrow windows): admin, and every role a plan,
+// suite prompt or saved session uses,
 // for the environment picked in the header. On a page that runs tests (the
 // suite page), the roles its chosen steps need come first (useLogins.tsx).
 //
@@ -40,7 +41,7 @@ export function LoginsMenu() {
     if (!panel || !button) return;
     // Matches .logins-panel's width in styles.css.
     const place = () => {
-      const width = Math.min(480, window.innerWidth - 32);
+      const width = Math.min(920, window.innerWidth - 32);
       const left = Math.max(
         16,
         Math.min(

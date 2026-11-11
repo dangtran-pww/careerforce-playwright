@@ -1,7 +1,8 @@
-# [Stage] - CKEditor 5 - Test Plan
+# [Smoke] - CKEditor 5 - Test Plan
 
 Status: ready to generate
 Implemented test: —
+Prod: No: creates and deletes test pages.
 
 Devices: desktop only. Admin and editor screens are not tested on a phone (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`).
 
@@ -14,7 +15,7 @@ these tests use a throwaway page instead so they don't edit real content.
 
 ```bash
 npm run login:manual -- content-manager
-BASE_URL=https://qa.careerforce.link npx playwright test tests/stage/ckeditor
+BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/ckeditor --project=smoke-desktop
 ```
 
 ## Scope
@@ -65,7 +66,7 @@ BASE_URL=https://qa.careerforce.link npx playwright test tests/stage/ckeditor
 
 ```
 tests/
-  stage/ckeditor/
+  smoke/ckeditor/
     toolbar.spec.ts       # CK-1
     formatting.spec.ts    # CK-2 .. CK-6
   pages/

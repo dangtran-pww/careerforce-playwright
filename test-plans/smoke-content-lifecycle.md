@@ -1,7 +1,8 @@
-# [Stage] - Content Lifecycle - Test Plan
+# [Smoke] - Content Lifecycle - Test Plan
 
 Status: ready to generate
 Implemented test: —
+Prod: No: creates, publishes, translates and deletes test pages.
 
 Devices: desktop only. Admin and editor screens are not tested on a phone (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`).
 
@@ -12,7 +13,7 @@ Split out from [deed-smoke-test-plan.md](../docs/deed-smoke-test-plan.md)
 
 ```bash
 npm run login:manual -- content-manager
-BASE_URL=https://qa.careerforce.link npx playwright test tests/stage/content-lifecycle
+BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/content-lifecycle --project=smoke-desktop
 ```
 
 ## Scope
@@ -60,7 +61,7 @@ BASE_URL=https://qa.careerforce.link npx playwright test tests/stage/content-lif
 
 ```
 tests/
-  stage/content-lifecycle/
+  smoke/content-lifecycle/
     publish.spec.ts       # CL-1, CL-2, CL-6
     revisions.spec.ts     # CL-3, CL-4
     translation.spec.ts   # CL-5

@@ -21,8 +21,8 @@ export async function startRun(
   plan,
   { env, projects, cases = [], headed = false } = {},
 ) {
-  checkPlanRunnable(plan, env);
-  const chosen = planArgs(plan, { projects, cases, headed });
+  checkPlanRunnable(plan);
+  const chosen = planArgs(plan, { env, projects, cases, headed });
 
   const now = new Date();
   const meta = {

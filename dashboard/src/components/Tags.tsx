@@ -4,6 +4,7 @@ const TAG_NOTES: Record<string, string> = {
   'desktop-only': 'Skipped by the mobile projects',
   'mobile-only': 'Runs only in the mobile projects',
   'job-search': 'Run by the job-search project',
+  'no-prod': 'Never runs on Production',
 };
 
 export function Tags({ tags }: { tags?: string[] }) {
