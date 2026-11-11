@@ -30,22 +30,40 @@ export function useRole(role: string): void {
   // below say what to do instead.
   test.use({ storageState: existsSync(file) ? file : undefined });
 
-  test.beforeAll(async ({ page }) => {
+  // `page` can't be used in beforeAll (it's made per test), so this opens
+  // its own context with the project's site, Basic Auth and the saved login.
+  test.beforeAll(async ({ browser }, testInfo) => {
     if (checked.has(role)) return;
-    expect(existsSync(file), `No saved ${role} session at ${file}. ${hint}`).toBe(true);
-
-    await page.goto('/user');
     expect(
-      new URL(page.url()).pathname,
-      `The saved ${role} session has expired or was logged out. ${hint}`,
-    ).not.toBe('/user/login');
+      existsSync(file),
+      `No saved ${role} session at ${file}. ${hint}`,
+    ).toBe(true);
 
-    if (role === 'admin') {
-      await page.goto('/admin/reports/status');
-      await expect(
-        page.getByRole('heading', { name: 'Status report' }),
-        `Logged in, but not as an admin (no access to the status report). ${hint}`,
-      ).toBeVisible();
+    const { baseURL, httpCredentials, ignoreHTTPSErrors } =
+      testInfo.project.use;
+    const context = await browser.newContext({
+      baseURL,
+      httpCredentials,
+      ignoreHTTPSErrors,
+      storageState: file,
+    });
+    try {
+      const page = await context.newPage();
+      await page.goto('/user');
+      expect(
+        new URL(page.url()).pathname,
+        `The saved ${role} session has expired or was logged out. ${hint}`,
+      ).not.toBe('/user/login');
+
+      if (role === 'admin') {
+        await page.goto('/admin/reports/status');
+        await expect(
+          page.getByRole('heading', { name: 'Status report' }),
+          `Logged in, but not as an admin (no access to the status report). ${hint}`,
+        ).toBeVisible();
+      }
+    } finally {
+      await context.close();
     }
     checked.add(role);
   });

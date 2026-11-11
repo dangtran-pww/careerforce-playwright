@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { CaseDetails } from '../../components/CaseDetails';
+import { CloseButton } from '../../components/CloseButton';
 import { CASE_PANEL_ID, type ShownCase } from '../../hooks/useCasePanel';
 import { useRerun } from '../../hooks/useRerun';
 
@@ -46,14 +47,7 @@ export function CasePanel({
           <span className="mono">{shown.caseId}</span>
           {testCase && ` ${testCase.title}`}
         </h2>
-        <button
-          type="button"
-          className="ghost"
-          onClick={onClose}
-          aria-label="Close case details"
-        >
-          ✕
-        </button>
+        <CloseButton label="Close case details" onClick={onClose} />
       </div>
       {plan && <p className="note">{plan.name}</p>}
       {testCase ? (

@@ -278,7 +278,7 @@ fixture files.
 
 In-depth tests of one big feature area, such as Job Search, Resume Builder or
 Job Seeker Registration: many more cases than its smoke plan. Too long for the
-post-deploy run, so they run on their own. There are none yet.
+post-deploy run, so they run on their own.
 
 ```bash
 npx playwright test --project=functional-desktop --project=functional-mobile   # all functional plans
@@ -290,6 +290,10 @@ Conventions:
 - **Naming:** one plan per feature, `test-plans/functional-<feature>.md` ↔
   `tests/functional/<feature>/`. Each part of the feature is its own spec
   file in that folder, e.g. `search.spec.ts`, `saved-searches.spec.ts`.
+  A feature too big for one plan is split into parts,
+  `test-plans/functional-<feature>-<part>.md`, all sharing
+  `tests/functional/<feature>/`; each part names its own spec files under
+  `Implemented test:` so no two parts claim the same tests.
 - **Projects:** `functional-desktop` and `functional-mobile` run
   `tests/functional/`.
 - **Production:** the same rules as smoke, see
@@ -316,8 +320,8 @@ Conventions:
 - `smoke-ckeditor.md` — Status: ready to generate.
 - `smoke-media.md` — Status: ready to generate.
 - `smoke-block-placement.md` — Status: ready to generate.
-- `smoke-job-search.md` — Status: partially implemented (JF-3 to JF-5,
-  SS-1 to SS-3, MD-1 to MD-6 pending). Implemented tests:
+- `smoke-job-search.md` — Status: partially implemented (SS-1 to SS-3 and
+  MD-1 to MD-6 generated but not yet verified against a live site). Implemented tests:
   `tests/smoke/job-search/*.spec.ts`. Search and results, filters and sort
   (read-only, in the smoke run), plus saved searches and My Job Search on the
   dashboard as a job seeker (no-prod cases: tagged `@no-prod`, QA and Stage
@@ -327,3 +331,18 @@ Conventions:
 - `smoke-resume-builder.md` — Status: ready to generate.
 - `smoke-profile.md` — Status: ready to generate.
   Job seeker and admin profile edits.
+- `functional-job-search-search.md` — Status: ready to generate.
+  Job Search part 1: keyword, location formats, distance, empty, SOC and
+  hostile input, location suggestions. Prod-safe.
+- `functional-job-search-sort-filters-paging.md` — Status: ready to
+  generate. Part 2: sort orders, Company and City filters (incl. the
+  company cache check), paging, the address, Back/Forward, deep links.
+  Prod-safe.
+- `functional-job-search-posting-accessibility.md` — Status: ready to
+  generate. Part 3: one job on its own, Share, apply link, bad job IDs, the
+  visitor's login dialog, phone width, keyboard, names and headings.
+  Prod-safe.
+- `functional-job-search-logged-in.md` — Status: ready to generate.
+  Part 4: a logged-in job seeker's bookmarks, saved searches, Jobs for me,
+  career goals and region, the log-in hand-off, and privacy. No-prod cases
+  (all but PV-4, PV-5), `jobseeker` login.

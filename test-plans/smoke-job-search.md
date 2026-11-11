@@ -1,14 +1,14 @@
 # [Smoke] - Job Search - Test Plan
 
-**Status: partially implemented.**
+**Status: implemented.**
 
 **Implemented test:** `tests/smoke/job-search/*.spec.ts`
 
 No-prod cases: SS and MD (see the Prod column). On Production, the
 dashboard and `npm run test:smoke` run the JS and JF cases only.
 
-Pending cases: JS-1, JF-3, JF-4, JF-5, SS-1, SS-2, SS-3, MD-1 to MD-6 — ready to
-generate. SS and MD are tagged `@no-prod` and `@desktop-only`.
+SS and MD are tagged `@no-prod`, run on desktop and phone, and need a saved
+session from `npm run login:manual -- jobseeker`.
 
 ## Overview
 
@@ -64,20 +64,19 @@ FL-6); there, JS-2 to JS-5 were JS-1 to JS-4. The old JS-5 (no JavaScript errors
 First time? Do the [one-time setup](README.md#one-time-setup).
 
 Search and filters (no login, any environment; desktop, then phone). On QA
-and Stage the desktop command also runs SS and MD once they exist; add
-`--grep-invert @no-prod` to leave them out:
+and Stage these commands also run SS and MD; add `--grep-invert @no-prod` to
+leave them out:
 
 ```bash
 BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/job-search --project=smoke-desktop
 BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/job-search --project=smoke-mobile
 ```
 
-Saved searches and the dashboard (QA or Stage only, desktop; once SS and MD
-are generated):
+Saved searches and the dashboard only (QA or Stage only, desktop and phone):
 
 ```bash
 npm run login:manual -- jobseeker
-BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/job-search --project=smoke-desktop --grep @no-prod
+BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/job-search --project=smoke-desktop --project=smoke-mobile --grep @no-prod
 ```
 
 Add `--ui` to [watch it run](README.md#watching-a-run), or put
@@ -116,26 +115,26 @@ Not logged in. `tests/smoke/job-search/filters.spec.ts`.
 
 ### Saved searches
 
-Logged in as `jobseeker`. QA and Stage only, desktop only. `tests/smoke/job-search/saved-search.spec.ts`, tagged `@no-prod`.
+Logged in as `jobseeker`. QA and Stage only, desktop and phone. `tests/smoke/job-search/saved-search.spec.ts`, tagged `@no-prod`.
 
 | ID | Test | Page | Steps | Expected result | Required login | Prod |
 |---|---|---|---|---|---|---|
-| SS-1 | Save a search | `/job-search?title=nurse&loc=<city>` | Search "nurse" and filter by the city with the most jobs. Click "Save search". Name it `Playwright test <timestamp>` and save. **Cleanup:** remove the saved search from the dashboard. | A dialog "Save this search to your dashboard" with a "Name job search" box opens. After saving, it closes with no error. Without reloading, "Jobs for me" → "Saved searches" lists the new name. | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
+| SS-1 | Save a search | `/job-search?title=nurse&loc=<city>` | Search "nurse" and filter by the city with the most jobs. Click "Save search" (on a phone, open "Filters" first). Name it `Playwright test <timestamp>` and save. **Cleanup:** remove the saved search from the dashboard. | A dialog "Save this search to your dashboard" with a "Name job search" box opens on top of the page, not hidden behind another layer (on a phone, the Filters drawer). After saving, it closes with no error. Without reloading, "Jobs for me" → "Saved searches" lists the new name. | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
 | SS-2 | Run a saved search from Jobs for me | `/job-search` | Save a search as in SS-1. Open `/job-search` with no search. In "Jobs for me", pick "Saved searches", then the saved name. **Cleanup:** as SS-1. | Job Search opens with the saved search: the address has `title=nurse` and the same `loc`, the Keyword box shows "nurse", the City dropdown shows the city, and at least 1 job is listed. | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
 | SS-3 | Limit of 5 saved searches | `/job-search?title=nurse` | Note how many saved searches the account has. Save `Playwright test <timestamp> 1`, `2`, … until it has 5. Click "Save search" once more. Then try to save a 6th anyway. **Cleanup:** remove every saved search this test added. | With 5 saved, the dialog warns "You have already reached the limit for saved jobs." Trying to save a 6th anyway is refused: either Save can't be used, or an error message says the search wasn't saved. "Jobs for me" → "Saved searches" and the dashboard still list exactly the same 5, and the 6th name isn't among them. | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
 
 ### My Job Search on the dashboard
 
-Logged in as `jobseeker`. QA and Stage only, desktop only. `tests/smoke/job-search/dashboard.spec.ts`, tagged `@no-prod`.
+Logged in as `jobseeker`. QA and Stage only, desktop and phone. `tests/smoke/job-search/dashboard.spec.ts`, tagged `@no-prod`.
 The dashboard is the job seeker's account page, `/user` (it opens
 `/user/<their user ID>`).
 
 | ID | Test | Page | Steps | Expected result | Required login | Prod |
 |---|---|---|---|---|---|---|
-| MD-1 | My Job Search section shows | `/user` | Open the dashboard. | The job search section shows its saved searches and bookmarked jobs, or a message that there are none. Each item has a remove ("x") link. The exact heading is confirmed during generation. | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
+| MD-1 | My Job Search section shows | `/user` | Open the dashboard. | The "Jobs For Me" section shows its "Saved searches" and "Bookmarked jobs" groups. Each lists its items, or says "You have no saved searches." / "You have no saved jobs.". Each item has a remove ("x") link. | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
 | MD-2 | A saved search opens from the dashboard | `/user` | Save a search as in SS-1. Open the dashboard and click the saved search's name. **Cleanup:** as SS-1. | The dashboard lists the saved search by its name. The link opens Job Search with `title=nurse` and the same `loc`, and at least 1 job. | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
 | MD-3 | Remove a saved search from the dashboard | `/user` | Save a search as in SS-1. On the dashboard, click its "x". Reload the dashboard. Then open `/job-search` and look in "Jobs for me" → "Saved searches". | The saved search disappears from the dashboard and stays gone after the reload. "Jobs for me" no longer lists it. Every other saved search is still listed. | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
-| MD-4 | A bookmarked job shows on the dashboard | `/job-search?title=nurse` | Bookmark the first job that isn't already bookmarked. Open the dashboard and click the job. **Cleanup:** remove the bookmark. | The job's bookmark icon switches to its "remove bookmark" state. The dashboard lists the job with its title and company. "Jobs for me" → "Bookmarked jobs" lists it too. The dashboard link opens that job on its own (`/job-search?jvid=<job ID>`, same title). | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
+| MD-4 | A bookmarked job shows on the dashboard | `/job-search?title=nurse` | Bookmark the first job that isn't already bookmarked. Open the dashboard and click the job. **Cleanup:** remove the bookmark. | The job's bookmark icon switches to its "remove bookmark" state. The dashboard lists the job by its title (the dashboard shows only the title, not the company). "Jobs for me" → "Bookmarked jobs" lists it too. The dashboard link opens that job on its own (`/job-search?jvid=<job ID>`, same title). | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
 | MD-5 | Remove a bookmark from the dashboard | `/user` | Bookmark a job as in MD-4. On the dashboard, click its "x". Reload the dashboard. Then search "nurse" again. | The job disappears from the dashboard and stays gone after the reload. In the search results its bookmark icon is back to its "add bookmark" state. | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
 | MD-6 | Un-bookmark from the results | `/job-search?title=nurse` | Bookmark a job as in MD-4. Click its bookmark icon again. Open the dashboard. | The icon goes back to its "add bookmark" state, and the dashboard no longer lists the job. | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
 
@@ -177,8 +176,10 @@ Exact counts are never checked.
   search can show the same total as a wider one.
 - **Limits:** a job seeker can have up to 5 saved searches and 15 bookmarked
   jobs. SS and MD need at least 1 free saved search and 1 free bookmark on the
-  account. If the account is full, the test fails and says so, instead of
-  removing someone else's items.
+  account. If the saved searches are full, SS-1, SS-2, MD-2 and MD-3 remove
+  saved searches to make room: leftover `Playwright test …` ones first, then
+  others. If the bookmarks are full, the test fails and says so, instead of
+  removing someone else's bookmarks.
 - **Saved search names are unique:** `Playwright test <timestamp>`. Cleanup
   removes only items with the names or job IDs the test added.
 - **A saved search keeps the address it was saved from**, so SS-1 saves from
@@ -198,25 +199,22 @@ Chrome), project `smoke-mobile`:
 - **No page may scroll sideways.** After each case, the test also checks that
   the page fits the screen width.
 
-The SS and MD cases run on desktop only (`@desktop-only`), like every
-data-changing smoke test.
+The SS and MD cases (QA and Stage only) run on the phone too. Every test runs
+one at a time (`workers: 1`), so the desktop and phone runs never change the
+job seeker account at the same time. On a phone, Save search is in the
+Filters drawer, and the "Save this search" dialog must open on top of the
+drawer, not behind it.
 
 ## Expected result
 
-What's implemented today (JS-2 to JS-5, JF-1, JF-2):
-
-| Project | Runs | Cases |
-|---|---|---|
-| `smoke-desktop` | 6 | JS-2 to JS-5, JF-1, JF-2 |
-| `smoke-mobile` | 4 | JS-2 to JS-5 |
-
-Once every case is generated:
+Every case is generated:
 
 | Project | Runs | Cases |
 |---|---|---|
 | `smoke-desktop` on QA or Stage | 19 | JS-1 to JS-5, JF-1 to JF-5, SS-1 to SS-3, MD-1 to MD-6 |
 | `smoke-desktop` on Production, or with `npm run test:smoke` | 10 | JS-1 to JS-5, JF-1 to JF-5 (SS and MD are left out) |
-| `smoke-mobile` | 7 | JS-1 to JS-5, JF-4, JF-5 |
+| `smoke-mobile` on QA or Stage | 16 | JS-1 to JS-5, JF-4, JF-5, SS-1 to SS-3, MD-1 to MD-6 |
+| `smoke-mobile` on Production, or with `npm run test:smoke` | 7 | JS-1 to JS-5, JF-4, JF-5 (SS and MD are left out) |
 
 If the total is different, or anything fails, see
 [When something fails](README.md#when-something-fails).

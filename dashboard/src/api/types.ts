@@ -184,6 +184,12 @@ export interface PlansResponse {
   listErrors: string[];
 }
 
+// GET /api/plans/:slug/markdown
+export interface PlanMarkdownResponse {
+  file: string;
+  markdown: string;
+}
+
 export interface PlanResponse {
   plan: Plan;
   site: string;

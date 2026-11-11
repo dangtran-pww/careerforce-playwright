@@ -4,9 +4,12 @@ import type { PlanResponse } from '../../api/types';
 import { Badge } from '../../components/Badge';
 import { CaseDetails } from '../../components/CaseDetails';
 import { CaseProjects } from '../../components/CaseProjects';
+import { CloseButton } from '../../components/CloseButton';
 import { NoProdBadge, PlanNoProdBadge } from '../../components/NoProdBadge';
 import { ErrorBox, Loading } from '../../components/Callouts';
 import { Facts } from '../../components/Facts';
+import { Modal } from '../../components/Modal';
+import { PlanMarkdown } from '../../components/PlanMarkdown';
 import { PlanOverview } from '../../components/PlanOverview';
 import { PlanRunButton } from '../../components/PlanRunButton';
 import { Table, VisuallyHidden } from '../../components/Table';
@@ -44,6 +47,8 @@ export function PlanPanel({
   const ref = useRef<HTMLElement>(null);
   // The Test files row stays folded until asked for.
   const [showTests, setShowTests] = useState(false);
+  // The whole plan file, read in a modal.
+  const [showPlan, setShowPlan] = useState(false);
   const factsId = useId();
 
   // Move focus into the panel when it opens, so keyboard and screen reader
@@ -52,11 +57,13 @@ export function PlanPanel({
     ref.current?.focus();
   }, []);
 
+  // Escape closes the panel, unless it's closing the full-plan modal.
   useEffect(() => {
+    if (showPlan) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, [onClose, showPlan]);
 
   const plan = data?.plan;
 
@@ -69,15 +76,28 @@ export function PlanPanel({
       aria-labelledby="plan-panel-heading"
     >
       <div className="card-head">
-        <h2 id="plan-panel-heading">{plan ? plan.name : slug}</h2>
-        <button
-          type="button"
-          className="ghost"
-          onClick={onClose}
-          aria-label="Close plan details"
-        >
-          ✕
-        </button>
+        <div className="card-head-title">
+          <h2 id="plan-panel-heading">{plan ? plan.name : slug}</h2>
+          {plan && (
+            <>
+              <Badge map={PLAN_STATUS} value={plan.status} />
+              <PlanNoProdBadge plan={plan} />
+            </>
+          )}
+        </div>
+        <div className="card-head-actions">
+          {plan && (
+            <button
+              type="button"
+              className="ghost small"
+              aria-haspopup="dialog"
+              onClick={() => setShowPlan(true)}
+            >
+              Read full plan
+            </button>
+          )}
+          <CloseButton label="Close plan details" onClick={onClose} />
+        </div>
       </div>
       {error ? (
         <ErrorBox>{error.message}</ErrorBox>
@@ -85,12 +105,19 @@ export function PlanPanel({
         <Loading />
       ) : (
         <>
-          <p className="side-panel-tags">
-            <span className="note">{plan.type}</span>
-            <Badge map={PLAN_STATUS} value={plan.status} />
-            <PlanNoProdBadge plan={plan} />
-          </p>
           <PlanOverview plan={plan} />
+          {showPlan && (
+            <Modal
+              title={plan.name}
+              className="plan-modal"
+              onClose={() => {
+                setShowPlan(false);
+                ref.current?.focus();
+              }}
+            >
+              <PlanMarkdown slug={plan.slug} />
+            </Modal>
+          )}
           {plan.notes.map((n) => (
             <p key={n} className="callout callout-warn">
               {n}

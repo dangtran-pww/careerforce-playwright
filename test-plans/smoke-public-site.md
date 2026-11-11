@@ -87,7 +87,7 @@ Keep `--project=smoke-desktop` in the command. Without it, the same tests also r
 the phone ([Mobile](#mobile)), 78 runs in all.
 
 Add `--ui` to [watch it run](README.md#watching-a-run). A successful run ends
-with `43 passed` ([Expected result](#expected-result)).
+with `44 passed` ([Expected result](#expected-result)).
 
 To save a full-page screenshot of every test, even the ones that pass, put
 `SCREENSHOT=on` in front ([more on screenshots](README.md#screenshots-of-every-test)):
@@ -141,9 +141,11 @@ after the site name, for example `/programs-services` means
 | HP-2 | Login page offers all 3 logins | `/user/login` | Open the login page. Click "CareerForce partner organization or a training program provider" to open it. Then click "DEED Staff Member" to open it. Don't fill in or submit anything. | **Job Seekers:** the "Job Seekers" heading, a list of what registering lets them do (at least 1 item; its wording isn't checked), a "Log In or Register with LoginMN" button, and a "Data Privacy Notice" with a link to DEED's data privacy policies (`https://mn.gov/deed/about/what-guides-us/data-practices/`). **Partners:** the section starts closed; once opened it shows a "Log In" heading, "Email address" and "Password" boxes, a "Forgot your password?" link to `/user/password`, a "Submit" button, and a "Request one today" link to `/user/register-partner`. **DEED staff:** the section starts closed; once opened it shows 2 buttons on QA and Stage, "Log In" and "PWW Staff Log In", and only the "Log In" button on Production. |
 | HP-3 | Tracking code is present | `/`, `/job-search`, `/user/login` | Open the homepage, Job Search, and the login page, one at a time. | Each page loads (no error or "Page not found" page) and its Google Tag Manager tracking code loads the container for this environment, and no other container: `GTM-WL36T6M` on Production, `GTM-P8D2THV` on QA and Stage. A "GTM-…" text elsewhere on the page (in an article or a link) doesn't count. |
 | HP-4 | Decision Tree walks every path | `/` | In "What brings you here today?": 1. Note the starting cards. 2. For each option under "Choose a path", one at a time: open "Choose a path" and click the option, then open "Make a selection" and click its first answer. 3. On the first path, click each of its answers in turn. 4. With an answer chosen, pick a different option under "Choose a path". 5. Click "Reset selections". 6. Pick the first path again and click its first card. See [Decision Tree for HP-4](#decision-tree-for-hp-4). | **Start:** "Choose a path", at least 2 options, 3 cards, no "Tell us more." and no Reset. **After an option:** the dropdown closes; "Choose a path" shows the option; a "Tell us more." question appears, its toggle says "Make a selection" and it has at least 2 answers; the cards differ from the starting cards; "Reset selections" shows. **After an answer:** "Make a selection" shows the answer and the cards differ from the option's cards. On the first path, each answer shows a different set of cards. **Every step:** at least 1 card, each with a title, a loaded image and a link. **Changing the option:** "Tell us more." goes back to "Make a selection", lists the new option's answers, and the cards change. **After Reset:** back to "Choose a path" and the starting cards, with no "Tell us more." and no Reset. **The card** opens its page with HTTP 200 (after any redirects). The page title isn't checked. |
-| SR-1 | Site search returns results | `/search` | Search with no words. Then search for "job fair", "networking", and "farmer", one at a time. Then search for a made-up word ("zzqxnotaword"). Finally, on the homepage, type "networking" in the header's "Search CareerForce" box and press Enter (on a phone, tap the header's "Search" button first). | Every real search shows at least 1 result. The 3 keyword searches show "Search results 1-N of N", and their first result is a page on this site. The made-up word shows "No results found." and no results. The header box opens `/search?k=networking` with results. |
-| SR-2 | Career search returns results | `/explore/careers` | Search for "Nursing", "taxi driver", and "project manager", one at a time. Then, on the homepage, type "Nursing" in the Explore Careers box and click "Search". | Every search shows at least 1 result. The homepage box opens `/explore/careers?otitle=Nursing`. |
+| SR-1 | Site search returns results | `/search` | Search with no words. Then search for "job fair", "networking", and "farmer", one at a time. Then search for a made-up word ("zzqxnotaword"). | Every real search shows at least 1 result. The 3 keyword searches show "Search results 1-N of N", and their first result is a page on this site. The made-up word shows "No results found." and no results. |
+| SR-2 | Career search returns results | `/explore/careers` | Search for "Nursing", "taxi driver", and "project manager", one at a time. Then search for a made-up word ("zzqxnotaword"). | Every real search shows at least 1 result. The made-up word shows "No results found." and no results. |
 | SR-3 | Career page opens | `/explore/careers` | Search for "Nursing" and click the "Registered Nurses" result. It opens in a new tab. Then click "Find current job openings in this occupation". | The career page `/explore/careers/29-1141.00` shows the title "Registered Nurses" and the sections "Also known as", "Daily Work Activities", "Data By Region", and "Qualifications". The job openings link opens Job Search for "Registered Nurses" with at least 1 job. |
+| SR-4 | Homepage Explore Careers box runs a career search | `/` | On the homepage, type "Nursing" in the Explore Careers box and click "Search". The box is its own form, separate from the career search page, so this checks that it sends the search there; HP-1 only checks its heading. | The box opens `/explore/careers?otitle=Nursing` with at least 1 result. |
+| SR-5 | Header search box runs a site search | `/` | On the homepage, type "networking" in the header's "Search CareerForce" box and press Enter (on a phone, tap the header's "Search" button first). The header box is its own form, separate from the site search page, so this checks that it sends the search there. | The box opens `/search?k=networking` with at least 1 result. |
 | LV-1 | Location pages load | see the list below | Open each of the 4 location pages. | Each page shows its title ("CareerForce in Aitkin", …, "CareerForce from Anywhere") and a "Programs and Services" section. The 3 offices also show "Location Details" with Address, Phone (a link to call), Email (a link to email), Hours (at least 1 day with a time), and a map. "CareerForce from Anywhere" is virtual: no Location Details, but a phone link and an email link. |
 | LV-2 | Events page lists events | `/education-and-training/events` | Open the page. Click the first event. Don't register. | The page title "Events" shows, with at least 1 event listed below it. The first event card has a title, a date, a start time and a place. Its page has the event title, the sections "Date", "Time", "Location" and "Offered By", and a "Log In or Create Account" button. |
 | LV-3 | Programs and Services page lists services | `/programs-services` | Open the page. Open the first 2 programs. | The page title "Programs and Services" shows, with at least 1 program or service listed below it. Each opened program's page has the same title as its card. |
@@ -294,17 +296,17 @@ To run the mobile tests, see [Running the mobile tests](#running-the-mobile-test
 
 ## Expected result
 
-The terminal ends with `43 passed`. The desktop run has 24 test cases (all
+The terminal ends with `44 passed`. The desktop run has 26 test cases (all
 but MB-1, which is phone only), but some are repeated with different inputs,
-so they add up to 43 runs:
+so they add up to 44 runs:
 
 | Test case | Runs | Why |
 |---|---|---|
 | HP-1, HP-2, HP-4 | 3 | once each |
 | HP-3 | 3 | Homepage, Job Search, login page |
-| SR-1 | 6 | an empty search; "job fair", "networking", "farmer"; a word with no matches; the header search box |
-| SR-2 | 4 | "Nursing", "taxi driver", "project manager"; the homepage Explore Careers box |
-| SR-3 | 1 | once |
+| SR-1 | 5 | an empty search; "job fair", "networking", "farmer"; a word with no matches |
+| SR-2 | 4 | "Nursing", "taxi driver", "project manager"; a word with no matches |
+| SR-3, SR-4, SR-5 | 3 | once each |
 | LV-1 | 4 | Aitkin, Bloomington, Brooklyn Center, CareerForce from Anywhere |
 | LV-2, LV-3 | 2 | once each |
 | CT-1, CT-2, CT-3 | 3 | once each |
@@ -312,7 +314,7 @@ so they add up to 43 runs:
 | GN-1, GN-2, GN-4 | 3 | once each |
 | GN-3 | 5 | the 5 main menu pages |
 | GN-5 | 3 | Homepage, site search, Explore Careers |
-| **Total** | **43** | |
+| **Total** | **44** | |
 
 If the total is anything other than 43, or anything fails, see
 [When something fails](README.md#when-something-fails).

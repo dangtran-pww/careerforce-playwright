@@ -4,6 +4,7 @@ import { useApi } from '../hooks/useApi';
 import { useEnv } from '../hooks/useEnv';
 import { useLoginsMenuState } from '../hooks/useLogins';
 import { ErrorBox, Loading } from './Callouts';
+import { CloseButton } from './CloseButton';
 import { EnvTag } from './EnvTag';
 import { SessionCard } from './SessionCard';
 
@@ -93,14 +94,11 @@ export function LoginsMenu() {
           <h2 id="logins-panel-heading">
             Login sessions on <EnvTag env={currentEnv} />
           </h2>
-          <button
-            type="button"
-            className="ghost"
+          <CloseButton
+            label="Close login sessions"
             popoverTarget="logins-panel"
             popoverTargetAction="hide"
-          >
-            Close
-          </button>
+          />
         </div>
         <p className="note small">
           Tests that need a role are skipped or fail when its session has

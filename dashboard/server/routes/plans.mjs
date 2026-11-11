@@ -1,12 +1,14 @@
 // /api/plans: the test plans in test-plans/, running them, and asking
 // Claude Code about their cases.
 
+import { readFile } from 'node:fs/promises';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { loadPlan, loadPlans } from '../catalog/plans.mjs';
 import { explainCase, savedExplanation } from '../claude/explain.mjs';
 import { latestReview, reviewCase } from '../claude/review.mjs';
 import { envParam, publicEnv } from '../environments.mjs';
+import { fromRoot } from '../paths.mjs';
 import { ApiError } from '../errors.mjs';
 import { listRuns } from '../runs/history.mjs';
 import { activeRunId } from '../runs/lifecycle.mjs';
@@ -53,6 +55,16 @@ planRoutes.get(PLAN, async (c) => {
     activeRun: activeRunId(),
     plan,
     runs: await listRuns({ plan: plan.slug, limit: 10 }),
+  });
+});
+
+// GET /api/plans/:slug/markdown — the plan's whole Markdown file, for
+// reading it in full.
+planRoutes.get(`${PLAN}/markdown`, async (c) => {
+  const plan = await planOf(c);
+  return c.json({
+    file: plan.file,
+    markdown: await readFile(fromRoot(plan.file), 'utf8'),
   });
 });
 

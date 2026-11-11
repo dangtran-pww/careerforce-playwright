@@ -190,7 +190,9 @@ async function accountEmail(ctx, userPage) {
             .match(
               /<label[^>]*>[\s\S]*?<\/label>\s*<div>\s*([^<\s][^<]*?)\s*<\/div>/,
             )?.[1];
-    const input = html.match(/<input\b[^>]*\bname="mail"[^>]*>/);
+    // Core Drupal names the input "mail". LoginMN (SSO) accounts, such as
+    // job seekers, get a disabled one named "email" on "My Profile".
+    const input = html.match(/<input\b[^>]*\bname="e?mail"[^>]*>/);
     const value = shown ?? input?.[0].match(/\bvalue="([^"]*)"/)?.[1];
     return value ? decodeHtml(value) : undefined;
   } catch {

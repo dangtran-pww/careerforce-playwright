@@ -10,7 +10,8 @@ environment picked in the dashboard's header:
    fail or unsure, with a summary, findings and screenshots.
 
 `smoke.md` is the smoke suite: every smoke plan, QA and Stage only.
-`job-search.md`, `jobseeker-registration.md`, `resume-builder.md`, `events.md` and
+`job-search.md` runs the four functional Job Search plans.
+`jobseeker-registration.md`, `resume-builder.md`, `events.md` and
 `appointments.md` are placeholders with
 no steps yet. Add a suite by adding a `.md`
 file here. Each prompt is its own file in `prompts/`, so several suites can

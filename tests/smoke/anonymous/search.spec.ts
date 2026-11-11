@@ -5,7 +5,7 @@ import { JobSearchPage } from '../../pages/job-search.page';
 import { HomePage } from '../../pages/home.page';
 import { SiteHeader } from '../../pages/site-header.page';
 
-// [Smoke] - Public Site - General - Test Plan, SR-1/SR-2/SR-3.
+// [Smoke] - Public Site - General - Test Plan, SR-1 to SR-5.
 // See test-plans/smoke-public-site.md.
 
 test.describe('site search', () => {
@@ -40,7 +40,9 @@ test.describe('site search', () => {
     expect(await search.resultCount()).toBe(0);
   });
 
-  test('SR-1: the header search box runs a site search', async ({ page }) => {
+  // The header box is its own form. It only has to send the visitor to the
+  // site search with the keyword in `k`, which SR-1 doesn't cover.
+  test('SR-5: the header search box runs a site search', async ({ page }) => {
     await page.goto('/');
     await new SiteHeader(page).search('networking');
     await expect(page).toHaveURL(/\/search\?(.*&)?k=networking(&|$)/);
@@ -58,14 +60,14 @@ test.describe('explore careers search', () => {
     });
   }
 
-  test('SR-2: the homepage Explore Careers box runs a career search', async ({ page }) => {
-    const home = new HomePage(page);
-    await home.goto();
-    await home.exploreCareersInput.fill('Nursing');
-    await home.exploreCareersButton.click();
-    await expect(page).toHaveURL(/\/explore\/careers\?(.*&)?otitle=Nursing(&|$)/);
+  // A word that matches nothing shows the empty message instead of results,
+  // so the results above aren't just the full list of careers.
+  test('SR-2: a keyword with no matches says "No results found."', async ({ page }) => {
     const careers = new SearchPage(page, '/explore/careers', 'otitle');
-    expect(await careers.resultCount()).toBeGreaterThan(0);
+    await careers.search('zzqxnotaword');
+    await expect(careers.noResults).toBeVisible();
+    await expect(careers.resultRows).toHaveCount(0);
+    expect(await careers.resultCount()).toBe(0);
   });
 
   // Registered Nurses is O*NET code 29-1141.00, which doesn't change, so
@@ -101,5 +103,19 @@ test.describe('explore careers search', () => {
     await expect(jobs.heading).toBeVisible();
     await expect(jobs.keywordInput).toHaveValue(/^Registered Nurses/);
     expect(await jobs.resultCount()).toBeGreaterThan(0);
+  });
+
+  // The homepage box is its own form. It only has to send the visitor to the
+  // career search with the keyword in `otitle`, which SR-2 doesn't cover.
+  // "Nursing" is known to return results, so a failure here points at the
+  // box, not the keyword.
+  test('SR-4: the homepage Explore Careers box runs a career search', async ({ page }) => {
+    const home = new HomePage(page);
+    await home.goto();
+    await home.exploreCareersInput.fill('Nursing');
+    await home.exploreCareersButton.click();
+    await expect(page).toHaveURL(/\/explore\/careers\?(.*&)?otitle=Nursing(&|$)/);
+    const careers = new SearchPage(page, '/explore/careers', 'otitle');
+    expect(await careers.resultCount()).toBeGreaterThan(0);
   });
 });
