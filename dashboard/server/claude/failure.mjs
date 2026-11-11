@@ -12,9 +12,13 @@
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
-import { loadPlan } from './plans.mjs';
-import { RunError, eachTest, readMeta, runsDir, stripAnsi } from './runs.mjs';
-import { answerOf, claudeError, runClaude, usageOf } from './explain.mjs';
+import { loadPlan } from '../catalog/plans.mjs';
+import { ApiError } from '../errors.mjs';
+import { singleFlight } from '../lib/single-flight.mjs';
+import { RUNS_DIR as runsDir } from '../paths.mjs';
+import { readMeta } from '../runs/history.mjs';
+import { eachTest, stripAnsi } from '../runs/playwright.mjs';
+import { answerOf, claudeError, runClaude, usageOf } from './run.mjs';
 
 export const CAUSES = ['site', 'test', 'environment', 'flaky', 'unclear'];
 
@@ -68,7 +72,7 @@ export function testRef(body) {
     title: String(body.title ?? ''),
   };
   if (!ref.file || !ref.title || !Number.isFinite(ref.line))
-    throw new RunError(400, 'Say which test: project, file, line and title.');
+    throw new ApiError(400, 'Say which test: project, file, line and title.');
   return ref;
 }
 
@@ -82,7 +86,7 @@ const fileOf = (runId, ref) =>
 
 /** Every saved explanation of a failure in the run. */
 export async function savedFailureExplanations(runId) {
-  if (!(await readMeta(runId))) throw new RunError(404, 'No such run.');
+  if (!(await readMeta(runId))) throw new ApiError(404, 'No such run.');
   const dir = explanationsDir(runId);
   const names = await readdir(dir).catch(() => []);
   const all = await Promise.all(
@@ -99,17 +103,12 @@ export async function savedFailureExplanations(runId) {
 
 // One request per failure at a time: a second click joins the first. A
 // refresh doesn't join a request that may return the saved answer.
-const pending = new Map();
+const flights = singleFlight();
 
 /** Ask Claude why the test failed (or reuse the saved answer), and save it. */
 export function explainFailure(runId, ref, { refresh = false } = {}) {
   const key = `${keyOf(runId, ref)}${refresh ? '#refresh' : ''}`;
-  if (!pending.has(key))
-    pending.set(
-      key,
-      generate(runId, ref, refresh).finally(() => pending.delete(key)),
-    );
-  return pending.get(key);
+  return flights.run(key, () => generate(runId, ref, refresh));
 }
 
 async function generate(runId, ref, refresh) {
@@ -122,12 +121,12 @@ async function generate(runId, ref, refresh) {
   }
 
   const run = await readMeta(runId);
-  if (!run) throw new RunError(404, 'No such run.');
+  if (!run) throw new ApiError(404, 'No such run.');
   let dir = join(runsDir, runId);
   let planSlug = run.plan;
   if (ref.step != null) {
     const step = run.steps?.find((s) => s.n === ref.step && s.kind === 'plan');
-    if (!step) throw new RunError(404, `No plan step ${ref.step} in this run.`);
+    if (!step) throw new ApiError(404, `No plan step ${ref.step} in this run.`);
     dir = join(dir, step.dir);
     planSlug = step.plan;
   }
@@ -135,7 +134,7 @@ async function generate(runId, ref, refresh) {
     .then(JSON.parse)
     .catch(() => null);
   if (!report)
-    throw new RunError(409, 'This run has no test results to look at yet.');
+    throw new ApiError(409, 'This run has no test results to look at yet.');
 
   let found = null;
   eachTest(report, (spec, t, title) => {
@@ -148,9 +147,9 @@ async function generate(runId, ref, refresh) {
     )
       found = { spec, test: t };
   });
-  if (!found) throw new RunError(404, 'That test is not in this run.');
+  if (!found) throw new ApiError(404, 'That test is not in this run.');
   if (!['unexpected', 'flaky'].includes(found.test.status))
-    throw new RunError(400, 'That test did not fail.');
+    throw new ApiError(400, 'That test did not fail.');
 
   const testCase = await caseOf(planSlug, ref.file, ref.line);
   const result = await runClaude(

@@ -15,9 +15,9 @@ import { readFile, readdir, stat } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { join } from 'node:path';
+import { PLANS_DIR as plansDir } from '../paths.mjs';
 
 const run = promisify(execFile);
-const plansDir = 'test-plans';
 const caseId = /^[A-Z][A-Z0-9]*-\d+$/;
 
 export function clean(text) {
@@ -210,6 +210,10 @@ function pathMatcher(path) {
 const hasCase = (test, id) =>
   test.path.some((title) => new RegExp(`^${id}(?!\\d)`).test(title));
 
+// Plans whose tests live in tests/stage/ create, edit or delete content.
+export const changesData = (plan) =>
+  plan.files.some((f) => f.startsWith('tests/stage/'));
+
 // Playwright `-g` pattern that picks these cases' tests.
 export const caseGrep = (ids) => `\\b(?:${ids.join('|')})(?!\\d)`;
 
@@ -308,11 +312,12 @@ async function fromFile(file, compute) {
 // Roles a plan logs in as: `useRole('<role>')` or
 // `storageState: authFile('<role>')` (or an old
 // 'playwright/.auth/<role>.json') in its spec files.
-const rolesIn = (text) => [
-  ...text.matchAll(
-    /(?:useRole|authFile)\(\s*['"]([a-z-]+)['"]|playwright\/\.auth\/([a-z-]+)\.json/g,
-  ),
-].map((m) => m[1] ?? m[2]);
+const rolesIn = (text) =>
+  [
+    ...text.matchAll(
+      /(?:useRole|authFile)\(\s*['"]([a-z-]+)['"]|playwright\/\.auth\/([a-z-]+)\.json/g,
+    ),
+  ].map((m) => m[1] ?? m[2]);
 
 async function rolesFor(files) {
   const roles = new Set();

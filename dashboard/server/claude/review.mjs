@@ -8,15 +8,10 @@
 // to the page; restarting the server forgets it. Every request asks Claude
 // again.
 
-import { RunError } from './runs.mjs';
-import {
-  answerOf,
-  claudeError,
-  findCase,
-  hashFiles,
-  runClaude,
-  usageOf,
-} from './explain.mjs';
+import { ApiError } from '../errors.mjs';
+import { singleFlight } from '../lib/single-flight.mjs';
+import { caseContext, findCase, hashFiles } from './cases.mjs';
+import { answerOf, claudeError, runClaude, usageOf } from './run.mjs';
 
 const SCHEMA = {
   type: 'object',
@@ -56,17 +51,12 @@ const SCHEMA = {
 };
 
 function prompt(plan, testCase) {
-  const where = testCase.locations
-    .map((l) => `- ${l.file}:${l.line} — "${l.title}"`)
-    .join('\n');
-  const planRow = testCase.details
-    .map((d) => `${d.label}: ${d.text}`)
-    .join('\n');
+  const { where, planRow } = caseContext(testCase);
   return `You are reviewing a Playwright test against its test plan, for a QA tester who does not read code.
 
 Test case ${testCase.id} "${testCase.title}" from the test plan ${plan.file}.
 The plan describes it as:
-${planRow || '(no more detail in the plan)'}
+${planRow}
 
 Its code:
 ${where}
@@ -78,7 +68,7 @@ Answer only with the JSON the schema asks for.`;
 
 // One request per case at a time: a second click (or coming back to the
 // page while it runs) joins the first.
-const pending = new Map();
+const flights = singleFlight();
 // The latest review of each case, in memory only.
 const latest = new Map();
 
@@ -98,24 +88,18 @@ export async function latestReview(plan, id) {
       ...review,
       stale: review.hash !== (await hashFiles(files)),
     },
-    reviewing: pending.has(key),
+    reviewing: flights.has(key),
   };
 }
 
 /** Ask Claude to review the case's code against the plan; keep it in memory. */
 export function reviewCase(plan, id) {
   const key = keyOf(plan, id);
-  if (!pending.has(key))
-    pending.set(
-      key,
-      generate(plan, id)
-        .then((review) => {
-          latest.set(key, review);
-          return { ...review, stale: false };
-        })
-        .finally(() => pending.delete(key)),
-    );
-  return pending.get(key);
+  return flights.run(key, async () => {
+    const review = await generate(plan, id);
+    latest.set(key, review);
+    return { ...review, stale: false };
+  });
 }
 
 async function generate(plan, id) {
@@ -126,7 +110,7 @@ async function generate(plan, id) {
   if (!answer?.verdict || !Array.isArray(answer.findings))
     throw claudeError(result, 'Claude answered without a review. Try again.');
   if (!['matches', 'partial', 'differs'].includes(answer.verdict))
-    throw new RunError(
+    throw new ApiError(
       502,
       `Claude gave an unknown verdict: ${answer.verdict}`,
     );

@@ -99,7 +99,7 @@ export default defineConfig({
     // rejects deviceScaleFactor with a null viewport, so it is dropped.
     //
     // SEED_STORAGE_STATE logs the agent's browser in: the dashboard's prompt
-    // steps (dashboard/server/suite-runs.mjs) set it to a role's login file so
+    // steps (dashboard/server/runs/suite-run.mjs) set it to a role's login file so
     // Claude can check pages as that role.
     {
       name: 'seed',

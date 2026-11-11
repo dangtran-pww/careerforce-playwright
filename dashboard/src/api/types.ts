@@ -1,5 +1,5 @@
 // The shapes the dashboard API returns. The server builds them in
-// dashboard/server/{index,plans,suites,runs,suite-runs,explain,review,failure}.mjs;
+// dashboard/server/routes/*.mjs;
 // keep these in step when you change what it sends.
 
 // ---- environments and sessions ---------------------------------------------
@@ -78,7 +78,7 @@ export interface CaseLocation {
 }
 
 // GET/POST /api/plans/:slug/cases/:id/explanation: Claude's plain-words
-// account of a case's test code (dashboard/server/explain.mjs).
+// account of a case's test code (dashboard/server/claude/explain.mjs).
 export interface CaseExplanation {
   plan: string;
   case: string;
@@ -110,7 +110,7 @@ export interface ClaudeUsage {
 }
 
 // GET/POST /api/plans/:slug/cases/:id/review: Claude's review of a case's
-// code against its plan row (dashboard/server/review.mjs). Kept in the
+// code against its plan row (dashboard/server/claude/review.mjs). Kept in the
 // server's memory, never on disk.
 export type ReviewVerdict = 'matches' | 'partial' | 'differs';
 export type ReviewFindingKind = 'missing' | 'different' | 'extra' | 'covered';
@@ -279,7 +279,7 @@ export interface TestRef {
 }
 
 // GET/POST /api/runs/:id/explanations: Claude's account of why a test
-// failed (dashboard/server/failure.mjs), saved in the run's folder.
+// failed (dashboard/server/claude/failure.mjs), saved in the run's folder.
 export type FailureCause =
   'site' | 'test' | 'environment' | 'flaky' | 'unclear';
 

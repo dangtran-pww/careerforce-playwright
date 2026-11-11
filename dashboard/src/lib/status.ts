@@ -61,7 +61,7 @@ export const TEST_OUTCOME: StatusMap = {
   skipped: { label: 'Skipped', tone: 'neutral' },
 };
 
-// Claude's guess at why a test failed (server/failure.mjs).
+// Claude's guess at why a test failed (server/claude/failure.mjs).
 export const FAILURE_CAUSE: StatusMap = {
   site: { label: 'Looks like the site', tone: 'bad' },
   test: { label: 'Looks like the test', tone: 'warn' },

@@ -9,6 +9,7 @@ import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import playwright from 'eslint-plugin-playwright';
 import reactHooks from 'eslint-plugin-react-hooks';
+import globals from 'globals';
 
 export default tseslint.config(
   eslint.configs.recommended,
@@ -23,6 +24,12 @@ export default tseslint.config(
       'playwright/no-focused-test': 'error',
       'playwright/no-skipped-test': 'warn',
     },
+  },
+  // The Node scripts and the dashboard server run in Node: process, console,
+  // URL, timers and the rest are defined there.
+  {
+    files: ['**/*.mjs'],
+    languageOptions: { globals: globals.node },
   },
   // The dashboard's React app: the rules of hooks.
   {

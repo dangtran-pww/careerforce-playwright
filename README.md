@@ -19,8 +19,9 @@ scripts/
                              # (/publish-report-confluence)
   lib/site.mjs              # environments and logins, shared by the scripts and the dashboard
 dashboard/                  # `npm run dashboard` — local test dashboard (see "Test dashboard")
-  server/                   #   Node server and JSON API: index.mjs, plans.mjs, suites.mjs,
-                             #   runs.mjs, suite-runs.mjs, explain.mjs
+  server/                   #   Node server and JSON API (Hono): index.mjs starts it,
+                             #   app.mjs mounts routes/; catalog/ reads plans and suites,
+                             #   runs/ runs them, claude/ asks Claude Code
   src/                      #   React app (Vite + TypeScript); dist/ is its build (gitignored)
 .claude/skills/             # Claude Code skills: run-test-case, test-plan-report,
                              # publish-report-confluence (see "Test reports and Confluence")
@@ -269,7 +270,7 @@ A local page for seeing and running the tests:
 - **Plans:** every plan in `test-plans/`, with its status, cases, the
   roles it logs in as, and its last run. The dashboard reads the status,
   "Implemented test" and "Pending cases" lines and the case tables from each
-  plan (`dashboard/server/plans.mjs`), and asks Playwright (`--list`) which
+  plan (`dashboard/server/catalog/plans.mjs`), and asks Playwright (`--list`) which
   projects and tests each plan maps to. A case maps to the tests whose title
   or `describe` starts with its ID. **Reload** asks Playwright again after
   you add or rename tests.

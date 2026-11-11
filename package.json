@@ -2,6 +2,8 @@
     "description": "Playwright end-to-end tests for CareerForce Drupal",
     "devDependencies": {
         "@eslint/js": "^9.0.0",
+        "@hono/node-server": "^2.1.7",
+        "@hono/zod-validator": "^0.9.1",
         "@playwright/test": "^1.55.0",
         "@types/node": "^26.6.6",
         "@types/react": "^19.3.0",
@@ -11,13 +13,16 @@
         "eslint": "^9.0.0",
         "eslint-plugin-playwright": "^2.0.0",
         "eslint-plugin-react-hooks": "^7.1.1",
+        "globals": "^14.0.0",
+        "hono": "^4.13.18",
         "prettier": "^3.0.0",
         "react": "^19.3.1",
         "react-dom": "^19.3.1",
         "react-router": "^8.5.1",
         "typescript": "^5.6.0",
         "typescript-eslint": "^8.0.0",
-        "vite": "^8.3.6"
+        "vite": "^8.3.6",
+        "zod": "^4.6.7"
     },
     "name": "careerforce-playwright",
     "private": true,

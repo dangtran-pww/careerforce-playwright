@@ -8,11 +8,11 @@
 
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { clean, loadPlans, tableRows } from './plans.mjs';
-import { changesData } from './runs.mjs';
-
-const suitesDir = 'test-suites';
-const promptsDir = join(suitesDir, 'prompts');
+import {
+  PROMPTS_DIR as promptsDir,
+  SUITES_DIR as suitesDir,
+} from '../paths.mjs';
+import { changesData, clean, loadPlans, tableRows } from './plans.mjs';
 const ANONYMOUS = ['', '-', '—', 'anonymous', 'none'];
 
 const role = (cell) =>
@@ -229,6 +229,7 @@ function resolve(suite, allPlans, allPrompts) {
   };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const withoutSlug = ({ slug, ...rest }) => rest;
 
 export async function loadSuites({ refresh = false } = {}) {

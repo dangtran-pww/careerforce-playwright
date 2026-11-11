@@ -1,6 +1,6 @@
 // Runs a suite (test-suites/*.md) for the dashboard: its plans, then its
 // prompts, one step after another, on the
-// environment picked in the dashboard. Uses the run lifecycle in runs.mjs,
+// environment picked in the dashboard. Uses the run lifecycle in lifecycle.mjs,
 // so a suite takes the same one-run-at-a-time lock and can be stopped the
 // same way (Stop ends the current step and skips the rest).
 //
@@ -14,35 +14,44 @@
 import { createWriteStream } from 'node:fs';
 import { mkdir, readdir, writeFile } from 'node:fs/promises';
 import { join, relative, resolve } from 'node:path';
-import { loadPlan } from './plans.mjs';
+import { authFile, hostOf } from '../../../scripts/lib/site.mjs';
+import { loadPlan } from '../catalog/plans.mjs';
 import {
-  RunError,
+  CLAUDE,
+  NOT_STARTED,
+  answerOf,
+  claudeArgs,
+  stoppedReason,
+} from '../claude/run.mjs';
+import { publicEnv } from '../environments.mjs';
+import { ApiError } from '../errors.mjs';
+import { RUNS_DIR } from '../paths.mjs';
+import {
   beginRun,
-  checkPlanRunnable,
   endRun,
-  envInfo,
   isStopped,
   killChild,
+  launch,
   log,
   newRunId,
+  save,
+  spawnStep,
+} from './lifecycle.mjs';
+import {
+  checkPlanRunnable,
   planArgs,
   playwrightStatus,
   runPlaywright,
-  runsDir,
-  save,
   shownCommand,
-  spawnStep,
-} from './runs.mjs';
-import { authFile, hostOf } from '../../scripts/lib/site.mjs';
+} from './playwright.mjs';
 
 // A prompt that takes longer than this is stopped and marked as an error.
 const PROMPT_TIMEOUT_MS = Number(process.env.PROMPT_TIMEOUT_MS ?? 6 * 60_000);
 const PROMPT_MAX_TURNS = process.env.PROMPT_MAX_TURNS ?? '40';
-const CLAUDE = process.env.CLAUDE_BIN ?? 'claude';
 // PROMPT_MODEL (e.g. sonnet, haiku) picks a cheaper model than your default.
 const PROMPT_MODEL = process.env.PROMPT_MODEL;
 
-const relRun = (path) => relative(resolve(runsDir), resolve(path));
+const relRun = (path) => relative(resolve(RUNS_DIR), resolve(path));
 
 // ---- starting --------------------------------------------------------------
 
@@ -61,7 +70,7 @@ export async function startSuiteRun(suite, choice) {
   const prompts = pick(suite.prompts, choice.prompts, 'id');
 
   if (!plans.length && !prompts.length)
-    throw new RunError(400, 'Pick at least one plan or prompt to run.');
+    throw new ApiError(400, 'Pick at least one plan or prompt to run.');
 
   // The plans that will actually run (a plan with no tests yet is skipped).
   const planSteps = [];
@@ -77,7 +86,7 @@ export async function startSuiteRun(suite, choice) {
     planSteps.push({ entry, plan });
   }
   if (plans.some((p) => p.changesData) && env.production)
-    throw new RunError(
+    throw new ApiError(
       400,
       `This suite has plans that change data, and ${env.name} is production.`,
     );
@@ -95,7 +104,7 @@ export async function startSuiteRun(suite, choice) {
   );
   const notReady = logins.filter((s) => s.status !== 'valid');
   if (notReady.length)
-    throw new RunError(
+    throw new ApiError(
       409,
       notReady.length === 1
         ? `The ${notReady[0].role} login isn't ready on ${env.name}, so the run didn't start.`
@@ -147,7 +156,7 @@ export async function startSuiteRun(suite, choice) {
     kind: 'suite',
     suite: suite.slug,
     planName: `Suite - ${suite.name}`,
-    env: envInfo(env),
+    env: publicEnv(env),
     site: hostOf(env),
     headed,
     // Kept for the runs table, which lists projects and cases.
@@ -160,11 +169,7 @@ export async function startSuiteRun(suite, choice) {
   };
   const dir = await beginRun(meta);
 
-  run(meta, dir, { planSteps, env, headed }).catch(async (err) => {
-    log(`\n[dashboard] ${err.stack}\n`);
-    meta.status = 'error';
-    await endRun(meta);
-  });
+  launch(meta, () => run(meta, dir, { planSteps, env, headed }));
   return meta;
 }
 
@@ -368,25 +373,13 @@ async function promptStep(step, stepDir, env) {
   }, PROMPT_TIMEOUT_MS);
   const { code } = await spawnStep(
     CLAUDE,
-    [
-      '-p',
-      wrapPrompt(step, env, resolve(shotsDir)),
-      '--output-format',
-      'stream-json',
-      '--verbose',
-      '--json-schema',
-      JSON.stringify(VERDICT_SCHEMA),
-      '--mcp-config',
+    claudeArgs(wrapPrompt(step, env, resolve(shotsDir)), VERDICT_SCHEMA, {
+      tools: PROMPT_TOOLS,
+      maxTurns: PROMPT_MAX_TURNS,
+      model: PROMPT_MODEL,
+      stream: true,
       mcpConfig,
-      '--strict-mcp-config',
-      '--allowedTools',
-      PROMPT_TOOLS.join(','),
-      '--disallowedTools',
-      'Bash,Edit,Write,NotebookEdit,WebFetch,WebSearch,Task',
-      '--max-turns',
-      PROMPT_MAX_TURNS,
-      ...(PROMPT_MODEL ? ['--model', PROMPT_MODEL] : []),
-    ],
+    }),
     { env: serverEnv, onStdout },
   ).finally(() => clearTimeout(timer));
   if (buffer.trim()) onStdout('\n');
@@ -395,14 +388,7 @@ async function promptStep(step, stepDir, env) {
   step.exitCode = code;
   step.costUsd = result?.total_cost_usd ?? null;
   step.turns = result?.num_turns ?? null;
-  let verdict = result?.structured_output ?? null;
-  if (!verdict && typeof result?.result === 'string') {
-    try {
-      verdict = JSON.parse(result.result.match(/\{[\s\S]*\}/)?.[0] ?? '');
-    } catch {
-      // Not JSON: no verdict.
-    }
-  }
+  const verdict = answerOf(result);
   step.screenshots = (await readdir(shotsDir).catch(() => []))
     .filter((f) => /\.(png|jpe?g|webp)$/i.test(f))
     .sort()
@@ -422,10 +408,9 @@ async function promptStep(step, stepDir, env) {
     step.status = isStopped() ? 'stopped' : 'error';
     step.error = step.timedOut
       ? 'Timed out before giving a verdict.'
-      : result?.is_error || result?.subtype?.startsWith('error')
-        ? `Claude stopped: ${result.subtype ?? 'error'}${result.result ? ` (${String(result.result).slice(0, 300)})` : ''}`
-        : code === null
-          ? `Couldn't start \`${CLAUDE}\`. Is Claude Code installed and logged in?`
-          : `Claude finished without a verdict (exit code ${code}).`;
+      : (stoppedReason(result) ??
+        (code === null
+          ? NOT_STARTED
+          : `Claude finished without a verdict (exit code ${code}).`));
   }
 }

@@ -25,7 +25,7 @@ export const runBody = (choice: PlanChoice, cases = [...choice.cases]) => ({
 // The chosen projects that run at least one of the chosen cases (all of the
 // chosen projects when no case is picked). A @desktop-only case such as HP-3
 // has no tests in smoke-mobile, and Playwright fails a project/grep pair
-// that matches nothing. Mirrors planArgs in dashboard/server/runs.mjs.
+// that matches nothing. Mirrors planArgs in dashboard/server/runs/playwright.mjs.
 export function projectsForCases(plan: Plan, choice: PlanChoice): string[] {
   const projects = [...choice.projects];
   if (!choice.cases.size) return projects;

@@ -7,7 +7,12 @@
 // the one before. The dashboard closes it when it stops.
 
 import { spawn } from 'node:child_process';
-import { checkPlanRunnable, planArgs, shownCommand } from './runs.mjs';
+import { killGroup } from './lib/processes.mjs';
+import {
+  checkPlanRunnable,
+  planArgs,
+  shownCommand,
+} from './runs/playwright.mjs';
 
 let child = null;
 
@@ -16,12 +21,8 @@ export function closeUiMode() {
   const open = child;
   child = null;
   if (!open || open.exitCode !== null) return;
-  try {
-    // Own process group: ends UI mode and the browsers it started.
-    process.kill(-open.pid, 'SIGTERM');
-  } catch {
-    open.kill('SIGTERM');
-  }
+  // Own process group: ends UI mode and the browsers it started.
+  killGroup(open);
 }
 
 /**

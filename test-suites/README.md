@@ -89,7 +89,7 @@ anything.
   it as one check with a clear pass/fail, the way you'd ask a tester: what
   to open, what must be there, and what must not happen.
 
-How a prompt runs (`dashboard/server/suite-runs.mjs`):
+How a prompt runs (`dashboard/server/runs/suite-run.mjs`):
 
 - Claude Code runs headless with only the Playwright MCP's browser tools. It
   can't run commands or edit files. It is told to stay read-only (no forms
