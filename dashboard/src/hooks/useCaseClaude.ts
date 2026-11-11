@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { post } from '../api/client';
 import type {
   CaseExplanation,
@@ -15,7 +15,8 @@ import { useApi } from './useApi';
 //   explanation: what the code does, step by step. Saved on disk.
 //   review: the code against the plan's row for the case. Kept in the
 //     server's memory only, so it survives leaving the page but not a
-//     server restart; every request asks Claude again.
+//     server restart; every request asks Claude again. Explaining the code
+//     again resets it (here and on the server), along with one running.
 //
 // Each takes about a minute. Used by the plan page's "What the code does"
 // panel (CaseExplain) and the run page's side-by-side card (CaseCompare).
@@ -31,12 +32,25 @@ export function useCaseClaude(planSlug: string, caseId: string) {
   const [freshReview, setFreshReview] = useState<CaseReview | null>(null);
   const [reviewing, setReviewing] = useState(false);
   const [reviewError, setReviewError] = useState<string | null>(null);
+  // Set when the explanation is asked for again: the review shown until
+  // then is dropped, and answers to reviews started before are ignored.
+  const [reviewReset, setReviewReset] = useState(false);
+  const resets = useRef(0);
+
+  function resetReview() {
+    resets.current += 1;
+    setReviewReset(true);
+    setFreshReview(null);
+    setReviewError(null);
+    setReviewing(false);
+  }
 
   async function explain() {
     setExplaining(true);
     setExplainError(null);
+    const refresh = Boolean(fresh ?? saved.data?.explanation);
+    if (refresh) resetReview();
     try {
-      const refresh = Boolean(fresh ?? saved.data?.explanation);
       const res = await post<ExplanationResponse>(path, { refresh });
       setFresh(res.explanation);
     } catch (err) {
@@ -47,15 +61,20 @@ export function useCaseClaude(planSlug: string, caseId: string) {
   }
 
   async function review() {
+    const run = resets.current;
+    const current = () => resets.current === run;
     setReviewing(true);
     setReviewError(null);
     try {
       const res = await post<ReviewResponse>(reviewPath);
-      setFreshReview(res.review);
+      if (current()) {
+        setFreshReview(res.review);
+        setReviewReset(false);
+      }
     } catch (err) {
-      setReviewError((err as Error).message);
+      if (current()) setReviewError((err as Error).message);
     } finally {
-      setReviewing(false);
+      if (current()) setReviewing(false);
     }
   }
 
@@ -65,9 +84,11 @@ export function useCaseClaude(planSlug: string, caseId: string) {
   useEffect(() => {
     if (!stillReviewing) return;
     let cancelled = false;
+    const run = resets.current;
+    const current = () => !cancelled && resets.current === run;
     post<ReviewResponse>(reviewPath).then(
-      (res) => !cancelled && setFreshReview(res.review),
-      (err: Error) => !cancelled && setReviewError(err.message),
+      (res) => current() && setFreshReview(res.review),
+      (err: Error) => current() && setReviewError(err.message),
     );
     return () => {
       cancelled = true;
@@ -81,8 +102,12 @@ export function useCaseClaude(planSlug: string, caseId: string) {
     explaining,
     explainError,
     explain,
-    review: freshReview ?? lastReview.data?.review ?? null,
-    reviewing: reviewing || (stillReviewing && !freshReview && !reviewError),
+    review: reviewReset
+      ? freshReview
+      : (freshReview ?? lastReview.data?.review ?? null),
+    reviewing:
+      reviewing ||
+      (stillReviewing && !reviewReset && !freshReview && !reviewError),
     reviewError,
     runReview: review,
   };

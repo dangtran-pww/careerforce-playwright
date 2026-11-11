@@ -6,7 +6,7 @@
 // Never written to disk. The latest review of each case is kept in memory
 // while the dashboard server runs, so it is still there when you come back
 // to the page; restarting the server forgets it. Every request asks Claude
-// again.
+// again. Explaining the case's code again resets it (forgetReview).
 
 import { ApiError } from '../errors.mjs';
 import { singleFlight } from '../lib/single-flight.mjs';
@@ -88,18 +88,36 @@ export async function latestReview(plan, id) {
       ...review,
       stale: review.hash !== (await hashFiles(files)),
     },
-    reviewing: flights.has(key),
+    reviewing: flights.has(flightOf(key)),
   };
 }
+
+// How many times each case's review was reset (forgetReview). A review
+// running across a reset is not kept, and a request after the reset starts
+// a new one rather than joining it.
+const resets = new Map();
+const flightOf = (key) => `${key}#${resets.get(key) ?? 0}`;
 
 /** Ask Claude to review the case's code against the plan; keep it in memory. */
 export function reviewCase(plan, id) {
   const key = keyOf(plan, id);
-  return flights.run(key, async () => {
+  const flight = flightOf(key);
+  return flights.run(flight, async () => {
     const review = await generate(plan, id);
-    latest.set(key, review);
+    if (flightOf(key) === flight) latest.set(key, review);
     return { ...review, stale: false };
   });
+}
+
+/**
+ * Forget the case's review, and the result of one running now. Called when
+ * the case's code is explained again: the review then has to be asked for
+ * again too.
+ */
+export function forgetReview(plan, id) {
+  const key = keyOf(plan, id);
+  latest.delete(key);
+  resets.set(key, (resets.get(key) ?? 0) + 1);
 }
 
 async function generate(plan, id) {

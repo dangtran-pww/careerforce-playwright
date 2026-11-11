@@ -11,6 +11,7 @@ import { join } from 'node:path';
 import { singleFlight } from '../lib/single-flight.mjs';
 import { EXPLANATIONS_DIR as cacheDir } from '../paths.mjs';
 import { caseContext, findCase, hashFiles } from './cases.mjs';
+import { forgetReview } from './review.mjs';
 import { answerOf, claudeError, runClaude, usageOf } from './run.mjs';
 
 const SCHEMA = {
@@ -75,8 +76,13 @@ export async function savedExplanation(plan, id) {
 // refresh doesn't join a request that may return the saved answer.
 const flights = singleFlight();
 
-/** Ask Claude for an explanation (or reuse the saved one), and save it. */
+/**
+ * Ask Claude for an explanation (or reuse the saved one), and save it.
+ * Explaining again (`refresh`) also resets the case's review against the
+ * plan.
+ */
 export function explainCase(plan, id, { refresh = false } = {}) {
+  if (refresh) forgetReview(plan, id);
   const key = `${plan.slug}/${id}${refresh ? '#refresh' : ''}`;
   return flights.run(key, () => generate(plan, id, refresh));
 }

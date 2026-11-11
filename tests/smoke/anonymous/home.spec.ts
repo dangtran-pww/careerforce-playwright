@@ -124,7 +124,11 @@ test('HP-4: homepage Decision Tree walks every path', async ({ page }) => {
     return home.decisionTreeCardTitles();
   };
 
-  // Picks a path and checks the step after it. Returns that step's cards.
+  // The cards before any choice, noted in the Start step.
+  let startCards: string[] = [];
+
+  // Picks a path and checks the step after it: the cards change from the
+  // previous step and differ from the starting cards. Returns that step's cards.
   const pickPath = async (path: string, previousCards: string[]) => {
     await home.pickDecisionTreeOption(0, path);
     await expect(home.decisionTreeQuestionDropdown(0)).toHaveJSProperty('open', false);
@@ -135,21 +139,27 @@ test('HP-4: homepage Decision Tree walks every path', async ({ page }) => {
     await expect
       .poll(() => home.decisionTreeCardTitles(), { message: `cards change after "${path}"` })
       .not.toEqual(previousCards);
-    return checkStep();
+    const cards = await checkStep();
+    expect(cards, `"${path}" cards differ from the starting cards`).not.toEqual(startCards);
+    return cards;
   };
 
   // Picks an answer and checks its cards differ from the path's.
   const pickAnswer = async (answer: string, pathCards: string[]) => {
+    // The cards on screen right now: the path's, or the previous answer's.
+    const before = await home.decisionTreeCardTitles();
     await home.pickDecisionTreeOption(1, answer);
     await expect(home.decisionTreeQuestionDropdown(1)).toHaveJSProperty('open', false);
+    // Wait for this answer's cards to replace them.
     await expect
       .poll(() => home.decisionTreeCardTitles(), { message: `cards change after "${answer}"` })
-      .not.toEqual(pathCards);
-    return checkStep();
+      .not.toEqual(before);
+    const cards = await checkStep();
+    expect(cards, `"${answer}" cards differ from the path's cards`).not.toEqual(pathCards);
+    return cards;
   };
 
   await home.goto();
-  let startCards: string[] = [];
   let paths: string[] = [];
 
   await test.step('Start', async () => {
@@ -185,16 +195,15 @@ test('HP-4: homepage Decision Tree walks every path', async ({ page }) => {
     }
   });
 
-  // An answer of the first path is chosen at this point.
+  // An answer of the first path is chosen at this point. pickPath runs the
+  // full "after an option" checks (dropdown closes, "Make a selection",
+  // Reset shows, cards change).
   await test.step('Changing the path resets "Tell us more."', async () => {
     const before = await home.decisionTreeCardTitles();
-    await home.pickDecisionTreeOption(0, paths[1]);
-    await expect(home.decisionTreeQuestionToggle(1)).toHaveText('Make a selection');
+    await pickPath(paths[1], before);
     await expect
       .poll(() => home.decisionTreeOptionTexts(1))
       .toEqual(answersByPath.get(paths[1]));
-    await expect.poll(() => home.decisionTreeCardTitles()).not.toEqual(before);
-    await checkStep();
   });
 
   await test.step('Reset selections', async () => {
@@ -208,13 +217,28 @@ test('HP-4: homepage Decision Tree walks every path', async ({ page }) => {
 
   await test.step('A card opens its page', async () => {
     await pickPath(paths[0], startCards);
-    // Job Search is covered by the JS cases, so open a card that links elsewhere.
-    const card = home.decisionTreeCards().locator('a:not([href^="/job-search"])').first();
+    // Cards can link anywhere, so open the first one, whatever its page.
+    const card = home.decisionTreeCards().first().getByRole('link');
     const href = (await card.getAttribute('href'))!;
+    // The page's own response, after any redirects. Its status is the check:
+    // the page title isn't, since a real page's title can contain any word.
+    const response = page.waitForResponse(
+      (r) =>
+        r.request().isNavigationRequest() &&
+        r.frame() === page.mainFrame() &&
+        (r.status() < 300 || r.status() >= 400),
+    );
+    // The link may be relative, so resolve it against the homepage address.
+    const linkUrl = new URL(href, page.url()).href;
     await card.click();
-    await expect(page).toHaveURL(new RegExp(`${href.replace(/[.?*+^$()|[\]\\]/g, '\\$&')}$`));
-    const title = page.getByRole('heading', { level: 1 }).first();
-    await expect(title).toBeVisible();
-    await expect(title).not.toHaveText(/Page Not Found|Forbidden|Error/i);
+    const finalResponse = await response;
+    expect(finalResponse.status(), `HTTP status of ${href}`).toBe(200);
+    // The card's link may redirect, so the browser can end up somewhere else.
+    // Check the navigation started at the card's link, then that the browser
+    // shows the page it was redirected to.
+    let firstRequest = finalResponse.request();
+    while (firstRequest.redirectedFrom()) firstRequest = firstRequest.redirectedFrom()!;
+    expect(firstRequest.url(), 'the click followed the card link').toBe(linkUrl);
+    await expect(page).toHaveURL(finalResponse.url());
   });
 });
