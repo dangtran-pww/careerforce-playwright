@@ -154,6 +154,50 @@ starting URL, GIVEN / WHEN / THEN with a visible result, any unique test
 data needed, and cleanup. Keep it in plain language — no code is needed
 here. See the phase-1 plan below for a worked example.
 
+## Plan writing rules
+
+Every plan follows these rules. Each has a number, and
+`npm run check:plans` checks the ones a script can check (see
+`scripts/check-plans.mjs`). To add a rule, give it the next number here,
+add a line for it under "Test plan rules" in `CLAUDE.md`, and add a check to
+the script if it can be checked automatically.
+
+| # | Rule | Checked by script |
+|---|---|---|
+| 1 | [Steps and Expected result cells](#rule-1-steps-and-expected-result-cells) | Yes |
+
+### Rule 1: Steps and Expected result cells
+
+A table cell holds one line, so lists are written inline, and the dashboard
+shows them as numbered lists. [smoke-job-search.md](smoke-job-search.md) and
+[smoke-public-site.md](smoke-public-site.md) follow this format.
+
+- **Steps:** one action is plain text. Two or more are numbered `1. … 2. …`.
+  Put a precondition or rule for every step before `1.` ("Save a search as
+  in SS-1 first.", "Don't log in."). End with `**Cleanup:** …` if needed; it
+  shows below the list.
+- **Expected result:** one check is plain text. Two or more are numbered
+  `**1.** … **2.** …`. When the steps are numbered, expected item N is the
+  result of step N. When one step has several checks, number the checks
+  instead and say which step they follow ("After step 2, …"). Put anything
+  that holds for every step, or a link such as "See [Filters](#filters).",
+  before `**1.**`.
+- **Numbers run 1, 2, 3 with no gaps.** A skipped or repeated number stops
+  the cell showing as a list. Merge a step that has nothing to check into the
+  next one.
+
+The script reports number gaps, cells with several sentences and no
+numbers, and numbered Steps and Expected results whose counts differ.
+
+### Checking a plan
+
+```bash
+npm run check:plans                                  # every plan
+npm run check:plans -- test-plans/smoke-public-site.md   # one plan
+```
+
+Each problem names the plan, line, case and rule number.
+
 ## Smoke plans
 
 Every `smoke-*.md` is a smoke plan: quick checks to run after each deploy.

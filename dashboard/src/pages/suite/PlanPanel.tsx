@@ -218,7 +218,7 @@ export function PlanPanel({
                         cases: [c.id],
                         headed,
                       }}
-                      className="ghost small"
+                      className="small"
                       disabled={
                         Boolean(activeRun) ||
                         Boolean(currentEnv.production && c.noProd)
@@ -238,7 +238,7 @@ export function PlanPanel({
             ]}
           />
           <p className="actions">
-            <Link className="button ghost" to={`/plans/${plan.slug}`}>
+            <Link className="button" to={`/plans/${plan.slug}`}>
               Open plan page
             </Link>
           </p>

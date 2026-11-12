@@ -1275,6 +1275,10 @@ tr.row-below td {
   margin: 0 0 6px;
 }
 
+.step-outro {
+  margin: 6px 0 0;
+}
+
 .step-list {
   display: grid;
   gap: 4px;

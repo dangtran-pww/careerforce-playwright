@@ -1,0 +1,132 @@
+// Checks test plans against the rules in test-plans/README.md
+// ("Plan writing rules"). Each rule there that can be checked by a script
+// has an entry in RULES below, with the same number.
+//
+// Usage: npm run check:plans [-- test-plans/<plan>.md …]
+// With no files, checks every plan in test-plans/. Exits 1 on any problem.
+//
+// Adding a rule: write it up in the README, then add { id, name, check } to
+// RULES. `check` gets one plan (see readPlan) and returns problems as
+// { line, caseId?, message }.
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+
+// ---- Reading a plan --------------------------------------------------------
+
+function cells(line) {
+  return line
+    .replace(/^\|\s?/, '')
+    .replace(/\s?\|\s*$/, '')
+    .split(' | ');
+}
+
+// The plan's text and lines, and every row of its case tables (tables with
+// an ID column) as { line, id, cells: { <column header>: text } }.
+function readPlan(file) {
+  const text = readFileSync(file, 'utf8');
+  const lines = text.split('\n');
+  const cases = [];
+  let header = null;
+  lines.forEach((l, i) => {
+    if (!l.startsWith('|')) return void (header = null);
+    const row = cells(l);
+    if (!header) return void (header = row[0] === 'ID' ? row : []);
+    if (!header.length || /^:?-+:?$/.test(row[0])) return;
+    const byColumn = Object.fromEntries(header.map((h, c) => [h, row[c] ?? '']));
+    cases.push({ line: i + 1, id: row[0], cells: byColumn });
+  });
+  return { file, text, lines, cases };
+}
+
+// ---- Helpers for the rules -------------------------------------------------
+
+const MARKER = /(?:^|\s)(?:\*\*(\d+)\.\*\*|(\d+)\.)(?=\s)/g;
+const CLEANUP = /\s\*\*Cleanup:\*\*/;
+
+// A cell's numbered items: { count } (0 if it isn't a numbered list), or
+// { error }. Like the dashboard (dashboard/src/lib/numbered.ts), a number
+// that isn't the next one is plain text ("up to 5. 3. Click"); one past the
+// end means an item went missing.
+function numbered(text) {
+  const nums = [...text.matchAll(MARKER)].map((m) => Number(m[1] ?? m[2]));
+  if (!nums.includes(1) || !nums.includes(2)) return { count: 0 };
+  let next = 1;
+  const skipped = [];
+  for (const n of nums) {
+    if (n === next) next++;
+    else skipped.push(n);
+  }
+  const count = next - 1;
+  if (skipped.some((n) => n > count))
+    return {
+      error: `numbers run ${nums.join(', ')}; a number is missing, or a "N." in the text reads like an item`,
+    };
+  return { count };
+}
+
+// Sentences, leaving out a closing **Cleanup:** note.
+function sentences(text) {
+  return text
+    .split(CLEANUP)[0]
+    .split(/(?<=[.!?]["”)`]?)\s+(?=[A-Z"“`*(])/)
+    .filter((s) => s.trim());
+}
+
+// ---- The rules -------------------------------------------------------------
+
+const RULES = [
+  {
+    id: 1,
+    name: 'Steps and Expected result cells',
+    check(plan) {
+      const problems = [];
+      for (const c of plan.cases) {
+        if (!('Steps' in c.cells) || !('Expected result' in c.cells)) continue;
+        const add = (message) => problems.push({ line: c.line, caseId: c.id, message });
+        const steps = c.cells['Steps'];
+        const expected = c.cells['Expected result'];
+        const s = numbered(steps);
+        const e = numbered(expected);
+        if (s.error) add(`Steps: ${s.error}.`);
+        if (e.error) add(`Expected result: ${e.error}.`);
+        if (!s.count && !s.error && sentences(steps).length > 1)
+          add(
+            'Steps: more than one sentence and no numbers. Number the actions "1. … 2. …", or move a note to the Expected result.',
+          );
+        if (!e.count && !e.error && sentences(expected).length > 1)
+          add('Expected result: more than one sentence and no numbers. Number the checks "**1.** … **2.** …".');
+        if (s.count > 1 && e.count > 1 && s.count !== e.count && !/\bsteps?\b/i.test(expected))
+          add(
+            `${s.count} steps but ${e.count} expected items. Match them by step, or say which step the checks follow ("After step 2, …").`,
+          );
+      }
+      return problems;
+    },
+  },
+];
+
+// ---- Running ---------------------------------------------------------------
+
+const files = process.argv.slice(2).length
+  ? process.argv.slice(2)
+  : readdirSync('test-plans')
+      .filter((f) => f.endsWith('.md') && f !== 'README.md')
+      .map((f) => join('test-plans', f));
+
+let total = 0;
+for (const file of files) {
+  const plan = readPlan(file);
+  for (const rule of RULES) {
+    for (const p of rule.check(plan)) {
+      total++;
+      const where = `${file}:${p.line}${p.caseId ? ` ${p.caseId}` : ''}`;
+      console.log(`${where} [rule ${rule.id}: ${rule.name}] ${p.message}`);
+    }
+  }
+}
+console.log(
+  total
+    ? `\n${total} problem(s). See "Plan writing rules" in test-plans/README.md.`
+    : `${files.length} plan(s) follow the plan writing rules.`,
+);
+process.exit(total ? 1 : 0);

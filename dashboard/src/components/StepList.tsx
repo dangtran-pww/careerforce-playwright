@@ -2,7 +2,7 @@ import { inline } from '../lib/inline';
 import type { Numbered } from '../lib/numbered';
 
 // A numbered detail (e.g. Steps) as a real list, with any text before "1."
-// above it.
+// above it and any closing note (e.g. Cleanup) below it.
 export function StepList({ numbered }: { numbered: Numbered }) {
   return (
     <>
@@ -12,6 +12,7 @@ export function StepList({ numbered }: { numbered: Numbered }) {
           <li key={i}>{inline(item)}</li>
         ))}
       </ol>
+      {numbered.outro && <p className="step-outro">{inline(numbered.outro)}</p>}
     </>
   );
 }

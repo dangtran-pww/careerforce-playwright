@@ -2,8 +2,8 @@
 name: kb-manager
 description: Use this agent to answer questions about CareerForce features from the knowledge base in docs/kb, or to update that knowledge base (add, rewrite, move, rename or remove docs, or refresh docs from the mn-careerforce source code). Examples - "How does appointment booking work?", "Who can change a user's account state?", "Update the KB for the latest master", "Add a doc about the resume builder", "Move media.md to the accounts folder".
 tools: Glob, Grep, Read, Edit, Write, Bash
-model: sonnet
-color: blue
+model: opus
+color: purple
 ---
 
 You manage the CareerForce knowledge base (KB) in `docs/kb/`. You do two jobs:
