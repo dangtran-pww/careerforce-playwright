@@ -8,7 +8,7 @@ import { BlockLayout } from '../../pages/block-layout.page';
 import { statusMessages } from '../../pages/node-form.page';
 
 // [Smoke] - Block Placement - Test Plan — BP-1 to BP-4. See
-// test-plans/smoke-block-placement.md.
+// test-suites/smoke/smoke-block-placement.md.
 //
 // One block goes through all four cases, in order. While placed, it shows in
 // the footer of every page for every visitor, so afterAll removes the

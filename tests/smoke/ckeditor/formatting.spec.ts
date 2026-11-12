@@ -10,7 +10,7 @@ import {
 } from '../../pages/node-form.page';
 
 // [Smoke] - CKEditor 5 - Test Plan — CK-2 to CK-6. See
-// test-plans/smoke-ckeditor.md.
+// test-suites/smoke/smoke-ckeditor.md.
 //
 // Each test writes a Page body in CKEditor (format Full HTML, the default),
 // saves it as Draft so visitors never see it, checks the saved page, and

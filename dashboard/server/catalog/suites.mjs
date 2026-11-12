@@ -1,11 +1,12 @@
-// Reads the suites in test-suites/*.md for the dashboard. A suite is one run
-// made of several test plans (its "## Plans" table, by slug), run one after
-// another on the environment picked in the dashboard. See
-// test-suites/README.md for the format.
+// Reads the suites in test-suites/<suite>/suite.md for the dashboard. A suite
+// is a folder of test plans, run as one run: the plans in its "## Plans"
+// table (by slug), one after another on the environment picked in the
+// dashboard. See test-suites/README.md for the format.
 
-import { readFile, readdir } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { SUITES_DIR as suitesDir } from '../paths.mjs';
+import { SUITES_DIR, SUITE_FILE } from '../paths.mjs';
+import { suiteDirs } from '../../../scripts/lib/layout.mjs';
 import { allNoProd, clean, loadPlans, tableRows } from './plans.mjs';
 
 // The lines of the "## <name>" section (up to the next "## ").
@@ -67,7 +68,7 @@ function parseSuite(slug, text) {
 
   return {
     slug,
-    file: `${suitesDir}/${slug}.md`,
+    file: join(SUITES_DIR, slug, SUITE_FILE),
     name,
     summary: clean((intro ?? '').replace(/\s*\n\s*/g, ' ')),
     // "**Order:** 1": where the suite sits on the Suites page. Suites
@@ -78,13 +79,16 @@ function parseSuite(slug, text) {
 }
 
 // Joins each plan entry to the plan itself, and lists what's wrong with
-// the suite file (unknown plans and projects).
+// the suite (plans not in its folder, plan files missing from its table,
+// unknown projects).
 function resolve(suite, allPlans) {
   const problems = [];
+  const own = allPlans.filter((p) => p.suite === suite.slug);
+  const folder = join(SUITES_DIR, suite.slug);
   const plans = suite.plans.map((entry) => {
-    const plan = allPlans.find((p) => p.slug === entry.slug);
+    const plan = own.find((p) => p.slug === entry.slug);
     if (!plan) {
-      problems.push(`Plan "${entry.slug}" is not in test-plans/.`);
+      problems.push(`Plan "${entry.slug}" is not in ${folder}/.`);
       return { ...entry, found: false, runnable: false };
     }
     const known = plan.projects.map((p) => p.name);
@@ -119,6 +123,12 @@ function resolve(suite, allPlans) {
     };
   });
 
+  for (const plan of own)
+    if (!suite.plans.some((e) => e.slug === plan.slug))
+      problems.push(
+        `${plan.file} is not in the suite's Plans table, so the suite doesn't run it.`,
+      );
+
   const roles = [
     ...new Set(plans.filter((p) => p.runnable).flatMap((p) => p.roles)),
   ].filter(Boolean);
@@ -132,20 +142,19 @@ function resolve(suite, allPlans) {
 }
 
 export async function loadSuites({ refresh = false } = {}) {
-  const [{ plans }, names] = await Promise.all([
+  const [{ plans }, slugs] = await Promise.all([
     loadPlans({ refresh }),
-    readdir(suitesDir).catch(() => []),
+    suiteDirs(),
   ]);
   const suites = await Promise.all(
-    names
-      .filter((n) => n.endsWith('.md') && n !== 'README.md')
-      .map(async (n) => {
-        const slug = n.slice(0, -3);
-        return resolve(
-          parseSuite(slug, await readFile(join(suitesDir, n), 'utf8')),
-          plans,
-        );
-      }),
+    slugs.map(async (slug) => {
+      // A folder without suite.md is still a suite, named after the folder.
+      const text = await readFile(
+        join(SUITES_DIR, slug, SUITE_FILE),
+        'utf8',
+      ).catch(() => '');
+      return resolve(parseSuite(slug, text), plans);
+    }),
   );
   const rank = (s) => (Number.isFinite(s.order) ? s.order : Infinity);
   return suites.sort(

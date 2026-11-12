@@ -6,7 +6,7 @@ import {
 } from '../../pages/job-search.page';
 import type { Locator } from '@playwright/test';
 
-// spec: test-plans/smoke-job-search.md ("Filters", JF-1 to JF-5)
+// spec: test-suites/smoke/smoke-job-search.md ("Filters", JF-1 to JF-5)
 // seed: tests/seed.spec.ts
 //
 // Not logged in, and nothing is saved. The jobs come from an outside feed, so

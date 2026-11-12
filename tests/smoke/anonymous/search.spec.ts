@@ -6,7 +6,7 @@ import { HomePage } from '../../pages/home.page';
 import { SiteHeader } from '../../pages/site-header.page';
 
 // [Smoke] - Public Site - General - Test Plan, SR-1 to SR-5.
-// See test-plans/smoke-public-site.md.
+// See test-suites/smoke/smoke-public-site.md.
 
 test.describe('site search', () => {
   test('SR-1: empty keyword returns the full index', async ({ page }) => {

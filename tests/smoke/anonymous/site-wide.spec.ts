@@ -4,7 +4,7 @@ import { HomePage } from '../../pages/home.page';
 import { SiteFooter } from '../../pages/site-footer.page';
 
 // [Smoke] - Public Site - General - Test Plan, GN-1 to GN-5.
-// See test-plans/smoke-public-site.md.
+// See test-suites/smoke/smoke-public-site.md.
 //
 // Site-wide basics that every page relies on: the "page not found" page,
 // the footer, the main menu's pages, the "Skip to main content" link, and
@@ -127,7 +127,7 @@ test('GN-4: "Skip to main content" moves keyboard focus past the header', async 
 // Uncaught JavaScript errors only. Console messages are not checked: the
 // tests block analytics and the AWS WAF script on purpose, and those
 // blocked loads show up in the console as errors. Job Search is checked
-// by JS-1 in test-plans/smoke-job-search.md.
+// by JS-1 in test-suites/smoke/smoke-job-search.md.
 const NO_ERROR_PAGES = [
   { name: 'Homepage', path: '/' },
   { name: 'Site search', path: '/search?k=job' },

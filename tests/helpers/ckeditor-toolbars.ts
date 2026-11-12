@@ -1,6 +1,6 @@
 // The expected CKEditor 5 toolbar of each text format on the Page body,
 // read from QA with an admin session on 2026-11-12. The same table is in
-// test-plans/smoke-ckeditor.md → "Toolbars"; change both when a ticket
+// test-suites/smoke/smoke-ckeditor.md → "Toolbars"; change both when a ticket
 // changes a toolbar.
 //
 // '·' is a separator and '⏎' a line break. 'Heading' is the heading dropdown

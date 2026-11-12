@@ -4,7 +4,7 @@ import { expect } from '../fixtures';
 import type { JobSearchPage } from '../../../pages/job-search.page';
 
 // Helpers for tests/functional/job-search/search.spec.ts
-// (test-plans/functional-job-search-search.md). Everything else comes from
+// (test-suites/job-search/functional-job-search-search.md). Everything else comes from
 // the shared page object, tests/pages/job-search.page.ts.
 
 export type SearchForm = {

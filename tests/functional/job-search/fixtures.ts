@@ -7,7 +7,7 @@ import {
 } from '../../helpers/fixtures';
 
 // The checks every Job Search functional plan lists under "Checked in every
-// case" (test-plans/functional-job-search-*.md). Every spec in
+// case" (test-suites/job-search/functional-job-search-*.md). Every spec in
 // tests/functional/job-search/ imports `test` and `expect` from here, so
 // they run after each test without the test asking:
 //

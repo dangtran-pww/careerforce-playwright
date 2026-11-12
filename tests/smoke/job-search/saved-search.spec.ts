@@ -7,7 +7,7 @@ import {
 } from '../../pages/job-search.page';
 
 // [Smoke] - Job Search - Test Plan, SS-1 to SS-3 (saved searches).
-// See test-plans/smoke-job-search.md.
+// See test-suites/smoke/smoke-job-search.md.
 //
 // Logged in as the job seeker. These save searches on that account, so they
 // never run on Production (@no-prod); they run on desktop and phone. Each test removes

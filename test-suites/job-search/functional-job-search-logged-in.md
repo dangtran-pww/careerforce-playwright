@@ -22,7 +22,7 @@ The other parts:
 (one job on its own, phone layout, keyboard and accessibility).
 
 The basic saved-search and dashboard journeys are already in
-[smoke-job-search.md](smoke-job-search.md): save a search (SS-1), run it
+[smoke-job-search.md](../smoke/smoke-job-search.md): save a search (SS-1), run it
 from Jobs for me (SS-2), the 5-search limit (SS-3), and listing, opening and
 removing saved searches and bookmarks on the dashboard (MD-1 to MD-6). This
 plan doesn't repeat them. It covers what they don't: every value a saved
@@ -42,12 +42,12 @@ seeker login for Production; PV-5 runs as a visitor).
 |---|---|
 | **Role** | `jobseeker`: `playwright/.auth/<env>/jobseeker.json`, from `npm run login:manual -- jobseeker`. Job seekers log in with LoginMN. PV-4 and PV-5 also use a fresh browser that isn't logged in. |
 | **Test account** | A job seeker account used only for testing, never a person's own (see [Open questions](#open-questions)). Before a run it needs: at most 3 saved searches, at most 10 bookmarked jobs, at most 5 career goals, and "My Region" set to a Minnesota city (the cases note it and put it back). |
-| **Site password gate** | QA and Stage ask for the `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` from `.env` ([one-time setup](README.md#one-time-setup)). |
+| **Site password gate** | QA and Stage ask for the `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` from `.env` ([one-time setup](../README.md#one-time-setup)). |
 | **Accounts touched** | The job seeker account: saved searches, bookmarked jobs, career goals and My Region. Every case removes or puts back only what it added or changed, matched by name (`Playwright test <timestamp>`), job ID or occupation code. It never removes anything it didn't add. |
 
 ## Running it
 
-First time? Do the [one-time setup](README.md#one-time-setup). Then, on QA
+First time? Do the [one-time setup](../README.md#one-time-setup). Then, on QA
 or Stage only:
 
 ```bash
@@ -62,9 +62,9 @@ only case for the phone:
 BASE_URL=https://qa.careerforce.link npx playwright test tests/functional/job-search/logged-in --project=functional-mobile
 ```
 
-Add `--ui` to [watch it run](README.md#watching-a-run), or put
+Add `--ui` to [watch it run](../README.md#watching-a-run), or put
 `SCREENSHOT=on` in front to
-[save a screenshot of every test](README.md#screenshots-of-every-test).
+[save a screenshot of every test](../README.md#screenshots-of-every-test).
 
 ## Checked in every case
 

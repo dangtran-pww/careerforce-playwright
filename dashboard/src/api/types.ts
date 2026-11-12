@@ -64,7 +64,7 @@ export interface PlanCase {
   id: string; // e.g. "AM-1"
   title: string;
   // "prompt": no test code; Claude runs its prompt file in a browser
-  // (test-plans/README.md, Rule 2). Older servers leave it out ("test").
+  // (test-suites/README.md, Rule 2). Older servers leave it out ("test").
   kind?: 'test' | 'prompt';
   prompt?: PromptCheck | null; // its prompt file; null when it's missing
   promptProblems?: string[]; // what's wrong with that file
@@ -87,7 +87,7 @@ export interface PlanCase {
   locations: CaseLocation[];
 }
 
-// A prompt file in test-plans/prompts/ (scripts/lib/prompts.mjs).
+// A prompt file in test-suites/<suite>/prompts/ (scripts/lib/prompts.mjs).
 export interface Viewport {
   name: string;
   width: number;

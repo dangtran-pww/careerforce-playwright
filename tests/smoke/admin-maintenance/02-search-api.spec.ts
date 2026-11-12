@@ -11,7 +11,7 @@ import { AppointmentsSearchPage } from '../../pages/appointments-search.page';
 import { siteDate } from '../../helpers/dates';
 
 // [Smoke] - Admin Maintenance - Test Plan — AM-2, AM-3. See
-// test-plans/smoke-admin-maintenance.md.
+// test-suites/smoke/smoke-admin-maintenance.md.
 //
 // AM-2 empties and refills each search index, so run off-peak on QA/stage
 // only. Rebuild and reindex stay in one test per index so a failure never

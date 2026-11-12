@@ -2,7 +2,7 @@ import { test, expect } from '../../helpers/fixtures';
 import { HomePage } from '../../pages/home.page';
 import { JobSearchPage } from '../../pages/job-search.page';
 
-// spec: test-plans/smoke-job-search.md ("Search and results", JS-1 to JS-5)
+// spec: test-suites/smoke/smoke-job-search.md ("Search and results", JS-1 to JS-5)
 // seed: tests/seed.spec.ts
 //
 // Not logged in, and nothing is saved: Save search and Bookmark only open the
@@ -20,7 +20,7 @@ const DISTANCES = [5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(
 
 test.describe('Search and results', () => {
   // JS-1 runs first: if Job Search doesn't load, nothing else here can pass.
-  // Uncaught JavaScript errors only, as in GN-5 (test-plans/smoke-public-site.md):
+  // Uncaught JavaScript errors only, as in GN-5 (test-suites/smoke/smoke-public-site.md):
   // the tests block analytics and the AWS WAF script on purpose, and those
   // blocked loads show up in the console as errors.
   test('JS-1: Job Search loads, and its search form works', async ({ page }) => {
@@ -106,7 +106,7 @@ test.describe('Search and results', () => {
   // JS-2 checks only that the homepage block hands its search over to Job
   // Search. That Job Search itself loads, lists jobs and has no JavaScript
   // errors is JS-1; the homepage's JavaScript errors are GN-5 in
-  // test-plans/smoke-public-site.md.
+  // test-suites/smoke/smoke-public-site.md.
   test('JS-2: Homepage Job Search hands over the search', async ({ page }) => {
     const home = new HomePage(page);
     const jobs = new JobSearchPage(page);

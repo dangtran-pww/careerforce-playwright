@@ -38,7 +38,7 @@ things on that account, so they run on **QA and Stage only**, never on
 Production. They live in the same folder, tagged `@no-prod`: on
 Production, Playwright leaves them out, and `--grep-invert @no-prod` leaves
 them out elsewhere (see
-[Keeping tests off Production](README.md#keeping-tests-off-production)).
+[Keeping tests off Production](../README.md#keeping-tests-off-production)).
 Each test removes what it added, even when it fails.
 
 The plan isn't no-prod as a whole, only SS and MD are (the Prod column), so
@@ -56,12 +56,12 @@ FL-6); there, JS-2 to JS-5 were JS-1 to JS-4. The old JS-5 (no JavaScript errors
 |---|---|
 | **JS and JF cases** | None. A visitor who isn't logged in. |
 | **SS and MD cases** | The `jobseeker` role: `playwright/.auth/<env>/jobseeker.json`, from `npm run login:manual -- jobseeker`. Job seekers log in with LoginMN. Use a test account, not a person's own account (see [Open questions](#open-questions)). |
-| **Site password gate** | QA and Stage ask for the `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` from `.env` ([one-time setup](README.md#one-time-setup)). Production has no gate. |
+| **Site password gate** | QA and Stage ask for the `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` from `.env` ([one-time setup](../README.md#one-time-setup)). Production has no gate. |
 | **Accounts touched** | SS and MD add saved searches and bookmarks to the job seeker account and remove them again. They never remove anything they didn't add. |
 
 ## Running it
 
-First time? Do the [one-time setup](README.md#one-time-setup).
+First time? Do the [one-time setup](../README.md#one-time-setup).
 
 Search and filters (no login, any environment; desktop, then phone). On QA
 and Stage these commands also run SS and MD; add `--grep-invert @no-prod` to
@@ -79,9 +79,9 @@ npm run login:manual -- jobseeker
 BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/job-search --project=smoke-desktop --project=smoke-mobile --grep @no-prod
 ```
 
-Add `--ui` to [watch it run](README.md#watching-a-run), or put
+Add `--ui` to [watch it run](../README.md#watching-a-run), or put
 `SCREENSHOT=on` in front to
-[save a screenshot of every test](README.md#screenshots-of-every-test).
+[save a screenshot of every test](../README.md#screenshots-of-every-test).
 
 ## Test cases
 
@@ -217,7 +217,7 @@ Every case is generated:
 | `smoke-mobile` on Production, or with `--grep-invert @no-prod` | 7 | JS-1 to JS-5, JF-4, JF-5 (SS and MD are left out) |
 
 If the total is different, or anything fails, see
-[When something fails](README.md#when-something-fails).
+[When something fails](../README.md#when-something-fails).
 
 ## Not covered
 

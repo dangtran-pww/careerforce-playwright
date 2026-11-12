@@ -41,9 +41,10 @@ You will:
 
 ## Test plans folder
 
-Test plans for this project live in `test-plans/`, not in `specs/` or anywhere
-else. Before writing or changing a plan, read `test-plans/README.md` and
-follow its status convention:
+Test plans for this project live in their suite's folder,
+`test-suites/<suite>/<plan>.md`, not in `specs/` or anywhere else. Before
+writing or changing a plan, read `test-suites/README.md` and follow its
+layout and status convention:
 
 - A new plan starts with `Status: ready to generate` and
   `Implemented test: —`.
@@ -56,7 +57,7 @@ follow its status convention:
 - A wording-only change, with no change to steps, data, or expected
   results, does not change the status — it stays `implemented`.
 
-Follow every rule in "Plan writing rules" in `test-plans/README.md` (for
+Follow every rule in "Plan writing rules" in `test-suites/README.md` (for
 example, numbered Steps and Expected result cells). You can't run commands,
 so after you save, the main session runs `npm run check:plans` on your plan
 and fixes or sends back whatever it reports.
@@ -65,18 +66,19 @@ Some checks need judgement rather than a fixed assertion. Examples are
 comparing the layout or styling with another site (such as Live), reviewing a
 page "for anything that looks broken" on desktop and on a phone, and
 side-by-side comparisons of custom pages with Live. Write these as **prompt
-cases** (Rule 2 in `test-plans/README.md`), not as cases to automate. Start
+cases** (Rule 2 in `test-suites/README.md`), not as cases to automate. Start
 the Steps cell with `**Prompt:** [<name>](prompts/<name>.md)` and say in the
 Expected result what passes and what fails. You can't write the prompt file
 itself, so end your report with the content of each new
-`test-plans/prompts/<name>.md` (Role, optional Compare with, Viewports and
+`test-suites/<suite>/prompts/<name>.md` (Role, optional Compare with, Viewports and
 Screenshots, and the `## Prompt` text), and the main session saves it. Prompt
 cases don't change the plan's status, because nothing is generated for them.
 
 5. **Create Documentation**
 
-   Submit your test plan in `test-plans/` using `planner_save_plan` tool,
-   starting a new plan with:
+   Submit your test plan in its suite's folder, `test-suites/<suite>/`, using
+   `planner_save_plan` tool, and report that it must be added to that suite's
+   Plans table in `suite.md`. Start a new plan with:
 
    ```md
    Status: ready to generate

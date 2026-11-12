@@ -1,4 +1,4 @@
-// /api/plans: the test plans in test-plans/, running them, and asking
+// /api/plans: the test plans in test-suites/<suite>/, running them, and asking
 // Claude Code about their cases.
 
 import { readFile } from 'node:fs/promises';

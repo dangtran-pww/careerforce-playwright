@@ -3,7 +3,7 @@ import type { Locator, Page } from '@playwright/test';
 import { expect } from '../fixtures';
 import type { JobSearchPage } from '../../../pages/job-search.page';
 
-// Helpers for test-plans/functional-job-search-sort-filters-paging.md
+// Helpers for test-suites/job-search/functional-job-search-sort-filters-paging.md
 // (sort-filters.spec.ts and paging-url-state.spec.ts).
 
 export const KEYWORD = 'nurse';

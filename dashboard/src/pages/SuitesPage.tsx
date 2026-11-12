@@ -20,7 +20,7 @@ export function SuitesPage() {
       <h1>Suites</h1>
       <p className="lede">
         A suite is one run made of several steps: test plans and checks Claude
-        does in a browser. Suites are the files in test-suites/.
+        does in a browser. Each suite is a folder in test-suites/ with its plans.
       </p>
       {error ? (
         <ErrorBox>{error.message}</ErrorBox>
@@ -33,7 +33,7 @@ export function SuitesPage() {
             <SuiteTable suites={data.suites} />
           ) : (
             <p className="note">
-              No suites yet. Add one to test-suites/ (see
+              No suites yet. Add a folder with a suite.md to test-suites/ (see
               test-suites/README.md).
             </p>
           )}

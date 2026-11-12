@@ -4,7 +4,7 @@
 // report row's heading (e.g. the Search API index label), case-insensitive.
 //
 // Ownership of keeping this current is an open question — see
-// test-plans/smoke-admin-reports.md, open question 1. Whoever notices a new
+// test-suites/smoke/smoke-admin-reports.md, open question 1. Whoever notices a new
 // accepted error/warning should add it here with a short reason, not widen
 // the match to something vaguer.
 export type KnownIssue = {
@@ -41,7 +41,7 @@ export function isKnownIssue(
 }
 
 // Allowlist of JavaScript errors already known on public pages, so GN-5
-// (test-plans/smoke-public-site.md) fails only on a *new* error. `path` is
+// (test-suites/smoke/smoke-public-site.md) fails only on a *new* error. `path` is
 // matched against the start of the page's path, `message` as a substring of
 // the error message. Remove an entry once its bug is fixed, so the test
 // guards against it coming back.

@@ -33,21 +33,21 @@ RS-3 are E1, AX-1 to AX-4 are E2, and AX-5 and AX-6 are E3. PO-9 is added.
 | | |
 |---|---|
 | **Role** | None. A visitor who isn't logged in. No saved session is loaded. |
-| **Site password gate** | QA and Stage ask for the `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` from `.env` ([one-time setup](README.md#one-time-setup)). Production has no gate. |
+| **Site password gate** | QA and Stage ask for the `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` from `.env` ([one-time setup](../README.md#one-time-setup)). Production has no gate. |
 | **Accounts touched** | None. |
 
 ## Running it
 
-First time? Do the [one-time setup](README.md#one-time-setup).
+First time? Do the [one-time setup](../README.md#one-time-setup).
 
 ```bash
 BASE_URL=https://qa.careerforce.link npx playwright test tests/functional/job-search/posting.spec.ts tests/functional/job-search/responsive.spec.ts tests/functional/job-search/accessibility.spec.ts --project=functional-desktop
 BASE_URL=https://qa.careerforce.link npx playwright test tests/functional/job-search/posting.spec.ts tests/functional/job-search/accessibility.spec.ts --project=functional-mobile
 ```
 
-Add `--ui` to [watch it run](README.md#watching-a-run), or put
+Add `--ui` to [watch it run](../README.md#watching-a-run), or put
 `SCREENSHOT=on` in front to
-[save a screenshot of every test](README.md#screenshots-of-every-test).
+[save a screenshot of every test](../README.md#screenshots-of-every-test).
 
 ## Checked in every case
 

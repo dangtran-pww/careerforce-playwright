@@ -4,8 +4,12 @@ See README.md for the project layout and rules.
 
 ## Test plan rules
 
-Whenever you write or change a plan in `test-plans/`, follow every rule in
-"Plan writing rules" in `test-plans/README.md`. In short:
+Plans live in their suite's folder, `test-suites/<suite>/<plan>.md`, next to
+the suite's `suite.md` (see "Layout" in `test-suites/README.md`). A new plan
+goes in its suite's folder and in that suite's Plans table.
+
+Whenever you write or change a plan in `test-suites/`, follow every rule in
+"Plan writing rules" in `test-suites/README.md`. In short:
 
 1. **Steps and Expected result cells:** more than one action is numbered
    `1. … 2. …`; more than one check is numbered `**1.** … **2.** …`, and
@@ -13,8 +17,9 @@ Whenever you write or change a plan in `test-plans/`, follow every rule in
    `**Cleanup:** …` goes last, and numbers run 1, 2, 3 with no gaps.
 2. **Prompt cases:** a check that needs judgement (e.g. layout compared
    with another site) is a prompt case: its Steps cell starts with
-   `**Prompt:** [<name>](prompts/<name>.md)`, and `test-plans/prompts/<name>.md`
-   has `**Role:**`, optional `**Compare with:**`, `**Viewports:**` and
+   `**Prompt:** [<name>](prompts/<name>.md)`, and
+   `test-suites/<suite>/prompts/<name>.md` (in the plan's own suite) has
+   `**Role:**`, optional `**Compare with:**`, `**Viewports:**` and
    `**Screenshots:**`, and a `## Prompt` section. It has no test code.
 3. **Parallel:** a plan (`Parallel: yes` in its header) or a prompt file
    (`**Parallel:** yes`) runs alongside other work only when it only reads
@@ -28,7 +33,7 @@ plans you touched before you finish.
 The user adds rules over time. When they give a new one, add it in all of
 these places in the same change:
 
-- the rules table and a "Rule N" section in `test-plans/README.md`;
+- the rules table and a "Rule N" section in `test-suites/README.md`;
 - a one-line summary in the list above, with the same number;
 - a check in `RULES` in `scripts/check-plans.mjs`, if a script can check it;
 - then run `npm run check:plans` and offer to bring existing plans in line.

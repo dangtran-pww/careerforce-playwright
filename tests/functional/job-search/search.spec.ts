@@ -17,7 +17,7 @@ import {
   submitSearch,
 } from './helpers/search';
 
-// spec: test-plans/functional-job-search-search.md (SE-1 to SE-12)
+// spec: test-suites/job-search/functional-job-search-search.md (SE-1 to SE-12)
 // seed: tests/seed.spec.ts
 //
 // A visitor who isn't logged in; nothing is saved or changed, so every case

@@ -15,7 +15,7 @@ export const SESSION_STATUS: StatusMap = {
   checking: { label: 'Checking…', tone: 'neutral' },
 };
 
-// test-plans/README.md → "Status on every plan".
+// test-suites/README.md → "Status on every plan".
 export const PLAN_STATUS: StatusMap = {
   implemented: { label: 'Implemented', tone: 'good' },
   'partially implemented': { label: 'Partially implemented', tone: 'warn' },

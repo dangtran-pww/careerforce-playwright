@@ -16,10 +16,9 @@ export const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 /** An absolute path from one relative to ROOT. */
 export const fromRoot = (...parts) => join(ROOT, ...parts);
 
-export const PLANS_DIR = 'test-plans';
-export const SUITES_DIR = 'test-suites';
-// Prompt checks, used by plan cases and suites; see scripts/lib/prompts.mjs.
-export { PROMPTS_DIR } from '../../scripts/lib/prompts.mjs';
+// Suites, their plans and their prompts: test-suites/<suite>/; see
+// scripts/lib/layout.mjs.
+export { SUITES_DIR, SUITE_FILE } from '../../scripts/lib/layout.mjs';
 // One folder per dashboard run (gitignored); see runs/lifecycle.mjs.
 export const RUNS_DIR = join('reports', 'dashboard-runs');
 // One folder per prompt check run by scripts/run-prompt.mjs (gitignored).

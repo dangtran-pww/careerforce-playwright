@@ -19,7 +19,7 @@ import {
 } from './helpers';
 
 // [Functional] - Job Search - Logged-in Job Seeker - Test Plan, PV-1 to PV-5.
-// See test-plans/functional-job-search-logged-in.md.
+// See test-suites/job-search/functional-job-search-logged-in.md.
 //
 // PV-1 to PV-3 change the job seeker account (@no-prod). PV-4 only looks,
 // and PV-5 runs as a visitor, so both may run on Production. All desktop

@@ -1,10 +1,10 @@
-// Reads the test plans in test-plans/*.md for the dashboard, and matches
-// each plan to the Playwright tests that implement it.
+// Reads the test plans in test-suites/<suite>/*.md for the dashboard, and
+// matches each plan to the Playwright tests that implement it.
 //
 // From each plan's Markdown: the title, the status line, the "Implemented
 // test" path(s), any "Pending cases" / "Updated cases" note, and the case IDs
 // and titles from its test-case tables (rows whose first cell is an ID such as
-// HP-1 or JSS-2). See test-plans/README.md → "Status on every plan".
+// HP-1 or JSS-2). See test-suites/README.md → "Status on every plan".
 //
 // What must never run on production is marked at one of two levels, with an
 // optional reason after "No":
@@ -22,20 +22,19 @@
 //
 // A prompt case has no test code: its Steps cell starts with
 // "**Prompt:** [<slug>](prompts/<slug>.md)", and Claude runs that prompt file
-// in a browser (scripts/lib/prompts.mjs, runs/prompt.mjs). It has
+// (in the plan's suite's prompts/ folder) in a browser (scripts/lib/prompts.mjs, runs/prompt.mjs). It has
 // kind: 'prompt' and the parsed file in `prompt`.
 
-import { readFile, readdir, stat } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { join } from 'node:path';
 import {
-  PROMPTS_DIR,
   loadPrompts,
   parallelValue,
   promptSlugInCell,
 } from '../../../scripts/lib/prompts.mjs';
-import { PLANS_DIR as plansDir } from '../paths.mjs';
+import { PROMPTS_FOLDER, planFiles } from '../../../scripts/lib/layout.mjs';
 
 const run = promisify(execFile);
 const caseId = /^[A-Z][A-Z0-9]*-\d+$/;
@@ -59,7 +58,7 @@ function splitTitle(heading) {
   return { type: type.trim(), name: name || type.trim() };
 }
 
-function parsePlan(slug, text) {
+function parsePlan({ slug, suite, file }, text) {
   const lines = text.split('\n');
   const heading = lines.find((l) => l.startsWith('# ')) ?? `# ${slug}`;
   const { type, name } = splitTitle(heading.slice(2));
@@ -81,7 +80,7 @@ function parsePlan(slug, text) {
 
   // "Parallel: yes" in the header: the plan's tests only read the site, so
   // they run with several workers and alongside parallel prompt cases
-  // (Rule 3 in test-plans/README.md).
+  // (Rule 3 in test-suites/README.md).
   const parallel =
     parallelValue(
       clean(
@@ -189,7 +188,8 @@ function parsePlan(slug, text) {
 
   return {
     slug,
-    file: `${plansDir}/${slug}.md`,
+    suite,
+    file,
     type,
     name,
     status,
@@ -371,13 +371,16 @@ function attachTests(plan, all) {
 
 // Fills in each prompt case's prompt file (null when the file is missing),
 // and makes a plan with a usable prompt case runnable.
+// The prompt must be in the plan's own suite, where its link points.
 function attachPrompts(plan, prompts) {
+  const dir = join(plan.file, '..', PROMPTS_FOLDER);
   for (const c of plan.cases) {
     if (c.kind !== 'prompt') continue;
-    c.prompt = prompts.get(c.promptSlug) ?? null;
+    const prompt = prompts.get(c.promptSlug);
+    c.prompt = prompt?.suite === plan.suite ? prompt : null;
     c.promptProblems = c.prompt
       ? c.prompt.problems
-      : [`No prompt file ${PROMPTS_DIR}/${c.promptSlug || '?'}.md.`];
+      : [`No prompt file ${dir}/${c.promptSlug || '?'}.md.`];
   }
   plan.promptCases = plan.cases
     .filter((c) => c.kind === 'prompt')
@@ -434,25 +437,22 @@ export async function loadPlans({ refresh = false } = {}) {
       throw err;
     });
   }
-  const [{ tests, errors }, names, prompts] = await Promise.all([
+  const [{ tests, errors }, entries, prompts] = await Promise.all([
     listCache,
-    readdir(plansDir),
+    planFiles(),
     loadPrompts(),
   ]);
   const plans = await Promise.all(
-    names
-      .filter((n) => n.endsWith('.md') && n !== 'README.md')
-      .map(async (n) => {
-        const slug = n.slice(0, -3);
-        // Parsed again each time (cheap): attachTests fills in its cases.
-        const text = await fromFile(join(plansDir, n), (t) => t);
-        const plan = attachPrompts(
-          attachTests(parsePlan(slug, text), tests),
-          prompts,
-        );
-        plan.roles = await rolesFor(plan.files);
-        return plan;
-      }),
+    entries.map(async (entry) => {
+      // Parsed again each time (cheap): attachTests fills in its cases.
+      const text = await fromFile(entry.file, (t) => t);
+      const plan = attachPrompts(
+        attachTests(parsePlan(entry, text), tests),
+        prompts,
+      );
+      plan.roles = await rolesFor(plan.files);
+      return plan;
+    }),
   );
   const order = ['Smoke'];
   const rank = (t) => (order.includes(t) ? order.indexOf(t) : order.length);

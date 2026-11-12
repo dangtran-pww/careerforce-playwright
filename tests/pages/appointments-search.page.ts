@@ -6,7 +6,7 @@ import { type Locator, type Page } from '@playwright/test';
 // location cards, each with slot links whose text lists the slot's formats.
 // The filter form (and the strip) is rendered twice — sidebar and mobile
 // drawer — so strip/button locators keep to the visible copy.
-// See "Appointments search page" in test-plans/smoke-admin-maintenance.md.
+// See "Appointments search page" in test-suites/smoke/smoke-admin-maintenance.md.
 export const APPOINTMENTS_PATH = '/connect-careerforce/schedule-an-appointment';
 
 export type Format = 'online' | 'phone' | 'in_person';

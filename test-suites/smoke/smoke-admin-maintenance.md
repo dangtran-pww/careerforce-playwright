@@ -31,7 +31,7 @@ out because they change site state.
 | **Role** | `admin`: a PWW staff Google account that has admin rights on the environment being tested. It must be able to rebuild permissions (`/admin/reports/status/rebuild`) and manage Search API indexes (`/admin/config/search/search-api`). |
 | **How to log in** | By hand, once per environment: `npm run login:manual -- admin --env <qa\|stage>` (without `--env`, it uses the environment `BASE_URL` in `.env` points at). A Chromium window opens on the login page. Click "PWW Staff Log In" and finish the Google sign-in. The session is saved as soon as you're back on the site, then close the window. The tests can't log in themselves: Google blocks sign-in from a browser Playwright controls. |
 | **Saved session** | `playwright/.auth/<env>/admin.json`, one file per environment, shared with [smoke-admin-reports](smoke-admin-reports.md). A QA session doesn't work on Stage. |
-| **Site password gate** | QA and Stage also ask for the Basic Auth username and password. The tests and the login window both take it from `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` in `.env` ([one-time setup](README.md#one-time-setup)). |
+| **Site password gate** | QA and Stage also ask for the Basic Auth username and password. The tests and the login window both take it from `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` in `.env` ([one-time setup](../README.md#one-time-setup)). |
 | **When it expires** | Run the login command again. Each spec calls `useRole('admin')`, which checks the session before the first test; if it has expired, the tests fail with the login command to fix it. Drupal can also end the session early, e.g. when the same account logs in somewhere else. |
 | **Environments** | QA and Stage only. The plan is no-prod (`Prod: No` in the header): AM-1 and AM-2 change site state, and AM-3 to AM-5 run after AM-2. |
 
@@ -48,7 +48,7 @@ npx playwright test tests/smoke/admin-maintenance --grep "AM-3|AM-4|AM-5" --proj
 Runs in the `smoke-desktop` project (admin-maintenance is desktop only). The
 plan is no-prod and every test is tagged `@no-prod`, so it never runs on
 Production, and `--grep-invert @no-prod` leaves it out elsewhere (see
-[README → Keeping tests off Production](README.md#keeping-tests-off-production)).
+[README → Keeping tests off Production](../README.md#keeping-tests-off-production)).
 
 ## Scope
 

@@ -4,7 +4,7 @@ import { DashboardPage, type DashboardGroup } from '../../pages/dashboard.page';
 import { JobSearchPage } from '../../pages/job-search.page';
 
 // [Smoke] - Job Search - Test Plan, MD-1 to MD-6 (My Job Search on the
-// dashboard). See test-plans/smoke-job-search.md.
+// dashboard). See test-suites/smoke/smoke-job-search.md.
 //
 // Logged in as the job seeker, whose dashboard is /user. The job search
 // section is the "Jobs For Me" block, with a "Saved searches" and a

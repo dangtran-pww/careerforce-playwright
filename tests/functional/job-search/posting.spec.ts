@@ -16,7 +16,7 @@ import {
   type JobSummary,
 } from './helpers/posting-accessibility';
 
-// spec: test-plans/functional-job-search-posting-accessibility.md ("One job on its own", PO-1 to PO-9)
+// spec: test-suites/job-search/functional-job-search-posting-accessibility.md ("One job on its own", PO-1 to PO-9)
 // seed: tests/seed.spec.ts
 //
 // A visitor who isn't logged in; nothing is changed. The jobs come from an

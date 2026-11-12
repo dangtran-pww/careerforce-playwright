@@ -10,7 +10,7 @@ import {
 } from '../../pages/node-form.page';
 
 // [Smoke] - Content Lifecycle - Test Plan — CL-5. See
-// test-plans/smoke-content-lifecycle.md.
+// test-suites/smoke/smoke-content-lifecycle.md.
 //
 // Step 4 is where MNDEED-8191 ("Deleting translation throws PHP error")
 // showed. It's Done, so the test expects no error.

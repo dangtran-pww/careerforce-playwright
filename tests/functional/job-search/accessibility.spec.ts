@@ -16,7 +16,7 @@ import {
   tabTo,
 } from './helpers/posting-accessibility';
 
-// spec: test-plans/functional-job-search-posting-accessibility.md ("Keyboard and accessibility", AX-1 to AX-6)
+// spec: test-suites/job-search/functional-job-search-posting-accessibility.md ("Keyboard and accessibility", AX-1 to AX-6)
 // seed: tests/seed.spec.ts
 //
 // AX-1 to AX-4 use only the keyboard (Tab, Shift+Tab, Enter, Space, Esc and

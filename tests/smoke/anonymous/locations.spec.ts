@@ -2,7 +2,7 @@ import { test, expect } from '../../helpers/fixtures';
 import { LocationPage } from '../../pages/location.page';
 
 // [Smoke] - Public Site - General - Test Plan, LV-1.
-// See test-plans/smoke-public-site.md.
+// See test-suites/smoke/smoke-public-site.md.
 
 const PHYSICAL_LOCATIONS = [
   {

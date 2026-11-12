@@ -6,7 +6,7 @@ import {
 } from '../../helpers/ckeditor-toolbars';
 import { NodeForm } from '../../pages/node-form.page';
 
-// [Smoke] - CKEditor 5 - Test Plan — CK-1. See test-plans/smoke-ckeditor.md.
+// [Smoke] - CKEditor 5 - Test Plan — CK-1. See test-suites/smoke/smoke-ckeditor.md.
 // Opens the Page add form and switches the Body's text format; saves nothing.
 
 useRole('admin');

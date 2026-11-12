@@ -22,7 +22,7 @@ import {
 } from './helpers';
 
 // [Functional] - Job Search - Logged-in Job Seeker - Test Plan, BK-1 to BK-5.
-// See test-plans/functional-job-search-logged-in.md.
+// See test-suites/job-search/functional-job-search-logged-in.md.
 //
 // Bookmarks jobs on the job seeker account, so QA and Stage only
 // (@no-prod), desktop only. Each test removes, by job ID in `finally`, only

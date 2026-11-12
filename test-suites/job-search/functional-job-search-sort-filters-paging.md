@@ -22,7 +22,7 @@ The other parts:
 Every case runs as a visitor who isn't logged in and changes nothing, so the
 whole plan is safe on QA, Stage and Production. The quick post-deploy checks
 of the filters and sort are JF-1 to JF-5 in
-[smoke-job-search.md](smoke-job-search.md); this plan goes further and
+[smoke-job-search.md](../smoke/smoke-job-search.md); this plan goes further and
 doesn't repeat them.
 
 The cases come from the manual test session in
@@ -35,21 +35,21 @@ are B6, UR-2 is B7, and UR-3 is B8. SO-6, FI-5, FI-6 and PG-1 are added.
 | | |
 |---|---|
 | **Role** | None. A visitor who isn't logged in. No saved session is loaded. |
-| **Site password gate** | QA and Stage ask for the `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` from `.env` ([one-time setup](README.md#one-time-setup)). Production has no gate. |
+| **Site password gate** | QA and Stage ask for the `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` from `.env` ([one-time setup](../README.md#one-time-setup)). Production has no gate. |
 | **Accounts touched** | None. |
 
 ## Running it
 
-First time? Do the [one-time setup](README.md#one-time-setup).
+First time? Do the [one-time setup](../README.md#one-time-setup).
 
 ```bash
 BASE_URL=https://qa.careerforce.link npx playwright test tests/functional/job-search/sort-filters.spec.ts tests/functional/job-search/paging-url-state.spec.ts --project=functional-desktop
 BASE_URL=https://qa.careerforce.link npx playwright test tests/functional/job-search/sort-filters.spec.ts tests/functional/job-search/paging-url-state.spec.ts --project=functional-mobile
 ```
 
-Add `--ui` to [watch it run](README.md#watching-a-run), or put
+Add `--ui` to [watch it run](../README.md#watching-a-run), or put
 `SCREENSHOT=on` in front to
-[save a screenshot of every test](README.md#screenshots-of-every-test).
+[save a screenshot of every test](../README.md#screenshots-of-every-test).
 
 ## Checked in every case
 

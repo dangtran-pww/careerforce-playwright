@@ -21,7 +21,7 @@ export const SKIP_TAG: Record<DeviceName, RegExp> = {
   mobile: /@desktop-only/,
 };
 
-// Smoke areas (tests/smoke/<area>/, test-plans/smoke-<area>.md) tested on
+// Smoke areas (tests/smoke/<area>/, test-suites/smoke/smoke-<area>.md) tested on
 // desktop only: admin and editor screens. smoke-mobile ignores their
 // folders. Every other area runs on both devices.
 export const DESKTOP_ONLY_SMOKE_AREAS = [

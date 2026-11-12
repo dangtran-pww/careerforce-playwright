@@ -4,7 +4,7 @@ import { useRole } from '../../helpers/roles';
 import { isKnownIssue } from '../../helpers/known-issues';
 
 // [Smoke] - Admin Reports - Test Plan — AR-1..AR-3. See
-// test-plans/smoke-admin-reports.md. Desktop only (DESKTOP_ONLY_SMOKE_AREAS).
+// test-suites/smoke/smoke-admin-reports.md. Desktop only (DESKTOP_ONLY_SMOKE_AREAS).
 //
 // Read-only admin report checks. All cases need the `admin` storageState
 // (write-capable, but every assertion here is read-only — see open

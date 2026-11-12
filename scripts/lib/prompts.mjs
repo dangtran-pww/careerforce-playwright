@@ -1,8 +1,8 @@
 // Prompt checks: checks Claude does by looking at the site in a browser
 // (`claude -p` with the Playwright MCP), written as a prompt instead of test
-// code. Each is a file in test-plans/prompts/<slug>.md, used by a test plan
-// case whose Steps cell starts with **Prompt:** [<slug>](prompts/<slug>.md)
-// (see test-plans/README.md, Rule 2).
+// code. Each is a file in test-suites/<suite>/prompts/<slug>.md, used by a
+// test plan case in the same suite whose Steps cell starts with
+// **Prompt:** [<slug>](prompts/<slug>.md) (see test-suites/README.md, Rule 2).
 //
 // Shared by the dashboard (dashboard/server/), scripts/check-plans.mjs and
 // scripts/run-prompt.mjs. A prompt file:
@@ -17,11 +17,9 @@
 //   ## Prompt
 //   <the prompt, sent to Claude as written>
 
-import { readFile, readdir } from 'node:fs/promises';
-import { join } from 'node:path';
+import { readFile } from 'node:fs/promises';
 import { environmentById } from '../../tests/helpers/environments.mts';
-
-export const PROMPTS_DIR = join('test-plans', 'prompts');
+import { promptFiles } from './layout.mjs';
 
 const ANONYMOUS = ['', '-', '—', 'anonymous', 'none'];
 // "default" is the environment's own comparison site (compareWith in
@@ -34,7 +32,7 @@ export const DEFAULT_VIEWPORTS = [
 const MAX_SCREENSHOTS = 30;
 
 /**
- * A "**Parallel:**" value (Rule 3 in test-plans/README.md): true for yes,
+ * A "**Parallel:**" value (Rule 3 in test-suites/README.md): true for yes,
  * false for no or no line, null when it is something else.
  */
 export function parallelValue(text) {
@@ -73,8 +71,11 @@ export function parseViewports(text) {
   return { viewports, bad };
 }
 
-/** A prompt file's fields, and what's wrong with it in `problems`. */
-export function parsePrompt(slug, text) {
+/**
+ * A prompt file's fields, and what's wrong with it in `problems`. `where` is
+ * { file, suite } from promptFiles() in layout.mjs.
+ */
+export function parsePrompt(slug, text, where = {}) {
   const lines = text.split('\n');
   const problems = [];
   const heading = lines.find((l) => l.startsWith('# '));
@@ -139,7 +140,8 @@ export function parsePrompt(slug, text) {
 
   return {
     slug,
-    file: `${PROMPTS_DIR}/${slug}.md`,
+    file: where.file ?? null,
+    suite: where.suite ?? null,
     name: heading ? heading.slice(2).trim() : slug,
     role,
     compare,
@@ -152,25 +154,23 @@ export function parsePrompt(slug, text) {
 }
 
 /** The prompt file `slug`, parsed; null when there is no such file. */
-export async function readPrompt(slug, dir = PROMPTS_DIR) {
+export async function readPrompt(slug) {
   if (!/^[\w-]+$/.test(slug)) return null;
-  const text = await readFile(join(dir, `${slug}.md`), 'utf8').catch(
-    () => null,
-  );
-  return text === null ? null : parsePrompt(slug, text);
+  return (await loadPrompts()).get(slug) ?? null;
 }
 
-/** Every prompt file, by slug. */
-export async function loadPrompts(dir = PROMPTS_DIR) {
-  const names = await readdir(dir).catch(() => []);
-  const prompts = await Promise.all(
-    names
-      .filter((n) => n.endsWith('.md') && n !== 'README.md')
-      .map(async (n) =>
-        parsePrompt(n.slice(0, -3), await readFile(join(dir, n), 'utf8')),
-      ),
-  );
-  return new Map(prompts.map((p) => [p.slug, p]));
+/**
+ * Every prompt file in the suites' prompts/ folders, by slug. A slug used in
+ * two suites keeps the first file; check-plans.mjs reports the clash.
+ */
+export async function loadPrompts() {
+  const prompts = new Map();
+  for (const entry of await promptFiles()) {
+    if (prompts.has(entry.slug)) continue;
+    const text = await readFile(entry.file, 'utf8');
+    prompts.set(entry.slug, parsePrompt(entry.slug, text, entry));
+  }
+  return prompts;
 }
 
 // ---- prompt cases in test plans ---------------------------------------------

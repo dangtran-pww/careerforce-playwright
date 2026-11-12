@@ -3,7 +3,7 @@ import { EventsSearchPage } from '../../pages/events-search.page';
 import { ListingPage } from '../../pages/listing.page';
 
 // [Smoke] - Public Site - General - Test Plan, LV-2/LV-3.
-// See test-plans/smoke-public-site.md.
+// See test-suites/smoke/smoke-public-site.md.
 
 test('LV-2: /education-and-training/events view page loads', async ({ page }) => {
   const events = new ListingPage(page, '/education-and-training/events', 'Events');

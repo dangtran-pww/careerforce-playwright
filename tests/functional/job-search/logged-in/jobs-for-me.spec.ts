@@ -28,7 +28,7 @@ import {
 } from './helpers';
 
 // [Functional] - Job Search - Logged-in Job Seeker - Test Plan, JM-1 to JM-5.
-// See test-plans/functional-job-search-logged-in.md.
+// See test-suites/job-search/functional-job-search-logged-in.md.
 //
 // Changes the job seeker account (bookmarks, saved searches, a career goal,
 // My Region), so QA and Stage only (@no-prod), desktop only. Each test puts

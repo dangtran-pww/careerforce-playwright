@@ -3,7 +3,7 @@
 // run by prompt.mjs; this file gives it the run's process, log and Stop,
 // finds a baseline among earlier runs, and decides when each one runs.
 //
-// When (test-plans/README.md, Rule 3): a prompt marked Parallel starts in
+// When (test-suites/README.md, Rule 3): a prompt marked Parallel starts in
 // the background, a few at a time, and the run goes on with its next plan
 // while it runs. In a plan marked Parallel it starts with the plan's own
 // Playwright tests (runPlanWork); otherwise after them. Anything not marked

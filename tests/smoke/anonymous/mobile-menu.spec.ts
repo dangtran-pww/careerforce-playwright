@@ -3,7 +3,7 @@ import { HomePage } from '../../pages/home.page';
 import { MobileHeader } from '../../pages/mobile-header.page';
 
 // [Smoke] - Public Site - General - Test Plan, MB-1 (mobile only).
-// See test-plans/smoke-public-site.md.
+// See test-suites/smoke/smoke-public-site.md.
 //
 // Given: an anonymous visitor on a phone
 // When: they tap the menu button in the header

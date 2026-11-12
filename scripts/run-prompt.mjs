@@ -17,7 +17,7 @@
 
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { killGroup } from '../dashboard/server/lib/processes.mjs';
@@ -31,6 +31,7 @@ import {
   readPrompt,
   resolveCompare,
 } from './lib/prompts.mjs';
+import { planFiles } from './lib/layout.mjs';
 import {
   authFile,
   environmentById,
@@ -57,9 +58,8 @@ function fail(message) {
 
 // The plan and row of case `id`: { plan, title, slug, noProd }.
 async function findCase(id) {
-  const dir = 'test-plans';
-  for (const name of (await readdir(dir)).filter((n) => n.endsWith('.md'))) {
-    const lines = (await readFile(join(dir, name), 'utf8')).split('\n');
+  for (const { slug: plan, file } of await planFiles()) {
+    const lines = (await readFile(file, 'utf8')).split('\n');
     let header = null;
     for (const line of lines) {
       if (!line.startsWith('|')) {
@@ -81,7 +81,7 @@ async function findCase(id) {
       const prod = cells[at(/^prod(uction)?$/i)] ?? '';
       const head = lines.slice(0, 25).join('\n');
       return {
-        plan: name.slice(0, -3),
+        plan,
         title: cells[1],
         slug: promptSlugInCell(steps),
         noProd: /^\**prod:\**\s*no\b/im.test(head) || /^no\b/i.test(prod),
@@ -102,7 +102,7 @@ if (!slug) {
   const id = positionals[0];
   if (!id) fail('Give a case ID (e.g. HP-9) or --prompt <slug>.');
   caseInfo = await findCase(id);
-  if (!caseInfo) fail(`No case ${id} in test-plans/.`);
+  if (!caseInfo) fail(`No case ${id} in the plans in test-suites/.`);
   if (!caseInfo.slug)
     fail(`${id} is not a prompt case: run it with Playwright instead.`);
   if (env.production && caseInfo.noProd)
@@ -111,9 +111,8 @@ if (!slug) {
 }
 
 const check = await readPrompt(slug);
-if (!check) fail(`No prompt file test-plans/prompts/${slug}.md.`);
-if (check.problems.length)
-  fail(`test-plans/prompts/${slug}.md: ${check.problems.join(' ')}`);
+if (!check) fail(`No prompt file test-suites/<suite>/prompts/${slug}.md.`);
+if (check.problems.length) fail(`${check.file}: ${check.problems.join(' ')}`);
 if (check.role && !existsSync(authFile(check.role, env)))
   fail(
     `This check runs as ${check.role}, and there's no saved login on ${env.name}. Run:\n  ${loginCommand(check.role, env)}`,

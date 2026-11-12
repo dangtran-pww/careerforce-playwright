@@ -1,16 +1,18 @@
-// Checks test plans against the rules in test-plans/README.md
+// Checks test plans against the rules in test-suites/README.md
 // ("Plan writing rules"). Each rule there that can be checked by a script
 // has an entry in RULES below, with the same number.
 //
-// Usage: npm run check:plans [-- test-plans/<plan>.md …]
-// With no files, checks every plan in test-plans/. Exits 1 on any problem.
+// Usage: npm run check:plans [-- test-suites/<suite>/<plan>.md …]
+// With no files, checks every plan in every suite folder, and that no two
+// plans or prompts share a file name. Exits 1 on any problem.
 //
 // Adding a rule: write it up in the README, then add { id, name, check } to
 // RULES. `check` gets one plan (see readPlan) and returns problems as
 // { line, caseId?, message }.
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
-import { PROMPTS_DIR, parallelValue, parsePrompt, promptSlugInCell } from './lib/prompts.mjs';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { PROMPTS_FOLDER, duplicateSlugs, planFiles, promptFiles } from './lib/layout.mjs';
+import { parallelValue, parsePrompt, promptSlugInCell } from './lib/prompts.mjs';
 
 // ---- Reading a plan --------------------------------------------------------
 
@@ -121,7 +123,8 @@ const RULES = [
         }
         if (!/^\s*\*\*Prompt:\*\*\s*\[[\w-]+\]\(prompts\/[\w-]+\.md\)/i.test(steps))
           add(`Steps: link the prompt file as "**Prompt:** [${slug || '<name>'}](prompts/${slug || '<name>'}.md)".`);
-        const file = join(PROMPTS_DIR, `${slug}.md`);
+        // Next to the plan, where its link points.
+        const file = join(dirname(plan.file), PROMPTS_FOLDER, `${slug}.md`);
         if (!slug || !existsSync(file)) {
           add(`No prompt file ${file}.`);
           continue;
@@ -166,13 +169,21 @@ const RULES = [
 
 // ---- Running ---------------------------------------------------------------
 
-const files = process.argv.slice(2).length
-  ? process.argv.slice(2)
-  : readdirSync('test-plans')
-      .filter((f) => f.endsWith('.md') && f !== 'README.md')
-      .map((f) => join('test-plans', f));
+const all = !process.argv.slice(2).length;
+const files = all ? (await planFiles()).map((p) => p.file) : process.argv.slice(2);
 
 let total = 0;
+// A plan or prompt is found by its file name alone, so each must be unique.
+if (all)
+  for (const [kind, entries] of [
+    ['plan', await planFiles()],
+    ['prompt', await promptFiles()],
+  ])
+    for (const [slug, where] of duplicateSlugs(entries)) {
+      total++;
+      console.log(`Two ${kind}s are named "${slug}": ${where.join(', ')}. Rename one.`);
+    }
+
 for (const file of files) {
   const plan = readPlan(file);
   for (const rule of RULES) {
@@ -185,7 +196,7 @@ for (const file of files) {
 }
 console.log(
   total
-    ? `\n${total} problem(s). See "Plan writing rules" in test-plans/README.md.`
+    ? `\n${total} problem(s). See "Plan writing rules" in test-suites/README.md.`
     : `${files.length} plan(s) follow the plan writing rules.`,
 );
 process.exit(total ? 1 : 0);

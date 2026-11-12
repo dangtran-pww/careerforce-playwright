@@ -4,7 +4,7 @@ import { expectedGtmId } from '../../helpers/environment';
 import { gtmContainerIds } from '../../helpers/gtm';
 
 // [Smoke] - Public Site - General - Test Plan, HP-1/HP-3/HP-4.
-// See test-plans/smoke-public-site.md.
+// See test-suites/smoke/smoke-public-site.md.
 
 // The homepage's listing sections, each a Drupal view (see HomePage.sectionItems).
 const HOME_SECTIONS = [

@@ -18,7 +18,7 @@ import {
 } from './helpers';
 
 // [Functional] - Job Search - Logged-in Job Seeker - Test Plan, MO-1.
-// See test-plans/functional-job-search-logged-in.md.
+// See test-suites/job-search/functional-job-search-logged-in.md.
 //
 // The phone only (@mobile-only, functional-mobile). Saves a search and
 // bookmarks a job on the job seeker account (@no-prod), and removes both in

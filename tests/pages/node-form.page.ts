@@ -3,7 +3,7 @@ import { expect, type Locator, type Page } from '@playwright/test';
 // The Page content type's add/edit form (/node/add/page, /<alias>/edit) and
 // delete form. Pages use the "Content Review" moderation workflow, so the
 // state is a select ("Save as" on add), not a Published checkbox. See
-// test-plans/smoke-content-lifecycle.md → "What the site has".
+// test-suites/smoke/smoke-content-lifecycle.md → "What the site has".
 
 export type ModerationState = 'draft' | 'review' | 'published' | 'archived';
 

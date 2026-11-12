@@ -25,8 +25,8 @@ reports/                    # generated test reports (gitignored)
 tests/
   pages/                    # Page objects for the CareerForce smoke suite below
   smoke/                    # Post-deploy smoke suite: quick checks, one folder
-    anonymous/              #   per test-plans/smoke-<area>.md (see
-    admin-reports/          #   test-plans/README.md, "Smoke plans"). Read-only and
+    anonymous/              #   per test-suites/smoke/smoke-<area>.md (see
+    admin-reports/          #   test-suites/README.md, "Smoke plans"). Read-only and
     admin-maintenance/      #   prod-safe, except tests tagged @no-prod
   functional/               # in-depth suites, one folder per big feature
                              # (job-search, resume-builder, ...); none yet
@@ -34,8 +34,8 @@ tests/
                              # environment's logins are saved
   helpers/devices.mts       # the devices (desktop, mobile) and desktop-only smoke areas
   helpers/roles.ts          # useRole('<role>'): log a spec in and check the session
-test-plans/                 # human-readable plans that specs are generated from
-test-suites/                # suites for the dashboard: several plans in one run
+test-suites/                # one folder per suite: suite.md, its human-readable
+                             # plans (specs are generated from them) and prompts/
                              # (see test-suites/README.md)
 ```
 
@@ -136,7 +136,7 @@ them `<suite>-<device>`:
   the tests of a no-prod case (`No` in the plan's Prod column). It's decided
   per plan or case, not by whether a test changes data. When `BASE_URL` is
   production, every project leaves them out, whatever the command; elsewhere,
-  `--grep-invert @no-prod` leaves them out (see test-plans/README.md,
+  `--grep-invert @no-prod` leaves them out (see test-suites/README.md,
   "Keeping tests off Production"). Tag tests that change data
   `@desktop-only` too, unless the phone is what's being tested.
 
@@ -207,7 +207,7 @@ tests left behind. No heavy style preset is included.
   can say `Parallel: yes`, and then the dashboard runs it with several
   workers. A prompt file can say `**Parallel:** yes`, and then the check runs
   in the background while the run goes on. See Rule 3 in
-  `test-plans/README.md`.
+  `test-suites/README.md`.
 
 ## Adding the next test (one per sprint feature)
 
@@ -248,8 +248,9 @@ A local page for seeing and running the tests:
   inactivity) long before the cookie's expiry date. If the session has
   expired, its card shows the `npm run login:manual -- <role> --env <env>`
   command to fix it. Press "Check again" afterwards.
-- **Suites:** run several plans as one run. Suites are Markdown files in
-  `test-suites/` (format in `test-suites/README.md`). On a suite's page,
+- **Suites:** run several plans as one run. Each suite is a folder in
+  `test-suites/` with a `suite.md` and its plans (format in
+  `test-suites/README.md`). On a suite's page,
   untick any plan and see the logins the chosen plans need. The run page
   shows each plan as it goes: its test results, then its prompt cases'
   verdicts, findings and screenshots.

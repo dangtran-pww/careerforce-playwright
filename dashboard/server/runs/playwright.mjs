@@ -19,7 +19,7 @@ export const stripAnsi = (text) => text.replace(ansi, '');
 
 // ---- what to run -----------------------------------------------------------
 
-// Workers for a plan marked Parallel (test-plans/README.md, Rule 3). Other
+// Workers for a plan marked Parallel (test-suites/README.md, Rule 3). Other
 // plans keep the config's one worker.
 const PARALLEL_WORKERS = Math.max(
   1,

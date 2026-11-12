@@ -1,5 +1,5 @@
 // Names for content a test creates, so a run's content is easy to spot and
-// clean up by hand (see test-plans/README.md: "Created content is titled
+// clean up by hand (see test-suites/README.md: "Created content is titled
 // `Playwright test <timestamp>`").
 
 /** A run-unique word with no spaces, e.g. `pw20261112153012ab3`. */

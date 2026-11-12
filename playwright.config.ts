@@ -67,7 +67,7 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   // Serial on a shared staging database: parallel tests that share content
   // or users collide and flake. Plans marked `Parallel: yes` (only read the
-  // site, Rule 3 in test-plans/README.md) get `--workers` from the
+  // site, Rule 3 in test-suites/README.md) get `--workers` from the
   // dashboard; from a terminal, pass `--workers 4` yourself for those.
   fullyParallel: false,
   workers: 1,
@@ -118,7 +118,7 @@ export default defineConfig({
         storageState: process.env.SEED_STORAGE_STATE || undefined,
       }))(DEVICES.desktop),
     },
-    // Smoke suite: every spec from a test-plans/smoke-*.md, one folder per
+    // Smoke suite: every spec from a test-suites/smoke/smoke-*.md, one folder per
     // plan (tests/smoke/<area>/): quick checks to run after each deploy.
     // Most are prod-safe. The ones that aren't are tagged `@no-prod` and are
     // left out on production (see the top of this file). No default login: a spec that
@@ -135,7 +135,7 @@ export default defineConfig({
         },
       },
     }),
-    // Functional suites (test-plans/README.md → Functional plans): in-depth
+    // Functional suites (test-suites/README.md → Functional plans): in-depth
     // tests of one big feature area, one folder per feature
     // (tests/functional/<feature>/), e.g. job-search, resume-builder,
     // jobseeker-registration. Too long for a post-deploy run. Like smoke,

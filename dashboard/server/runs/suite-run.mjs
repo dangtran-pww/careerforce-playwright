@@ -1,8 +1,8 @@
-// Runs a suite (test-suites/*.md) for the dashboard: its plans, one step
+// Runs a suite (test-suites/<suite>/suite.md) for the dashboard: its plans, one step
 // after another, on the environment picked in the dashboard. A step's prompt
 // cases marked Parallel go on in the background while the next steps run,
 // as long as those steps' plans are marked Parallel too
-// (test-plans/README.md, Rule 3; see prompt-step.mjs). Uses the run lifecycle in lifecycle.mjs,
+// (test-suites/README.md, Rule 3; see prompt-step.mjs). Uses the run lifecycle in lifecycle.mjs,
 // so a suite takes the same one-run-at-a-time lock and can be stopped the
 // same way (Stop ends the current step and skips the rest).
 //
@@ -133,7 +133,7 @@ export async function startSuiteRun(suite, choice) {
       // The plan's prompt cases, run after its tests.
       prompts: plan ? promptCaseEntries(plan, env) : [],
       skipReason: !entry.found
-        ? 'Not in test-plans/.'
+        ? `Not in test-suites/${suite.slug}/.`
         : plan
           ? null
           : (offProd ?? 'No tests yet.'),

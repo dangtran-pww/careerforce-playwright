@@ -6,7 +6,7 @@
 **Screenshots:** 16
 **Parallel:** yes
 
-HP-5 in test-plans/smoke-public-site.md. From the DEED smoke checklist:
+HP-5 in test-suites/smoke/smoke-public-site.md. From the DEED smoke checklist:
 "Review the Homepage for layout/styling issues. Comparison to be done with the
 Live (qa based on new changes) site/side-by-side. Review both desktop and
 responsive. Note any discrepancies."

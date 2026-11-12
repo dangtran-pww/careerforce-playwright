@@ -10,7 +10,7 @@ import {
 } from '../../pages/node-form.page';
 
 // [Smoke] - Content Lifecycle - Test Plan — CL-1, CL-2, CL-6. See
-// test-plans/smoke-content-lifecycle.md.
+// test-suites/smoke/smoke-content-lifecycle.md.
 //
 // Each test creates a Page and deletes it afterwards, even when it fails.
 // A published test page is briefly visible to visitors: QA/stage only.

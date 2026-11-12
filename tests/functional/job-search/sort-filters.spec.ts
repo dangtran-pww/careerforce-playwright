@@ -17,7 +17,7 @@ import {
   submitAndWait,
 } from './helpers/sort-filters';
 
-// spec: test-plans/functional-job-search-sort-filters-paging.md ("Sort" SO-1 to SO-6, "Filters" FI-1 to FI-6)
+// spec: test-suites/job-search/functional-job-search-sort-filters-paging.md ("Sort" SO-1 to SO-6, "Filters" FI-1 to FI-6)
 // seed: tests/seed.spec.ts
 //
 // A visitor who isn't logged in; nothing is changed, so every case is safe on

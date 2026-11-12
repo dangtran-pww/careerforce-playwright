@@ -10,7 +10,7 @@ import { test, expect, type SiteHealth } from '../fixtures';
 import { DashboardPage } from '../../../pages/dashboard.page';
 import { JobSearchPage } from '../../../pages/job-search.page';
 
-// Shared by the specs of test-plans/functional-job-search-logged-in.md.
+// Shared by the specs of test-suites/job-search/functional-job-search-logged-in.md.
 // Everything here works on the job seeker account the spec logs in as
 // (useRole('jobseeker')), and never removes anything the test didn't add.
 

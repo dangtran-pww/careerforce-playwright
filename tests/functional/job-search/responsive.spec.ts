@@ -11,7 +11,7 @@ import {
   openFirstNurseJob,
 } from './helpers/posting-accessibility';
 
-// spec: test-plans/functional-job-search-posting-accessibility.md ("At phone width", RS-1 to RS-3)
+// spec: test-suites/job-search/functional-job-search-posting-accessibility.md ("At phone width", RS-1 to RS-3)
 // seed: tests/seed.spec.ts
 //
 // Each case sets the browser to 390 × 844 itself, so the cases run on

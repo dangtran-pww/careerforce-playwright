@@ -16,7 +16,7 @@ import {
   type FormValues,
 } from './helpers/sort-filters';
 
-// spec: test-plans/functional-job-search-sort-filters-paging.md ("Paging" PG-1 to PG-5, "The address" UR-1 to UR-3)
+// spec: test-suites/job-search/functional-job-search-sort-filters-paging.md ("Paging" PG-1 to PG-5, "The address" UR-1 to UR-3)
 // seed: tests/seed.spec.ts
 //
 // A visitor who isn't logged in; nothing is changed, so every case is safe on

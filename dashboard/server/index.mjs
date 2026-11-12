@@ -6,7 +6,7 @@
 // This file starts it. The routes are a Hono app: see app.mjs for where each
 // one lives (routes/), and how requests are checked and errors answered.
 // The work is done by:
-//   catalog/   reading test-plans/ and test-suites/
+//   catalog/   reading test-suites/ (suites, their plans and prompts)
 //   runs/      running plans and suites, one run at a time, and run history
 //   claude/    asking Claude Code (explaining a case or a failure, reviewing
 //              a case)

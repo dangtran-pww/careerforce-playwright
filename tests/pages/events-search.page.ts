@@ -6,7 +6,7 @@ import type { Results } from '../helpers/results';
 // .view-header__result-summary-header), and .views-row is only the address
 // line inside a card, not the card. Every filter/sort is a GET param, so
 // tests build the URL instead of clicking the (several times rendered) form.
-// See "Events search page" in test-plans/smoke-admin-maintenance.md.
+// See "Events search page" in test-suites/smoke/smoke-admin-maintenance.md.
 export type EventsQuery = Record<string, string>;
 
 export const EVENTS_PATH = '/education-and-training/events';

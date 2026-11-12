@@ -8,7 +8,7 @@ import {
 import { addDays, longDate, siteDate, weekday } from '../../helpers/dates';
 
 // [Smoke] - Admin Maintenance - Test Plan — AM-5. See
-// test-plans/smoke-admin-maintenance.md, "Appointments search cases".
+// test-suites/smoke/smoke-admin-maintenance.md, "Appointments search cases".
 //
 // Uses whatever slots QA already has — the tests never create appointments
 // and never submit a booking. Cases that need a particular kind of day skip

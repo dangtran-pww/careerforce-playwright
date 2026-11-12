@@ -1,6 +1,6 @@
 // The run lifecycle: one run at a time (the tests share accounts and a
 // staging database, so two runs at once would collide). Within a run, the
-// plans and prompt cases marked Parallel (test-plans/README.md, Rule 3) can
+// plans and prompt cases marked Parallel (test-suites/README.md, Rule 3) can
 // have several processes going at once; Stop ends all of them. A run is either one test plan (plan-run.mjs) or a suite of
 // several steps (suite-run.mjs); both go
 //   beginRun → launch( spawnStep / runPlaywright … → endRun )

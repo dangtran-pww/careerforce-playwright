@@ -4,8 +4,8 @@ import { EventsSearchPage } from '../../pages/events-search.page';
 import { SearchPage } from '../../pages/search.page';
 
 // [Smoke] - Public Site - General - Test Plan, FL-1 to FL-4, FL-7, FL-8.
-// See test-plans/smoke-public-site.md. FL-5 and FL-6 (Job Search) moved to
-// test-plans/smoke-job-search.md as JF-1 and JF-2.
+// See test-suites/smoke/smoke-public-site.md. FL-5 and FL-6 (Job Search) moved to
+// test-suites/smoke/smoke-job-search.md as JF-1 and JF-2.
 //
 // Given: an anonymous visitor on a filterable listing
 // When: they open it with no filter, then with filter X, then with filter Y

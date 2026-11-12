@@ -3,7 +3,7 @@ import { expect, type Locator, type Page } from '@playwright/test';
 import { expectNoErrors } from './node-form.page';
 
 // Content blocks and their placement in the site theme, CareerForce Skin.
-// See test-plans/smoke-block-placement.md → "What the site has".
+// See test-suites/smoke/smoke-block-placement.md → "What the site has".
 
 export const THEME = 'careerforce_skin';
 

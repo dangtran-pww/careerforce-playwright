@@ -59,7 +59,7 @@ The checks come from the team's manual checklist on Confluence,
 |---|---|
 | **Site login** | None. Every test runs as a visitor who isn't logged in. |
 | **Role** | Anonymous. No saved session is used, so there is nothing to run `npm run login:manual` for, and nothing that can expire. |
-| **Site password gate** | QA and Stage ask for a username and password (a browser "Sign in" pop-up) before showing any page. The tests answer it with `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` from your `.env` file ([one-time setup](README.md#one-time-setup)). Production has no gate. |
+| **Site password gate** | QA and Stage ask for a username and password (a browser "Sign in" pop-up) before showing any page. The tests answer it with `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` from your `.env` file ([one-time setup](../README.md#one-time-setup)). Production has no gate. |
 | **Accounts touched** | None. HP-2 opens the login sections but never fills them in or submits. |
 
 If a run fails with 401 / "Unauthorized" on QA or Stage, the gate
@@ -67,7 +67,7 @@ password in `.env` is out of date. Ask the team for the current values.
 
 ## Running it
 
-No login needed. First time? Do the [one-time setup](README.md#one-time-setup).
+No login needed. First time? Do the [one-time setup](../README.md#one-time-setup).
 Run the command for the environment you want (about 1–2 minutes).
 
 QA:
@@ -91,11 +91,11 @@ BASE_URL=https://careerforce.mn.gov npx playwright test tests/smoke/anonymous --
 Keep `--project=smoke-desktop` in the command. Without it, the same tests also run on
 the phone ([Mobile](#mobile)), 78 runs in all.
 
-Add `--ui` to [watch it run](README.md#watching-a-run). A successful run ends
+Add `--ui` to [watch it run](../README.md#watching-a-run). A successful run ends
 with `44 passed` ([Expected result](#expected-result)).
 
 To save a full-page screenshot of every test, even the ones that pass, put
-`SCREENSHOT=on` in front ([more on screenshots](README.md#screenshots-of-every-test)):
+`SCREENSHOT=on` in front ([more on screenshots](../README.md#screenshots-of-every-test)):
 
 ```bash
 SCREENSHOT=on BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/anonymous --project=smoke-desktop
@@ -136,7 +136,7 @@ SCREENSHOT=on BASE_URL=https://qa.careerforce.link npx playwright test tests/smo
 
 ### Prompt case HP-5
 
-HP-5 has no test code. It is a [prompt case](README.md#rule-2-prompt-cases):
+HP-5 has no test code. It is a [prompt case](../README.md#rule-2-prompt-cases):
 Claude opens the site in a browser, follows
 [prompts/homepage-compare.md](prompts/homepage-compare.md) and gives a
 verdict (pass, fail or unsure) with findings and screenshots. The
@@ -350,7 +350,7 @@ so they add up to 44 runs:
 | **Total** | **44** | |
 
 If the total is anything other than 43, or anything fails, see
-[When something fails](README.md#when-something-fails).
+[When something fails](../README.md#when-something-fails).
 
 The mobile run (`--project=smoke-mobile`) has 35 runs: the same 43 minus
 the 3 HP-3 runs and the 6 FL cases, plus MB-1. A successful run ends with `35 passed`.

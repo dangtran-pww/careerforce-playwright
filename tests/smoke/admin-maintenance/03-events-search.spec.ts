@@ -4,7 +4,7 @@ import { EventsSearchPage, type EventsQuery } from '../../pages/events-search.pa
 import { addDays, siteDate } from '../../helpers/dates';
 
 // [Smoke] - Admin Maintenance - Test Plan — AM-4. See
-// test-plans/smoke-admin-maintenance.md, "Events search sort and filter cases".
+// test-suites/smoke/smoke-admin-maintenance.md, "Events search sort and filter cases".
 //
 // Assertions compare against the unfiltered count and against what's on the
 // cards — never fixed numbers — so they hold as events come and go.

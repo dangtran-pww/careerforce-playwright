@@ -11,7 +11,7 @@ import {
 } from '../../pages/node-form.page';
 
 // [Smoke] - Content Lifecycle - Test Plan — CL-3, CL-4. See
-// test-plans/smoke-content-lifecycle.md.
+// test-suites/smoke/smoke-content-lifecycle.md.
 //
 // Revisions list: /<alias>/revisions (Diff module), newest first; the newest
 // row says "Current revision", older rows link their date to

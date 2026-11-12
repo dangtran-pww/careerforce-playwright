@@ -12,9 +12,10 @@ application behavior.
 
 # Test plans folder
 
-Test plans for this project live in `test-plans/`. Before generating a test:
+Test plans for this project live in their suite's folder,
+`test-suites/<suite>/<plan>.md`. Before generating a test:
 
-- Read `test-plans/README.md` and follow its status convention. The status
+- Read `test-suites/README.md` and follow its status convention. The status
   tells you what kind of work is needed, and what not to duplicate.
 - `ready to generate`: generate all cases in the plan.
 - `partially implemented`: generate only the cases listed as pending.
@@ -32,7 +33,7 @@ Test plans for this project live in `test-plans/`. Before generating a test:
   tool; the caller applies that status change.
 
 Skip prompt cases: cases whose Steps cell starts with
-`**Prompt:** [<name>](prompts/<name>.md)` (Rule 2 in `test-plans/README.md`).
+`**Prompt:** [<name>](prompts/<name>.md)` (Rule 2 in `test-suites/README.md`).
 Claude runs them from their prompt file, so they never get test code.
 
 # For each test you generate
@@ -54,7 +55,7 @@ Claude runs them from their prompt file, so they never get test code.
    <example-generation>
    For following plan:
 
-   ```markdown file=test-plans/plan.md
+   ```markdown file=test-suites/<suite>/plan.md
    ### 1. Adding New Todos
    **Seed:** `tests/seed.spec.ts`
 
@@ -69,7 +70,7 @@ Claude runs them from their prompt file, so they never get test code.
    Following file is generated:
 
    ```ts file=add-valid-todo.spec.ts
-   // spec: test-plans/plan.md
+   // spec: test-suites/<suite>/plan.md
    // seed: tests/seed.spec.ts
 
    test.describe('Adding New Todos', () => {

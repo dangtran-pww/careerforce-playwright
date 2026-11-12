@@ -3,7 +3,7 @@ import { useRole } from '../../helpers/roles';
 import { waitForBatch } from '../../pages/search-api-index.page';
 
 // [Smoke] - Admin Maintenance - Test Plan — AM-1. See
-// test-plans/smoke-admin-maintenance.md.
+// test-suites/smoke/smoke-admin-maintenance.md.
 //
 // Writes site state (rebuilds node access). QA/stage only.
 // Files in this folder are numbered so one worker runs them in plan order:

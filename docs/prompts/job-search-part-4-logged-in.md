@@ -8,7 +8,7 @@ Search (D). Part 1 (job-search-part-1-search.md) covers search, part 2
 (job-search-part-2-sort-filters-paging.md) covers sort, filters, paging and URL
 state, and part 3 (job-search-part-3-posting-and-accessibility.md) covers the
 single posting, responsive layout and accessibility. The matching test plan is
-test-plans/functional-job-search-logged-in.md.
+test-suites/job-search/functional-job-search-logged-in.md.
 
 ## Target
 - Base URL: https://qa.careerforce.link/job-search (QA or Stage only, never
