@@ -1,5 +1,4 @@
 import { test, expect } from '../../helpers/fixtures';
-import { isKnownPageError } from '../../helpers/known-issues';
 import { HomePage } from '../../pages/home.page';
 import { SiteFooter } from '../../pages/site-footer.page';
 
@@ -141,15 +140,6 @@ for (const { name, path } of NO_ERROR_PAGES) {
     await page.goto(path);
     await page.waitForLoadState('networkidle');
 
-    const pagePath = new URL(page.url()).pathname;
-    const unknown = errors.filter((message) => !isKnownPageError(pagePath, message));
-    const known = errors.filter((message) => isKnownPageError(pagePath, message));
-    if (known.length > 0) {
-      test.info().annotations.push({
-        type: 'known issue',
-        description: `Known JavaScript error(s), see tests/helpers/known-issues.ts: ${known.join(' | ')}`,
-      });
-    }
-    expect(unknown, `New JavaScript errors on ${path}`).toEqual([]);
+    expect(errors, `JavaScript errors on ${path}`).toEqual([]);
   });
 }

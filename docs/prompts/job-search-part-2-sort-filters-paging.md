@@ -25,9 +25,8 @@ responsive layout and accessibility.
 - Sort options: best-match, date-posted-desc, job-title-asc, company-asc.
 - Each result shows: title, company, location, snippet, "Posted/Available … ago",
   "Learn more and apply", Share, Read more, and a bookmark icon.
-- Known issue: /job-search throws one JavaScript error from the footer JS
-  aggregate on every load (see tests/helpers/known-issues.ts). Note it, but
-  don't report it as new.
+- /job-search used to throw one JavaScript error from the footer JS
+  aggregate on every load. If it still does, report it as a bug.
 - Suspected bug to confirm: `company` is not in the cache context, so filtering
   by company A and then by company B may return company A's cached results.
 

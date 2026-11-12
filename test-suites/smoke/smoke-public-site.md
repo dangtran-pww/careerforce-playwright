@@ -18,12 +18,9 @@ use:
   email and password form for partners, and a "Log In" button for DEED staff.
 - **Search:** site search and the Explore Careers search both return
   results, and a career page opens from the results with its main sections.
-- **Locations, Events, Programs and Services:** the pages load with their
-  main content, and the Events and Programs and Services pages list at
-  least 1 item.
-- **Career tools:** the Skills Matcher and Interest Profiler can be filled in
-  and show results, and the Employment Readiness Assessment opens.
-- **Filters:** on Events, Programs and Services, site search and Training
+- **Locations, Programs and Services:** the pages load with their main
+  content, and the Programs and Services page lists at least 1 item.
+- **Filters:** on Programs and Services, site search and Training
   Programs, two different filters (or sort orders) give different results
   ([Filters](#filters)).
 - **Homepage layout (HP-5, a prompt case):** Claude compares the homepage
@@ -34,17 +31,21 @@ use:
   "Skip to main content" works from the keyboard, and the main pages load
   without JavaScript errors.
 
-Job Search has its own plan, [smoke-job-search.md](smoke-job-search.md).
-Its cases (JS-1 to JS-5, and FL-5 and FL-6, now JF-1 and JF-2) moved there.
 - **On a phone:** the same checks again in an emulated Android phone
   browser, plus the header menu button (MB-1) and a check that no page
   scrolls sideways ([Mobile](#mobile)).
 
+Job Search has its own plan, [smoke-job-search.md](smoke-job-search.md).
+Its cases (JS-1 to JS-5, and FL-5 and FL-6, now JF-1 and JF-2) moved there.
+The Events page and its filters moved to [smoke-events.md](smoke-events.md):
+LV-2 is now EP-4, and FL-1 to FL-3 are now EP-5 to EP-7. The career tools
+moved to [smoke-jobseeker-tools.md](smoke-jobseeker-tools.md): CT-1 to CT-3
+are now JT-6 to JT-8.
+
 The checks never log in, and they don't create, edit, or delete any site
 content. The only things they do besides viewing pages are what any visitor
-can do: make choices in the Decision Tree, filter and sort listings, and
-submit the Skills Matcher and Interest Profiler forms. Both are approved for Production, so the plan is safe
-to run on QA, Stage, and **Production**.
+can do: make choices in the Decision Tree, and filter and sort listings, so
+the plan is safe to run on QA, Stage, and **Production**.
 
 The checks don't cover emails or anything that takes longer than a single
 visit. Run them after each deployment to confirm the site still works for the
@@ -89,10 +90,10 @@ BASE_URL=https://careerforce.mn.gov npx playwright test tests/smoke/anonymous --
 ```
 
 Keep `--project=smoke-desktop` in the command. Without it, the same tests also run on
-the phone ([Mobile](#mobile)), 78 runs in all.
+the phone ([Mobile](#mobile)), 69 runs in all.
 
 Add `--ui` to [watch it run](../README.md#watching-a-run). A successful run ends
-with `44 passed` ([Expected result](#expected-result)).
+with `37 passed` ([Expected result](#expected-result)).
 
 To save a full-page screenshot of every test, even the ones that pass, put
 `SCREENSHOT=on` in front ([more on screenshots](../README.md#screenshots-of-every-test)):
@@ -180,15 +181,8 @@ after the site name, for example `/programs-services` means
 | SR-4 | Homepage Explore Careers box runs a career search | `/` | On the homepage, type "Nursing" in the Explore Careers box and click "Search". | The box is its own form, separate from the career search page, so this checks that it sends the search there; HP-1 only checks its heading. **1.** The box opens `/explore/careers?otitle=Nursing`. **2.** At least 1 result is listed. |
 | SR-5 | Header search box runs a site search | `/` | On the homepage, type "networking" in the header's "Search CareerForce" box and press Enter (on a phone, tap the header's "Search" button first). | The header box is its own form, separate from the site search page, so this checks that it sends the search there. **1.** The box opens `/search?k=networking`. **2.** At least 1 result is listed. |
 | LV-1 | Location pages load | see the list below | Open each of the 4 location pages. | **1.** Each page shows its title ("CareerForce in Aitkin", …, "CareerForce from Anywhere") and a "Programs and Services" section. **2.** The 3 offices also show "Location Details" with Address, Phone (a link to call), Email (a link to email), Hours (at least 1 day with a time), and a map. **3.** "CareerForce from Anywhere" is virtual: no Location Details, but a phone link and an email link. |
-| LV-2 | Events page lists events | `/education-and-training/events` | Don't register. 1. Open the page. 2. Click the first event. | **1.** The page title "Events" shows, with at least 1 event listed below it. The first event card has a title, a date, a start time and a place. **2.** The event's page has the event title, the sections "Date", "Time", "Location" and "Offered By", and a "Log In or Create Account" button. |
 | LV-3 | Programs and Services page lists services | `/programs-services` | 1. Open the page. 2. Open the first 2 programs. | **1.** The page title "Programs and Services" shows, with at least 1 program or service listed below it. **2.** Each opened program's page has the same title as its card. |
-| CT-1 | Skills Matcher gives results | `/occupations/skills_matcher` | 1. Answer the 10 skill groups on the first page. 2. Click "Continue" until the last page. 3. Submit. | A "Matching Careers By My Skills" results page shows. |
-| CT-2 | Interest Profiler gives results | `/occupations/interest_profiler` | 1. On each page, answer every question and click "Continue" (60 questions in all). 2. On the last page, submit. | An "Interest Assessment Results" page shows. |
-| CT-3 | Employment Readiness Assessment opens | `/employment-readiness/take` | Open the page. | **1.** The page title "Employment Readiness Assessment" shows. **2.** No login is needed. |
 | MB-1 | Mobile menu opens (phones only) | `/` | 1. On a phone, tap the menu button (☰) in the header. 2. Tap the arrow next to "Find a Job". 3. Tap the menu button again. | **1.** The menu opens and shows "Find a Job", "Job Loss Resources", "Job Search Tools", "Education and Training", and "Resources for". **2.** The "Find a Job" sub-menu opens with "Job Search", "Job Fairs and Networking Events", "Explore Careers", and "Explore Industries". **3.** The menu closes. |
-| FL-1 | Events: Online vs In Person | `/education-and-training/events` | 1. Open the page with no filter. 2. Filter by Format "Online". 3. Filter by "In Person" instead. | See [Filters](#filters). **1.** At least 1 event is listed. **2.** "Online" stays ticked, with no more events than in step 1. **3.** The same for "In Person", and the results differ from step 2's (a different total, or different events on the first page). |
-| FL-2 | Events: two topics | `/education-and-training/events` | 1. Open the page with no filter. 2. Filter by Topic "Resumes". 3. Filter by "Job Search" instead. | See [Filters](#filters). **1.** At least 1 event is listed. **2.** "Resumes" stays ticked, with no more events than in step 1. **3.** The same for "Job Search", and the results differ from step 2's (a different total, or different events on the first page). |
-| FL-3 | Events: two event types | `/education-and-training/events` | 1. Open the page with no filter. 2. Filter by Event Type "Workshop". 3. Filter by "Job Club" instead. | See [Filters](#filters). **1.** At least 1 event is listed. **2.** "Workshop" stays ticked, with no more events than in step 1. **3.** The same for "Job Club", and the results differ from step 2's (a different total, or different events on the first page). |
 | FL-4 | Programs and Services: two keywords | `/programs-services` | 1. Open the page with no keyword. 2. Search "veterans". 3. Search "youth". | See [Filters](#filters). **1.** At least 1 service is listed. **2.** "veterans" stays in the box, there are no more services than in step 1, and "Veterans Employment Services" is listed. **3.** "youth" stays in the box, there are no more services than in step 1, "Youth Employment" is listed, and the results differ from step 2's. |
 | FL-7 | Site search: newest vs oldest first | `/search?k=job` | 1. Search "job". 2. Sort by Date Published, Desc. 3. Sort by Date Published, Asc. | **1.** At least 1 result shows. **2.** The same number of results as step 1. **3.** The same number of results as step 1, in a different order from step 2. |
 | FL-8 | Training Programs: virtual vs not | `/training-programs` | 1. Open the page with no filter. 2. Set Virtual/Hybrid to "True". 3. Set it to "False". | See [Filters](#filters). **1.** At least 1 program is listed. **2.** The dropdown shows "True", with no more programs than in step 1. **3.** The dropdown shows "False", with no more programs than in step 1, and the results differ from step 2's. |
@@ -196,7 +190,7 @@ after the site name, for example `/programs-services` means
 | GN-2 | Footer | `/` | Look at the footer. | **1.** "Contact CareerForce" with a phone number and an email link. **2.** Links to CareerForce Locations, Connect to Our Services, Our Partners, Blog, About CareerForce, Your Right to Fair Treatment, and Site Index. **3.** Facebook, X, LinkedIn, YouTube, and Instagram links that open in a new tab. |
 | GN-3 | Main menu pages open | see the list below | For each of the 5 main menu items: 1. Check the homepage header has the menu link. 2. Open its page. | **1.** The header has the link. **2.** The page opens, and its title starts with the menu item's name. |
 | GN-4 | Skip to main content | `/` | 1. Press Tab once. 2. Press Enter. 3. Press Tab again. | **1.** The "Skip to main content" link shows. **2.** The page goes to the main content (`#main-content`). **3.** Focus lands inside the main content, not in the header menu. |
-| GN-5 | No JavaScript errors | see the list below | Open each page. | No JavaScript error, other than the ones listed in `tests/helpers/known-issues.ts`. |
+| GN-5 | No JavaScript errors | see the list below | Open each page. | No JavaScript error. |
 
 Location pages for LV-1:
 
@@ -257,9 +251,6 @@ Good to know:
   card at any page, so the test doesn't expect a particular address.
 - **Location pages don't always have an "Events" section.** It only appears
   when that location has events scheduled, so LV-1 doesn't check for it.
-- **Skills Matcher needs only 10 answers** (all on the first page), but Submit
-  is only on the last page, so you still click "Continue" to get there. The
-  **Interest Profiler needs all 60 answers.**
 - **Career pages load in two steps.** The page says "Loading..." until the
   career details arrive, so wait for the title before checking anything.
 - **GN-5 checks only real JavaScript errors**, not every red line in the
@@ -267,7 +258,7 @@ Good to know:
   purpose, and those blocked loads show up in the console as errors.
 - **Search result counts change** as content is added or removed. The tests
   only check that there's at least 1 result, not an exact number. The same
-  goes for the Events and Programs and Services listings (LV-2, LV-3).
+  goes for the Programs and Services listing (LV-3).
 - **The Page Not Found page has a 4th link**, "new career opportunity". It
   sends a visitor who isn't logged in to the login page, so GN-1 doesn't
   check it.
@@ -298,15 +289,17 @@ with no filter, then with filter X, then with filter Y, and expects:
 
 An empty result is fine. QA has no job fairs at the moment, for example, so
 filtering by them shows "No results found." A filter can also match
-everything: on QA, every event is In Person. Only X and Y showing the very
+everything. Only X and Y showing the very
 same results fails, because that means the filter was ignored. Exact counts
 are never checked.
 
 - **Every filter is in the page address**, for example
-  `/education-and-training/events?ff[virtual]=virtual`, so the tests open
+  `/training-programs?field_virtual=1`, so the tests open
   that address rather than clicking the form.
 - **FL-5 and FL-6 moved** to [smoke-job-search.md](smoke-job-search.md) as
-  JF-1 and JF-2. The other FL cases keep their numbers.
+  JF-1 and JF-2, and **FL-1 to FL-3** (Events) to
+  [smoke-events.md](smoke-events.md) as EP-5 to EP-7. The other FL cases
+  keep their numbers.
 
 ## Mobile
 
@@ -329,9 +322,9 @@ To run the mobile tests, see [Running the mobile tests](#running-the-mobile-test
 
 ## Expected result
 
-The terminal ends with `44 passed`. The desktop run has 26 test cases (all
-but MB-1, which is phone only), but some are repeated with different inputs,
-so they add up to 44 runs:
+The terminal ends with `37 passed`. The desktop run has 19 test cases (all
+but MB-1, which is phone only, and the HP-5 prompt case), but some are
+repeated with different inputs, so they add up to 37 runs:
 
 | Test case | Runs | Why |
 |---|---|---|
@@ -341,16 +334,15 @@ so they add up to 44 runs:
 | SR-2 | 4 | "Nursing", "taxi driver", "project manager"; a word with no matches |
 | SR-3, SR-4, SR-5 | 3 | once each |
 | LV-1 | 4 | Aitkin, Bloomington, Brooklyn Center, CareerForce from Anywhere |
-| LV-2, LV-3 | 2 | once each |
-| CT-1, CT-2, CT-3 | 3 | once each |
-| FL-1 to FL-4, FL-7, FL-8 | 6 | once each |
+| LV-3 | 1 | once |
+| FL-4, FL-7, FL-8 | 3 | once each |
 | GN-1, GN-2, GN-4 | 3 | once each |
 | GN-3 | 5 | the 5 main menu pages |
 | GN-5 | 3 | Homepage, site search, Explore Careers |
-| **Total** | **44** | |
+| **Total** | **37** | |
 
-If the total is anything other than 43, or anything fails, see
+If the total is anything other than 37, or anything fails, see
 [When something fails](../README.md#when-something-fails).
 
-The mobile run (`--project=smoke-mobile`) has 35 runs: the same 43 minus
-the 3 HP-3 runs and the 6 FL cases, plus MB-1. A successful run ends with `35 passed`.
+The mobile run (`--project=smoke-mobile`) has 32 runs: the same 37 minus
+the 3 HP-3 runs and the 3 FL cases, plus MB-1. A successful run ends with `32 passed`.

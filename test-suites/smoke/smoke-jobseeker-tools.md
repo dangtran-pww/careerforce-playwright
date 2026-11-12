@@ -1,46 +1,79 @@
 # [Smoke] - Job Seeker Tools - Test Plan
 
-Status: ready to generate
-Implemented test: —
-Prod: No: saves goals and assessment results on the job seeker account.
+Status: partially implemented
+Implemented test: tests/smoke/jobseeker-tools/visitor.spec.ts
+Pending cases: JT-1 to JT-5 — ready to generate
 
-The [anonymous smoke plan](smoke-public-site.md)
-(CT-1 .. CT-3) already covers these tools for a logged-out visitor; the
-source checklist asks for them to be tested "both as anon user and career
-seeker". This plan covers the logged-in parts, mainly "add to goals".
+A quick check after each deploy that the career tools work, both for a
+visitor who isn't logged in and for a job seeker: the Skills Matcher, the
+Interest Profiler and the Employment Readiness Assessment, plus adding
+careers to the job seeker's goals. The source checklist asks for these
+tools to be tested "both as anon user and career seeker".
+
+JT-6 to JT-8 (the visitor checks) were CT-1 to CT-3 in
+[smoke-public-site.md](smoke-public-site.md) and moved here so both halves
+are in one plan. They only read the site and run on Production. JT-1 to
+JT-5 log in as `jobseeker` and save to the account, so they are no-prod.
 
 ## Running it
 
 ```bash
+# Visitor checks only (prod-safe), desktop and phone:
+BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/jobseeker-tools/visitor.spec.ts --project=smoke-desktop --project=smoke-mobile
+
+# Everything (QA and Stage only):
 npm run login:manual -- jobseeker
 BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/jobseeker-tools --project=smoke-desktop
 ```
 
+On Production the no-prod cases are left out whatever the command.
+
 ## Scope
 
-- Adds careers to the job seeker's goals and removes them in
-  `finally`.
-- Reuses the existing page objects `tests/pages/skills-matcher.page.ts`,
-  `interest-profiler.page.ts`, and `employment-readiness.page.ts`.
+- **Visitor (JT-6 to JT-8, prod-safe):** each tool can be filled in and
+  shows results, or opens without a login.
+- **Job seeker (JT-1 to JT-5, no-prod):** the same tools logged in, adding
+  careers to goals and removing them in `finally`.
+- Reuses the page objects `tests/pages/skills-matcher.page.ts`,
+  `interest-profiler.page.ts` and `employment-readiness.page.ts`.
 
-## Persona / fixtures
+## Login
 
-- **Job seeker** — `playwright/.auth/<env>/jobseeker.json`.
+| | |
+|---|---|
+| **Visitor** | JT-6 to JT-8 use a logged-out browser context. |
+| **`jobseeker`** | `playwright/.auth/<env>/jobseeker.json`, for JT-1 to JT-5. |
+| **Environments** | JT-6 to JT-8: QA, Stage and Production. JT-1 to JT-5: QA and Stage only. |
 
-## Test cases
+## Visitor
 
-| ID | Title | Persona | Steps | Assertions | Notes |
-|---|---|---|---|---|---|
-| JT-1 | Skills Matcher: add a matched career to goals | Job seeker | `SkillsMatcherPage`: `goto()`, `answerSkills()`, `submit()`. On the results, click "Add to goals" (or similar) on the first career | Confirmation shown; that career appears in the goals section of the dashboard | Source checklist: "compare skills and add to goals" |
-| JT-2 | Remove a career from goals | Job seeker | From the dashboard, remove the career added in JT-1 | It is no longer listed | Same steps as JT-1's cleanup |
-| JT-3 | Interest Profiler as a job seeker | Job seeker | `InterestProfilerPage`: `goto()`, `answerAll()`, `submit()` | "Interest Assessment Results" render. If results are saved to the account, they show on the dashboard | Confirm during generation whether results are saved |
-| JT-4 | Employment readiness assessment as a job seeker | Job seeker | `goto('/employment-readiness/take')`, answer every question, submit | A results page renders. If results are saved to the account, they show on the dashboard | The anonymous plan only checks the page loads; this completes it |
-| JT-5 | Save a career from the careers explorer | Job seeker | `goto('/explore/careers')`, search "Nursing", open a career, click Save / Add to goals | The career appears in the dashboard goals; removed in `finally` | Logged-in half of the §20 flow (the anonymous half needs LoginMN) |
+| ID | Test | Page | Steps | Expected result | Required login | Prod |
+|---|---|---|---|---|---|---|
+| JT-6 | Skills Matcher gives results | `/occupations/skills_matcher` | 1. Answer the 10 skill groups on the first page. 2. Click "Continue" until the last page. 3. Submit. | A "Matching Careers By My Skills" results page shows. | | Yes |
+| JT-7 | Interest Profiler gives results | `/occupations/interest_profiler` | 1. On each page, answer every question and click "Continue" (60 questions in all). 2. On the last page, submit. | An "Interest Assessment Results" page shows. | | Yes |
+| JT-8 | Employment Readiness Assessment opens | `/employment-readiness/take` | Open the page. | **1.** The page title "Employment Readiness Assessment" shows. **2.** No login is needed. | | Yes |
 
-## Non-goals
+## Job seeker
 
-- The anonymous versions of these tools — already in the smoke suite.
-- LoginMN prompt for anonymous "save career" — Phase 3.
+| ID | Test | Page | Steps | Expected result | Required login | Prod |
+|---|---|---|---|---|---|---|
+| JT-1 | Skills Matcher: add a matched career to goals | `/occupations/skills_matcher` | Source checklist: "compare skills and add to goals". 1. Answer the skills and submit, as in JT-6. 2. On the results, click "Add to goals" (or similar) on the first career. 3. Open the dashboard. **Cleanup:** JT-2. | **1.** The results page shows. **2.** A confirmation shows. **3.** The career is listed in the dashboard's goals section. | `jobseeker` | No: adds a career to the job seeker's goals |
+| JT-2 | Remove a career from goals | the dashboard | On the dashboard, remove the career added in JT-1 from the goals section. | The career is no longer listed. | `jobseeker` | No: changes the job seeker's goals |
+| JT-3 | Interest Profiler as a job seeker | `/occupations/interest_profiler` | Confirm during generation whether results are saved to the account. 1. Answer every question and submit, as in JT-7. 2. Open the dashboard. | **1.** An "Interest Assessment Results" page shows. **2.** If results are saved to the account, they show on the dashboard. | `jobseeker` | No: may save results on the job seeker account |
+| JT-4 | Employment Readiness Assessment as a job seeker | `/employment-readiness/take` | JT-8 only checks the page opens; this completes it. 1. Answer every question and submit. 2. Open the dashboard. | **1.** A results page shows. **2.** If results are saved to the account, they show on the dashboard. | `jobseeker` | No: may save results on the job seeker account |
+| JT-5 | Save a career from Explore Careers | `/explore/careers` | The logged-in half of the checklist's §20 flow (the visitor half needs LoginMN). 1. Search "Nursing" and open a career. 2. Click Save / Add to goals, then open the dashboard. **Cleanup:** remove the career in `finally`. | **1.** The career page opens. **2.** The career is listed in the dashboard's goals. | `jobseeker` | No: saves a career on the job seeker account |
+
+Good to know:
+
+- **The Skills Matcher needs only 10 answers** (all on the first page), but
+  Submit is only on the last page, so you still click "Continue" to get
+  there. The **Interest Profiler needs all 60 answers.**
+- **JT-6 and JT-7 submit the forms as a visitor.** Nothing is saved for a
+  visitor, and both are approved for Production.
+
+## Not covered
+
+- The LoginMN prompt for a visitor who saves a career: Phase 3.
 
 ## Open questions
 
@@ -54,6 +87,7 @@ BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/jobseeker-t
 ```
 tests/
   smoke/jobseeker-tools/
+    visitor.spec.ts       # JT-6 .. JT-8 (implemented, desktop and phone)
     goals.spec.ts         # JT-1, JT-2, JT-5
     assessments.spec.ts   # JT-3, JT-4
   pages/

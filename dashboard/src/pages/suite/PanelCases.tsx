@@ -20,6 +20,7 @@ interface Props {
   projects: string[]; // the suite's projects for this plan
   headed: boolean;
   activeRun: string | null;
+  openCase?: string | null; // a case whose row starts opened and highlighted
 }
 
 // The suite page's plan panel: the plan's test cases, then its prompt cases
@@ -59,6 +60,7 @@ function TestCases({
   projects,
   headed,
   activeRun,
+  openCase,
 }: Props & { cases: PlanCase[] }) {
   const { currentEnv } = useEnv();
   const hasTests = plan.hasTests ?? plan.runnable;
@@ -71,6 +73,8 @@ function TestCases({
     <Table
       rows={cases}
       rowKey={(c) => c.id}
+      initialOpen={openCase ? [openCase] : undefined}
+      highlight={openCase ?? undefined}
       expand={(c) => (
         <CaseDetails
           planSlug={plan.slug}
@@ -125,12 +129,15 @@ function PromptCases({
   projects,
   headed,
   activeRun,
+  openCase,
 }: Props & { cases: PlanCase[] }) {
   const { currentEnv, envById } = useEnv();
   return (
     <Table
       rows={cases}
       rowKey={(c) => c.id}
+      initialOpen={openCase ? [openCase] : undefined}
+      highlight={openCase ?? undefined}
       expand={(c) => (
         <CaseDetails
           planSlug={plan.slug}

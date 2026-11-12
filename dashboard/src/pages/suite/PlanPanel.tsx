@@ -31,6 +31,7 @@ export function PlanPanel({
   projects,
   headed,
   activeRun,
+  openCase = null,
 }: {
   slug: string;
   suite: string; // the suite page it's on; runs started here link back
@@ -38,6 +39,7 @@ export function PlanPanel({
   projects: string[]; // the suite's projects for this plan
   headed: boolean;
   activeRun: string | null;
+  openCase?: string | null; // a case whose row starts opened
 }) {
   const { currentEnv } = useEnv();
   const { data, error } = useApi<PlanResponse>(
@@ -155,6 +157,7 @@ export function PlanPanel({
             projects={projects}
             headed={headed}
             activeRun={activeRun}
+            openCase={openCase}
           />
           {plan.runnable && (
             <p className="actions">

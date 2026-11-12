@@ -4,11 +4,13 @@
 //
 // Usage: npm run check:plans [-- test-suites/<suite>/<plan>.md …]
 // With no files, checks every plan in every suite folder, and that no two
-// plans or prompts share a file name. Exits 1 on any problem.
+// plans or prompts share a file name. Case IDs (rule 4) are always compared
+// with every plan, even when only some files are named. Exits 1 on any
+// problem.
 //
 // Adding a rule: write it up in the README, then add { id, name, check } to
-// RULES. `check` gets one plan (see readPlan) and returns problems as
-// { line, caseId?, message }.
+// RULES. `check` gets one plan (see readPlan) and every plan, and returns
+// problems as { line, caseId?, message }.
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { PROMPTS_FOLDER, duplicateSlugs, planFiles, promptFiles } from './lib/layout.mjs';
@@ -34,7 +36,7 @@ function readPlan(file) {
     if (!l.startsWith('|')) return void (header = null);
     const row = cells(l);
     if (!header) return void (header = row[0] === 'ID' ? row : []);
-    if (!header.length || /^:?-+:?$/.test(row[0])) return;
+    if (!header.length || /^\|[\s:|-]+$/.test(l)) return; // the |---|---| row
     const byColumn = Object.fromEntries(header.map((h, c) => [h, row[c] ?? '']));
     cases.push({ line: i + 1, id: row[0], cells: byColumn });
   });
@@ -42,6 +44,8 @@ function readPlan(file) {
 }
 
 // ---- Helpers for the rules -------------------------------------------------
+
+const CASE_ID = /^([A-Z]{2,4})-([1-9]\d*)$/;
 
 const MARKER = /(?:^|\s)(?:\*\*(\d+)\.\*\*|(\d+)\.)(?=\s)/g;
 const CLEANUP = /\s\*\*Cleanup:\*\*/;
@@ -165,6 +169,28 @@ const RULES = [
       return problems;
     },
   },
+  {
+    id: 4,
+    name: 'Case IDs',
+    check(plan, allPlans) {
+      const problems = [];
+      const elsewhere = allPlans.filter((p) => p.file !== plan.file);
+      const seen = new Map();
+      for (const c of plan.cases) {
+        const add = (message) => problems.push({ line: c.line, caseId: c.id, message });
+        const m = CASE_ID.exec(c.id);
+        if (!m) {
+          add(`"${c.id}" is not an ID like "SS-1": 2 to 4 capital letters, "-", then a number from 1 with no leading zero.`);
+          continue;
+        }
+        if (seen.has(c.id)) add(`${c.id} is already used on line ${seen.get(c.id)} of this plan. Give this case the next free number.`);
+        else seen.set(c.id, c.line);
+        const other = elsewhere.find((p) => p.cases.some((o) => CASE_ID.exec(o.id)?.[1] === m[1]));
+        if (other) add(`The prefix ${m[1]} is also used in ${other.file}. Each prefix belongs to one plan; pick one no other plan uses.`);
+      }
+      return problems;
+    },
+  },
 ];
 
 // ---- Running ---------------------------------------------------------------
@@ -184,10 +210,15 @@ if (all)
       console.log(`Two ${kind}s are named "${slug}": ${where.join(', ')}. Rename one.`);
     }
 
+// Every plan, to compare case IDs with (rule 4). A named file outside the
+// suite folders is compared too.
+const allPlans = (await planFiles()).map((p) => readPlan(p.file));
+for (const file of files) if (!allPlans.some((p) => p.file === file)) allPlans.push(readPlan(file));
+
 for (const file of files) {
-  const plan = readPlan(file);
+  const plan = allPlans.find((p) => p.file === file);
   for (const rule of RULES) {
-    for (const p of rule.check(plan)) {
+    for (const p of rule.check(plan, allPlans)) {
       total++;
       const where = `${file}:${p.line}${p.caseId ? ` ${p.caseId}` : ''}`;
       console.log(`${where} [rule ${rule.id}: ${rule.name}] ${p.message}`);

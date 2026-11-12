@@ -31,9 +31,9 @@ test-suites/
   Plans table and run history use. Slugs are unique across all suites.
 - A prompt lives in `prompts/` next to the plans that use it.
 - `smoke/` is every smoke plan, QA and Stage only. `job-search/` holds the
-  four functional Job Search plans. `jobseeker-registration/`,
-  `resume-builder/`, `events/` and `appointments/` are placeholders with no
-  plans yet.
+  four functional Job Search plans. `events/` holds the
+  functional Events plans. `jobseeker-registration/`, `resume-builder/` and
+  `appointments/` are placeholders with no plans yet.
 
 ## Suites
 
@@ -248,6 +248,7 @@ the script if it can be checked automatically.
 | 1 | [Steps and Expected result cells](#rule-1-steps-and-expected-result-cells) | Yes |
 | 2 | [Prompt cases](#rule-2-prompt-cases) | Yes |
 | 3 | [Parallel plans and prompts](#rule-3-parallel-plans-and-prompts) | Yes |
+| 4 | [Case IDs](#rule-4-case-ids) | Yes |
 
 ### Rule 1: Steps and Expected result cells
 
@@ -392,6 +393,28 @@ written to add or remove data stays `no`.
 The script reports a `Parallel` value that isn't `yes` or `no`, and a
 Parallel plan that is `Prod: No` or has a case marked `No` in its Prod
 column, because those change data.
+
+### Rule 4: Case IDs
+
+Every case has an ID that no other case in any plan has. The dashboard, the
+terminal and the spec titles (`test('SS-1: …')`) all find a case by its ID
+alone, so two cases with one ID would mix up their results.
+
+- **Format:** a prefix of 2 to 4 capital letters, `-`, then a number:
+  `SS-1`, `SS-2`. Numbers start at 1 with no leading zero.
+- **One plan per prefix:** a plan can use several prefixes (one per area,
+  e.g. `JS` and `SS` in smoke-job-search), but no prefix is used by two
+  plans. Before picking one for a new plan or area, search `test-suites/`
+  for it, e.g. `grep -rn "| ML-" test-suites/`.
+- **No repeats in a plan:** a new case gets the next number after the
+  highest one with that prefix. When a case is removed, its number isn't
+  given to a new case.
+- **Renaming an ID:** change it everywhere it's used: the plan's other
+  rows and notes, and the spec's test title and comments.
+
+The script reports an ID in the wrong format, an ID used twice in a plan,
+and a prefix that another plan also uses. It always compares IDs with every
+plan, even when you name only one plan to check.
 
 ### Checking a plan
 
@@ -552,9 +575,9 @@ Conventions:
   [Keeping tests off Production](#keeping-tests-off-production): a
   `Prod: No` line or Prod column, the `@no-prod` tag, and cleanup in
   `finally` for tests that write.
-- **Known bugs are `test.fail`.** A case that checks a known bug is marked as
-  expected to fail, with the bug in a comment, so the run stays green. Once the
-  bug is fixed, the run reports "expected to fail, but passed".
+- **Tests report bugs.** A case that checks a known bug expects the correct
+  behaviour and fails until the bug is fixed; the plan links the ticket. No
+  `test.fail`, no known-issue allowlists and no "Known issues" sections.
 
 ## Plans
 
@@ -584,11 +607,25 @@ Every plan, by suite folder.
   (read-only, in the smoke run), plus saved searches and My Job Search on the
   dashboard as a job seeker (no-prod cases: tagged `@no-prod`, QA and Stage
   only).
-- `smoke/smoke-jobseeker-tools.md` — Status: ready to generate.
-  Skills Matcher / Interest Profiler / Employment Readiness as a job seeker.
+- `smoke/smoke-jobseeker-tools.md` — Status: partially implemented.
+  Implemented test: `tests/smoke/jobseeker-tools/visitor.spec.ts` (JT-6 to
+  JT-8, the visitor checks moved from smoke-public-site). Skills Matcher /
+  Interest Profiler / Employment Readiness as a job seeker are pending
+  (no-prod cases, QA and Stage only).
 - `smoke/smoke-resume-builder.md` — Status: ready to generate.
 - `smoke/smoke-profile.md` — Status: ready to generate.
   Job seeker and admin profile edits.
+- `smoke/smoke-events.md` — Status: ready to generate. Events, one pass
+  each: the 45-day window and event cards as a visitor (prod-safe); an
+  admin schedules a short session, a job seeker registers and cancels, and
+  attendance creates a service record (no-prod cases, `admin` and
+  `jobseeker` logins).
+- `smoke/smoke-auto-logout.md` — Status: ready to generate. The
+  inactivity logout (MNDEED-8448): the 11-minute warning and 15-minute
+  logout settings as `admin` and `jobseeker`, the warning via the page
+  clock with the logout requests blocked, and the visitor's inactivity
+  message (prod-safe). The real 15-minute logout stays manual. Desktop
+  only.
 - `job-search/functional-job-search-search.md` — Status: implemented.
   Implemented test: `tests/functional/job-search/search.spec.ts`.
   Job Search part 1: keyword, location formats, distance, empty, SOC and
@@ -609,3 +646,16 @@ Every plan, by suite folder.
   logged-in job seeker's bookmarks, saved searches, Jobs for me, career goals
   and region, the log-in hand-off, and privacy. No-prod cases (all but PV-4,
   PV-5), `jobseeker` login.
+- `events/functional-events-search-detail.md` — Status: ready to generate.
+  Events part 1 of 5: the Events search (keyword, filters, sort, paging,
+  the address, bad and hostile values), what the search leaves out,
+  external events, the occurrence page, homepage and location page events
+  (incl. MNDEED-9620), phone width and accessibility. Prod-safe, visitor
+  only.
+- `events/functional-events-scheduling.md` — Status: ready to generate.
+  Events part 2 of 5: catalog items, the session form and its date widget
+  and preview, occurrence generation and the Until date, overrides, Draft /
+  Active / Cancelled, the location Event Scheduler, alternate locations,
+  private events, deleting and cancelling, and who can schedule. No-prod
+  plan, desktop only, `admin` and `jobseeker` logins (other roles' cases
+  wait for their logins).

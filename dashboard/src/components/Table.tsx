@@ -1,4 +1,4 @@
-import { Fragment, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 
 export interface Column<T> {
   head: ReactNode;
@@ -33,6 +33,10 @@ export interface Column<T> {
 // With `below`, each row it returns content for gets that content, always
 // shown, in a row underneath. It starts at column `belowFrom` (0 = the first
 // column) and spans the rest, so it can line up under, e.g., the Test column.
+//
+// `initialOpen` lists the keys of rows that start opened. `highlight` is the
+// key of a row to scroll into view and mark briefly when the table mounts
+// (e.g. a case found by the header's case search).
 export function Table<T>({
   columns,
   rows,
@@ -41,6 +45,8 @@ export function Table<T>({
   expandLabel = () => 'Details',
   below,
   belowFrom = 0,
+  initialOpen,
+  highlight,
 }: {
   columns: (Column<T> | false | null | undefined)[];
   rows: T[];
@@ -49,8 +55,16 @@ export function Table<T>({
   expandLabel?: (row: T) => string;
   below?: (row: T) => ReactNode;
   belowFrom?: number;
+  initialOpen?: string[];
+  highlight?: string;
 }) {
-  const [open, setOpen] = useState<ReadonlySet<string>>(new Set());
+  const [open, setOpen] = useState<ReadonlySet<string>>(
+    () => new Set(initialOpen),
+  );
+  const highlightRef = useRef<HTMLTableRowElement>(null);
+  useEffect(() => {
+    highlightRef.current?.scrollIntoView({ block: 'center' });
+  }, []);
   const toggle = (key: string) =>
     setOpen((s) => {
       const next = new Set(s);
@@ -115,12 +129,14 @@ export function Table<T>({
             const rowClass = [
               expandable && 'row-expandable',
               (details || extra) && 'row-open',
+              key === highlight && 'row-highlight',
             ]
               .filter(Boolean)
               .join(' ');
             return (
               <Fragment key={key}>
                 <tr
+                  ref={key === highlight ? highlightRef : undefined}
                   className={rowClass || undefined}
                   onClick={
                     expandable

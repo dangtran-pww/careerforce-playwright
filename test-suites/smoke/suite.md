@@ -23,7 +23,9 @@ yet" and skipped.
 | smoke-block-placement | smoke-desktop |
 | smoke-ckeditor | smoke-desktop |
 | smoke-content-lifecycle | smoke-desktop |
-| smoke-jobseeker-tools | (default) |
+| smoke-events | smoke-desktop, smoke-mobile |
+| smoke-auto-logout | (default) |
+| smoke-jobseeker-tools | smoke-desktop, smoke-mobile |
 | smoke-media | (default) |
 | smoke-profile | (default) |
 | smoke-resume-builder | (default) |

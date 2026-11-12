@@ -1,7 +1,6 @@
 import { test, expect } from '../../helpers/fixtures';
 import { isProd, isStage } from '../../helpers/environments.mjs';
 import { useRole } from '../../helpers/roles';
-import { isKnownIssue } from '../../helpers/known-issues';
 
 // [Smoke] - Admin Reports - Test Plan — AR-1..AR-3. See
 // test-suites/smoke/smoke-admin-reports.md. Desktop only (DESKTOP_ONLY_SMOKE_AREAS).
@@ -18,7 +17,8 @@ import { isKnownIssue } from '../../helpers/known-issues';
 
 useRole('admin');
 
-test('AR-1: status report has no new errors', async ({ page }) => {
+// AR-1 fails on any error row: there is no allowlist of accepted errors.
+test('AR-1: status report has no errors', async ({ page }) => {
   await page.goto('/admin/reports/status');
   await expect(
     page.getByRole('heading', { name: 'Status report' }),
@@ -27,22 +27,13 @@ test('AR-1: status report has no new errors', async ({ page }) => {
   const errorRows = page.locator(
     '.system-status-report__row:has(.system-status-report__status-icon--error)',
   );
-  const count = await errorRows.count();
+  const titles = (
+    await errorRows
+      .locator('.system-status-report__status-title')
+      .allTextContents()
+  ).map((title) => title.trim());
 
-  for (let i = 0; i < count; i++) {
-    const title = (
-      await errorRows
-        .nth(i)
-        .locator('.system-status-report__status-title')
-        .textContent()
-    )?.trim() ?? '';
-
-    expect(
-      isKnownIssue(title, 'error'),
-      `Unexpected status-report error: "${title}" — not in the known-issues ` +
-        `allowlist (tests/helpers/known-issues.ts) for this environment`,
-    ).toBeTruthy();
-  }
+  expect(titles, 'Errors on the status report').toEqual([]);
 });
 
 test('AR-2: translations warning matches environment', async ({

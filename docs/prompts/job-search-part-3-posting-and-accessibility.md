@@ -26,9 +26,8 @@ plan) is out of scope for now.
   "Get matched with the right jobs" banner is hidden.
 - Anonymous visitors who use Bookmark, Save search or "Customize my search" get
   a "Create an account or log in to use this feature" modal.
-- Known issue: /job-search throws one JavaScript error from the footer JS
-  aggregate on every load (see tests/helpers/known-issues.ts). Note it, but
-  don't report it as new.
+- /job-search used to throw one JavaScript error from the footer JS
+  aggregate on every load. If it still does, report it as a bug.
 
 ## Method for every check
 1. Before each interaction, call browser_snapshot and use the refs it returns.

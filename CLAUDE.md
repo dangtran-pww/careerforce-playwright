@@ -26,6 +26,10 @@ Whenever you write or change a plan in `test-suites/`, follow every rule in
    the site and nothing it checks depends on other tests. Anything else
    runs on its own. A Parallel plan can't be `Prod: No` or have no-prod
    cases.
+4. **Case IDs:** every case ID is unique across all plans: a prefix of 2–4
+   capital letters, `-`, a number from 1 (`SS-1`). A prefix belongs to one
+   plan only; grep `test-suites/` before picking one, and a new case takes
+   the next number.
 
 Then run `npm run check:plans` and fix every problem it reports in the
 plans you touched before you finish.

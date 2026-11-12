@@ -2,12 +2,13 @@ import { useEffect, useRef } from 'react';
 import { NavLink } from 'react-router';
 import { useEnv } from '../hooks/useEnv';
 import { envLabel } from '../lib/format';
+import { CaseSearch } from './CaseSearch';
 import { LoginsMenu } from './LoginsMenu';
 // The CareerForce site logo, copied from careerforce_skin/logo.svg. Bundled
 // rather than linked, because the QA and Stage sites sit behind basic auth.
 import logoUrl from '../assets/careerforce-logo.svg';
 
-// The top bar: brand, page links, the environment picker, and the Login Sessions
+// The top bar: brand, page links, the case search, the environment picker, and the Login Sessions
 // menu (the saved session of every role on that environment). Picking
 // Production turns the bar red (body.env-production in styles.css).
 export function Header() {
@@ -45,6 +46,7 @@ export function Header() {
       </div>
       <nav className="nav" aria-label="Dashboard sections">
         <NavLink to="/suites">Suites</NavLink>
+        <CaseSearch />
         <LoginsMenu />
       </nav>
       <div className="env-picker">

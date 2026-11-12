@@ -1,11 +1,11 @@
 import { test, expect } from '../../helpers/fixtures';
 import { expectFilterPairDiffers, type Results } from '../../helpers/results';
-import { EventsSearchPage } from '../../pages/events-search.page';
 import { SearchPage } from '../../pages/search.page';
 
-// [Smoke] - Public Site - General - Test Plan, FL-1 to FL-4, FL-7, FL-8.
-// See test-suites/smoke/smoke-public-site.md. FL-5 and FL-6 (Job Search) moved to
-// test-suites/smoke/smoke-job-search.md as JF-1 and JF-2.
+// [Smoke] - Public Site - General - Test Plan, FL-4, FL-7, FL-8.
+// See test-suites/smoke/smoke-public-site.md. FL-1 to FL-3 (Events) moved to
+// test-suites/smoke/smoke-events.md as EP-5 to EP-7, and FL-5 and FL-6 (Job
+// Search) to test-suites/smoke/smoke-job-search.md as JF-1 and JF-2.
 //
 // Given: an anonymous visitor on a filterable listing
 // When: they open it with no filter, then with filter X, then with filter Y
@@ -21,45 +21,6 @@ import { SearchPage } from '../../pages/search.page';
 // these run on desktop only.
 
 test.describe('filters', { tag: '@desktop-only' }, () => {
-  const EVENT_FILTERS = [
-    {
-      id: 'FL-1',
-      title: 'Events: Online and In Person formats give different results',
-      x: { name: 'Online', param: 'ff[virtual]', value: 'virtual' },
-      y: { name: 'In Person', param: 'ff[in_person]', value: 'in_person' },
-    },
-    {
-      id: 'FL-2',
-      title: 'Events: Resumes and Job Search topics give different results',
-      x: { name: 'Resumes', param: 'ft[791]', value: '791' },
-      y: { name: 'Job Search', param: 'ft[789]', value: '789' },
-    },
-    {
-      id: 'FL-3',
-      title: 'Events: Workshop and Job Club event types give different results',
-      x: { name: 'Workshop', param: 'fy[785]', value: '785' },
-      y: { name: 'Job Club', param: 'fy[783]', value: '783' },
-    },
-  ];
-
-  for (const { id, title, x, y } of EVENT_FILTERS) {
-    test(`${id}: ${title}`, async ({ page }) => {
-      const events = new EventsSearchPage(page);
-      await events.search();
-      const all = await events.results();
-
-      await events.search({ [x.param]: x.value });
-      await expect(events.filterCheckbox(x.param)).toBeChecked();
-      const xResults = await events.results();
-
-      await events.search({ [y.param]: y.value });
-      await expect(events.filterCheckbox(y.param)).toBeChecked();
-      const yResults = await events.results();
-
-      expectFilterPairDiffers(all, xResults, yResults, [x.name, y.name]);
-    });
-  }
-
   test('FL-4: Programs and Services: two keywords give different results', async ({
     page,
   }) => {

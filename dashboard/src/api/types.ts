@@ -180,6 +180,7 @@ export interface LatestReviewResponse {
 // One row of GET /api/plans.
 export interface PlanSummary {
   slug: string;
+  suite: string; // its suite's slug: the folder in test-suites/
   name: string;
   type: string;
   status: string; // a key of PLAN_STATUS

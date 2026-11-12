@@ -3,14 +3,14 @@ import { SkillsMatcherPage } from '../../pages/skills-matcher.page';
 import { InterestProfilerPage } from '../../pages/interest-profiler.page';
 import { EmploymentReadinessPage } from '../../pages/employment-readiness.page';
 
-// [Smoke] - Public Site - General - Test Plan, CT-1/CT-2/CT-3.
-// See test-suites/smoke/smoke-public-site.md.
+// [Smoke] - Job Seeker Tools - Test Plan, JT-6 to JT-8 (were CT-1 to CT-3
+// in smoke-public-site.md). See test-suites/smoke/smoke-jobseeker-tools.md.
 //
 // All three tools work for an anonymous visitor; none of this persists
 // anything server-side for an anon session. Stop short of "add to goals" /
-// saving results, which needs an account and is out of this plan's scope.
+// saving results, which needs an account: JT-1 to JT-5, logged in.
 
-test('CT-1: Skills Matcher loads and accepts input', async ({ page }) => {
+test('JT-6: Skills Matcher loads and accepts input', async ({ page }) => {
   const skillsMatcher = new SkillsMatcherPage(page);
   await skillsMatcher.goto();
   await skillsMatcher.answerSkills();
@@ -18,7 +18,7 @@ test('CT-1: Skills Matcher loads and accepts input', async ({ page }) => {
   await expect(skillsMatcher.resultsHeading).toBeVisible();
 });
 
-test('CT-2: Interest Profiler completes and scores', async ({ page }) => {
+test('JT-7: Interest Profiler completes and scores', async ({ page }) => {
   const interestProfiler = new InterestProfilerPage(page);
   await interestProfiler.goto();
   await interestProfiler.answerAll();
@@ -26,7 +26,7 @@ test('CT-2: Interest Profiler completes and scores', async ({ page }) => {
   await expect(interestProfiler.resultsHeading).toBeVisible();
 });
 
-test('CT-3: Employment Readiness Assessment entry page loads without login', async ({
+test('JT-8: Employment Readiness Assessment entry page loads without login', async ({
   page,
 }) => {
   const employmentReadiness = new EmploymentReadinessPage(page);

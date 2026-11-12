@@ -51,9 +51,8 @@ test-suites/job-search/functional-job-search-logged-in.md.
   page finishes the action (bookmarks the job, or opens the save dialog).
 - The jobseeker-tools tracker: on load the page calls
   /careerforce/jobseeker-tools-tracker?active_path=/job-search.
-- Known issue: /job-search throws one JavaScript error from the footer JS
-  aggregate on every load (see tests/helpers/known-issues.ts). Note it, but
-  don't report it as new.
+- /job-search used to throw one JavaScript error from the footer JS
+  aggregate on every load. If it still does, report it as a bug.
 
 ## Method for every check
 1. Before each interaction, call browser_snapshot and use the refs it returns.

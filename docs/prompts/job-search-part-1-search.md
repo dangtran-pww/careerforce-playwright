@@ -25,9 +25,8 @@ posting, responsive layout and accessibility.
 - A title like "Registered Nurses (29-1141.00)" is searched by SOC code only.
 - Each result shows: title, company, location, snippet, "Posted/Available … ago",
   "Learn more and apply", Share, Read more, and a bookmark icon.
-- Known issue: /job-search throws one JavaScript error from the footer JS
-  aggregate on every load (see tests/helpers/known-issues.ts). Note it, but
-  don't report it as new.
+- /job-search used to throw one JavaScript error from the footer JS
+  aggregate on every load. If it still does, report it as a bug.
 
 ## Method for every check
 1. Before each interaction, call browser_snapshot and use the refs it returns.

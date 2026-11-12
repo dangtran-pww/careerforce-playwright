@@ -56,12 +56,22 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
   });
   // The plan whose details show in the right-hand column; none leaves it
   // empty (the column is always there, so the page never changes width).
-  // ?plan=<slug> opens it (a plan run's page links back that way).
+  // ?plan=<slug> opens it (a plan run's page links back that way), and
+  // &case=<id> opens that case's row (the header's case search links that
+  // way). The page stays mounted when only the query changes, so a new
+  // search on this page opens its plan and case here.
   const [params] = useSearchParams();
-  const [shownPlan, setShownPlan] = useState<string | null>(() => {
-    const p = params.get('plan');
-    return suite.plans.some((x) => x.slug === p) ? p : null;
-  });
+  const planParam = params.get('plan');
+  const openCase = params.get('case');
+  const linkedPlan = suite.plans.some((x) => x.slug === planParam)
+    ? planParam
+    : null;
+  const [shownPlan, setShownPlan] = useState<string | null>(linkedPlan);
+  const [linked, setLinked] = useState({ plan: planParam, case: openCase });
+  if (linked.plan !== planParam || linked.case !== openCase) {
+    setLinked({ plan: planParam, case: openCase });
+    if (linkedPlan) setShownPlan(linkedPlan);
+  }
   const closePanel = useCallback(() => setShownPlan(null), []);
 
   // Tick or untick one plan.
@@ -188,8 +198,13 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
       </div>
       {shownPlan ? (
         <PlanPanel
-          key={shownPlan}
+          // A new case link remounts it, so that case opens and scrolls into
+          // view.
+          key={
+            shownPlan === linkedPlan ? `${shownPlan}:${openCase}` : shownPlan
+          }
           slug={shownPlan}
+          openCase={shownPlan === linkedPlan ? openCase : null}
           suite={suite.slug}
           onClose={closePanel}
           projects={

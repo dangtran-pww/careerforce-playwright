@@ -2,8 +2,8 @@
 
 **Status: implemented.** All 3 cases are written and verified against a real
 admin session on QA — see `tests/smoke/admin-reports/admin-reports.spec.ts`,
-`tests/helpers/known-issues.ts`, and `tests/helpers/environment.ts`.
-AR-1 currently fails on QA (a real, unallowlisted status-report error) — see
+and `tests/helpers/environment.ts`.
+AR-1 currently fails on QA (a real status-report error) — see
 "Implementation notes" below; this is the test correctly catching it, not a
 bug in the test.
 Implemented test: `tests/smoke/admin-reports/admin-reports.spec.ts`
@@ -60,7 +60,7 @@ To run a single case, add `-g`, e.g. `-g "AR-1"`.
 
 | ID | Title | Persona | Steps | Assertions | Notes |
 |---|---|---|---|---|---|
-| AR-1 | Status report has no new errors | Admin | `goto('/admin/reports/status')` | "Status report" heading visible; every row whose severity is "Error" has its title present in the known-issues allowlist for the current environment (e.g. Solr "Content" error); any "Error" row *not* in the allowlist fails the test | Needs `tests/helpers/known-issues.ts` — an allowlist of accepted errors/warnings, keyed by env, so new errors fail the test instead of being silently accepted. Ownership of updating it is still open (see below). |
+| AR-1 | Status report has no errors | Admin | `goto('/admin/reports/status')` | "Status report" heading visible; no row has severity "Error". Any error row fails the test, with its title in the message | No allowlist: an error the team already knows about (e.g. the Solr "Content" error) still fails, until it is fixed. Warnings are not checked. |
 | AR-2 | Translations warning matches environment | Admin | `goto('/admin/reports/translations')` | Warning banner/text visible on stage and prod; absent on QA | Env-conditional: stage behaves like prod, not QA — use `isStage(baseUrl) || isProd(baseUrl)` from `tests/helpers/environment.ts`. Confirm stage's exact hostname pattern when generating (see open question 2). |
 | AR-3 | Search index item counts are sane | Admin | `goto('/admin/config/search/search-api')` | Each of the 4 indexes — Appointment Occurrences, Events More Like This, General site content index, Occupations — shows an indexed item count > 0 and no error/red status indicator | Read-only — do **not** trigger "Index now" here, that belongs to the [admin maintenance plan](smoke-admin-maintenance.md) (stage/QA only) |
 
@@ -76,19 +76,15 @@ qa.careerforce.link, Drupal 11.4 / Claro theme:
   `__summary`, which don't exist in this Drupal version's markup).
 - **AR-1 currently fails on QA**, and correctly so: the status report shows
   1 error, "Entity/field definitions" ("The Context entity type needs to be
-  installed"), which is not the Solr "Content" error `known-issues.ts`
-  allowlists — it's a different, currently-unallowlisted error. Left out of
-  the allowlist deliberately (see open question 1); someone needs to either
-  fix the underlying issue or decide to allowlist it.
+  installed"). It keeps failing until the error is fixed.
 - **AR-1 status report errors on QA** (captured 2026-10-29). Only errors
   are asserted; warnings are ignored.
 
   | Title | Detail |
   |---|---|
-  | Entity/field definitions | Mismatched entity and/or field definitions — the Context entity type needs to be installed. **Fails AR-1** (not allowlisted). |
+  | Entity/field definitions | Mismatched entity and/or field definitions — the Context entity type needs to be installed. **Fails AR-1.** |
 
-  The Solr "Content" error allowlisted in `known-issues.ts` did not appear
-  in this run.
+  The Solr "Content" error did not appear in this run.
 - **AR-3 reworked to read each index's own page**, not the
   `/admin/config/search/search-api` overview table. That table only has
   Type/Name/Status/Operations columns — no item counts. The indexed count
@@ -117,10 +113,8 @@ qa.careerforce.link, Drupal 11.4 / Claro theme:
 
 ## Open questions before writing code
 
-1. **Known-issues allowlist ownership**: who owns updating
-   `tests/helpers/known-issues.ts` when a new "known, ok to ignore"
-   error/warning shows up (Solr Content error today)? Needs a clear owner so
-   AR-1 doesn't bit-rot into either false failures or a rubber-stamp pass.
+1. *(Answered 2026-11-12.)* There is no allowlist of accepted errors: AR-1
+   fails on every status-report error, known or not, until it is fixed.
 2. **Stage vs QA distinction for AR-2**: confirm the exact environments where
    the translations warning is expected (stage + prod) vs not (QA), and
    stage's hostname pattern, before extending `tests/helpers/environment.ts`.
@@ -138,6 +132,4 @@ tests/
   smoke/admin-reports/
     admin-reports.spec.ts # AR-1..AR-3, storageState: playwright/.auth/<env>/admin.json
                           # (generate via `npm run login:manual -- admin`)
-  helpers/
-    known-issues.ts       # allowlist of accepted status-report errors/warnings, keyed by env
 ```
