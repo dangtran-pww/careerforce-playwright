@@ -9,7 +9,7 @@
 //   catalog/   reading test-plans/ and test-suites/
 //   runs/      running plans and suites, one run at a time, and run history
 //   claude/    asking Claude Code (explaining a case or a failure, reviewing
-//              a case); runs/suite-run.mjs also runs it for suite prompts
+//              a case)
 //   sessions.mjs, ui-mode.mjs, environments.mjs
 //   lib/       small helpers with no dashboard knowledge
 // paths.mjs says where everything is; errors.mjs has the error type.

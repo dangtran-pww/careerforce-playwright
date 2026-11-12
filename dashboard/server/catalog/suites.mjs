@@ -1,19 +1,11 @@
 // Reads the suites in test-suites/*.md for the dashboard. A suite is one run
-// made of several steps, run one after another on the environment picked in
-// the dashboard:
-//   ## Plans              test plans from test-plans/, by slug
-//   ## Prompts            checks Claude does in a browser (claude -p), each
-//                         one a file in test-plans/prompts/ (shared with
-//                         the plans' prompt cases; scripts/lib/prompts.mjs)
-// See test-suites/README.md for the format.
+// made of several test plans (its "## Plans" table, by slug), run one after
+// another on the environment picked in the dashboard. See
+// test-suites/README.md for the format.
 
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
-import { loadPrompts } from '../../../scripts/lib/prompts.mjs';
-import {
-  PROMPTS_DIR as promptsDir,
-  SUITES_DIR as suitesDir,
-} from '../paths.mjs';
+import { SUITES_DIR as suitesDir } from '../paths.mjs';
 import { allNoProd, clean, loadPlans, tableRows } from './plans.mjs';
 
 // The lines of the "## <name>" section (up to the next "## ").
@@ -71,12 +63,6 @@ function parseSuite(slug, text) {
             .filter(Boolean),
   }));
 
-  // "| PR-1 | homepage-layout |" or "| PR-1 | [homepage-layout](prompts/homepage-layout.md) |"
-  const prompts = rows(lines, 'Prompts').map(([id, file]) => ({
-    id: clean(id),
-    file: promptSlug(file ?? ''),
-  }));
-
   return {
     slug,
     file: `${suitesDir}/${slug}.md`,
@@ -86,46 +72,13 @@ function parseSuite(slug, text) {
     // without one come after, by name.
     order: Number.parseInt(option(lines, 'Order') ?? '', 10),
     plans,
-    prompts,
   };
 }
 
-// The prompt file's slug from a table cell: a plain slug, a file name or a
-// Markdown link to the file.
-function promptSlug(cell) {
-  const link = cell.match(/\]\(([^)]+)\)/);
-  return (link ? link[1] : clean(cell))
-    .replace(/`/g, '')
-    .replace(/^.*\//, '')
-    .replace(/\.md$/i, '')
-    .trim();
-}
-
 // Joins each plan entry to the plan itself, and lists what's wrong with
-// the suite file (unknown plans and prompt files, duplicate IDs).
-function resolve(suite, allPlans, allPrompts) {
+// the suite file (unknown plans and projects).
+function resolve(suite, allPlans) {
   const problems = [];
-  const prompts = suite.prompts.flatMap((entry) => {
-    const prompt = allPrompts.get(entry.file);
-    if (!prompt) {
-      problems.push(
-        `${entry.id}: no prompt file ${promptsDir}/${entry.file || '?'}.md.`,
-      );
-      return [];
-    }
-    if (prompt.problems.length) {
-      problems.push(
-        `${entry.id}: ${promptsDir}/${entry.file}.md: ${prompt.problems.join(' ')}`,
-      );
-      return [];
-    }
-    return [
-      {
-        ...entry,
-        ...withoutProblems(prompt),
-      },
-    ];
-  });
   const plans = suite.plans.map((entry) => {
     const plan = allPlans.find((p) => p.slug === entry.slug);
     if (!plan) {
@@ -164,35 +117,22 @@ function resolve(suite, allPlans, allPrompts) {
     };
   });
 
-  const ids = suite.prompts.map((x) => x.id);
-  const dupes = ids.filter((id, i) => ids.indexOf(id) !== i);
-  if (dupes.length)
-    problems.push(`Duplicate IDs: ${[...new Set(dupes)].join(', ')}.`);
-
   const roles = [
-    ...new Set([
-      ...plans.filter((p) => p.runnable).flatMap((p) => p.roles),
-      ...prompts.map((p) => p.role),
-    ]),
+    ...new Set(plans.filter((p) => p.runnable).flatMap((p) => p.roles)),
   ].filter(Boolean);
 
   return {
     ...suite,
     plans,
-    prompts,
     roles,
     problems,
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const withoutProblems = ({ problems, ...rest }) => rest;
-
 export async function loadSuites({ refresh = false } = {}) {
-  const [{ plans }, names, prompts] = await Promise.all([
+  const [{ plans }, names] = await Promise.all([
     loadPlans({ refresh }),
     readdir(suitesDir).catch(() => []),
-    loadPrompts(),
   ]);
   const suites = await Promise.all(
     names
@@ -202,7 +142,6 @@ export async function loadSuites({ refresh = false } = {}) {
         return resolve(
           parseSuite(slug, await readFile(join(suitesDir, n), 'utf8')),
           plans,
-          prompts,
         );
       }),
   );

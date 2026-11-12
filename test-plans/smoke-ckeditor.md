@@ -6,8 +6,7 @@ Prod: No: creates and deletes test pages.
 
 Devices: desktop only. Admin and editor screens are not tested on a phone (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`).
 
-Split out from [deed-smoke-test-plan.md](../docs/deed-smoke-test-plan.md)
-§15, Phase 2, from the team's manual checklist on Confluence,
+From the team's manual checklist on Confluence,
 [DEED Smoke Testing Template](https://portland-webworks.atlassian.net/wiki/spaces/MNDEED/pages/1540882433):
 toolbars per text format "consistent with Live", tables, media embed,
 headers, and the available formatting. The checklist edits

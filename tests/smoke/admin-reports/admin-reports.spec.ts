@@ -53,8 +53,7 @@ test('AR-2: translations warning matches environment', async ({
 
   const warningBanner = page.locator('.messages--warning');
 
-  // Expected on stage and prod, but not QA — see
-  // docs/deed-smoke-test-plan.md §1.
+  // Expected on stage and prod, but not QA.
   if (isStage(baseURL!) || isProd(baseURL!)) {
     await expect(warningBanner.first()).toBeVisible();
   } else {

@@ -4,9 +4,6 @@ Status: ready to generate
 Implemented test: —
 Prod: No: edits user profiles.
 
-Split out from [deed-smoke-test-plan.md](../docs/deed-smoke-test-plan.md)
-§22, Phase 2.
-
 ## Running it
 
 ```bash

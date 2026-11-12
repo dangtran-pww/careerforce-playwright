@@ -1,5 +1,5 @@
 // Prompt checks as part of a dashboard run: a plan's prompt cases (plan runs
-// and suite plan steps) and a suite's own prompt steps. The check itself is
+// and suite plan steps). The check itself is
 // run by prompt.mjs; this file gives it the run's process, log and Stop, and
 // finds a baseline among earlier runs.
 
@@ -19,7 +19,7 @@ export const BASELINE_SOURCES = [
 
 /**
  * Run `check` (a parsed prompt file) on `env` in `dir`, and put its result
- * on `target` (a case's entry in run.json, or a suite step). `compareChoice`
+ * on `target` (a case's entry in run.json). `compareChoice`
  * is the run's "Compare with" choice, if any. `meta` is saved as it goes,
  * so the page shows the check running.
  */

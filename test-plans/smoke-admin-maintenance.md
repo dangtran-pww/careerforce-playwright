@@ -14,9 +14,8 @@ AM-4, AM-5 verified on QA, 2026-10-29.
 
 Devices: desktop only. Admin and editor screens are not tested on a phone (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`).
 
-Split out from [deed-smoke-test-plan.md](../docs/deed-smoke-test-plan.md)
-§3 (search-api maintenance) and §9 (permissions rebuild), Phase 2, which
-come from the team's manual checklist on Confluence,
+Search-api maintenance and permissions rebuild, from the team's manual
+checklist on Confluence,
 [DEED Smoke Testing Template](https://portland-webworks.atlassian.net/wiki/spaces/MNDEED/pages/1540882433)
 (the Stage run of 2026-10-30 also rebuilt and reindexed Appointment
 Occurrences and Events More Like This, and searched both). These

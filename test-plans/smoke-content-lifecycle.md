@@ -6,9 +6,7 @@ Prod: No: creates, publishes, translates and deletes test pages.
 
 Devices: desktop only. Admin and editor screens are not tested on a phone (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`).
 
-Split out from [deed-smoke-test-plan.md](../docs/deed-smoke-test-plan.md)
-§13 (publish/unpublish, revisioning) and §17 (translation), Phase 2, from
-the team's manual checklist on Confluence,
+From the team's manual checklist on Confluence,
 [DEED Smoke Testing Template](https://portland-webworks.atlassian.net/wiki/spaces/MNDEED/pages/1540882433):
 "unpublish (archive) a page", "revert previous versions", "view older
 versions with no errors", "translate a page", and "after the page is

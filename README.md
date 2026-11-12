@@ -35,8 +35,8 @@ tests/
   helpers/devices.mts       # the devices (desktop, mobile) and desktop-only smoke areas
   helpers/roles.ts          # useRole('<role>'): log a spec in and check the session
 test-plans/                 # human-readable plans that specs are generated from
-test-suites/                # suites for the dashboard: plans + Claude prompts
-                             # in one run (see test-suites/README.md)
+test-suites/                # suites for the dashboard: several plans in one run
+                             # (see test-suites/README.md)
 ```
 
 ## Quick start
@@ -195,8 +195,7 @@ tests left behind. No heavy style preset is included.
 - **Create and clean up through the UI (for now).** Tests that need data
   create it and delete it again through Drupal's own forms, in a `finally`
   block — no JSON:API dependency currently. Reintroduce a
-  JSON:API helper if a role needs faster setup later (see
-  `docs/deed-smoke-test-plan.md`).
+  JSON:API helper if a role needs faster setup later.
 - **Every test cleans up after itself.** Created nodes are deleted in a
   `finally` block, even if an assertion fails, and titles are unique
   (`Playwright test <timestamp>`) so tests do not collide.
@@ -245,11 +244,11 @@ A local page for seeing and running the tests:
   inactivity) long before the cookie's expiry date. If the session has
   expired, its card shows the `npm run login:manual -- <role> --env <env>`
   command to fix it. Press "Check again" afterwards.
-- **Suites:** run several plans and Claude prompts as one run. Suites are
-  Markdown files in `test-suites/` (format in `test-suites/README.md`). On a
-  suite's page, untick any step and see the logins the chosen steps need. The
-  run page shows each step as it goes: a plan's test results, and a prompt's
-  verdict, findings and screenshots.
+- **Suites:** run several plans as one run. Suites are Markdown files in
+  `test-suites/` (format in `test-suites/README.md`). On a suite's page,
+  untick any plan and see the logins the chosen plans need. The run page
+  shows each plan as it goes: its test results, then its prompt cases'
+  verdicts, findings and screenshots.
 - **Plans:** a suite's plan panel links to the plan's page, with its status,
   cases, the roles it logs in as, and its recent runs. The dashboard reads the status,
   "Implemented test" and "Pending cases" lines and the case tables from each

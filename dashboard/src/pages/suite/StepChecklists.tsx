@@ -1,5 +1,4 @@
-// The two lists of steps on the suite page: plans and prompts. Each tick
-// calls onToggle(key, on).
+// The list of plans on the suite page. Each tick calls onToggle(key, on).
 
 import type { ReactNode } from 'react';
 import type { Suite, SuitePlan } from '../../api/types';
@@ -141,35 +140,5 @@ function PlanRow({
         )
       )}
     </label>
-  );
-}
-
-export function PromptChecklist({
-  suite,
-  selected,
-  onToggle,
-}: {
-  suite: Suite;
-  selected: Set<string>;
-  onToggle: OnToggle;
-}) {
-  return (
-    <Checklist legend="Claude checks (prompts)">
-      {suite.prompts.map((p) => (
-        <label key={p.id} className="check">
-          <Tick
-            checked={selected.has(p.id)}
-            onToggle={(on) => onToggle(p.id, on)}
-          />
-          <strong>
-            {p.id}: {p.name}
-          </strong>
-          <span className="note small">
-            {p.role ? `as ${p.role}` : 'anonymous'}
-          </span>
-          <span className="detail">{p.prompt.replace(/\s+/g, ' ')}</span>
-        </label>
-      ))}
-    </Checklist>
   );
 }

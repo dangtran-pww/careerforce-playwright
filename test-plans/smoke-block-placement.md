@@ -6,8 +6,7 @@ Prod: No: places a block that every visitor sees.
 
 Devices: desktop only. Admin and editor screens are not tested on a phone (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`).
 
-Split out from [deed-smoke-test-plan.md](../docs/deed-smoke-test-plan.md)
-§13 (block placement), Phase 2. The team's manual checklist on Confluence,
+The team's manual checklist on Confluence,
 [DEED Smoke Testing Template](https://portland-webworks.atlassian.net/wiki/spaces/MNDEED/pages/1540882433),
 asks to "review the process of placing existing block content: custom
 blocks, page restricted block". These cases do that with a throwaway block.

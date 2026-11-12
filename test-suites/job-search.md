@@ -21,15 +21,3 @@ the dashboard lists it as "No tests yet" and skips it.
 | functional-job-search-sort-filters-paging | (default) |
 | functional-job-search-posting-accessibility | (default) |
 | functional-job-search-logged-in | (default) |
-
-## Prompts
-
-Read-only checks Claude does as the job seeker (`jobseeker` login). The
-suite runner keeps prompts read-only, so the full logged-in session, which
-saves, bookmarks and cleans up, is run by hand from
-`docs/prompts/job-search-part-4-logged-in.md`.
-
-| ID | Prompt |
-|---|---|
-| PR-1 | [job-search-jobseeker-tools](../test-plans/prompts/job-search-jobseeker-tools.md) |
-| PR-2 | [job-search-jobs-for-me](../test-plans/prompts/job-search-jobs-for-me.md) |

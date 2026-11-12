@@ -63,8 +63,8 @@ and fixes or sends back whatever it reports.
 
 Some checks need judgement rather than a fixed assertion. Examples are
 comparing the layout or styling with another site (such as Live), reviewing a
-page "for anything that looks broken" on desktop and on a phone, and the
-items marked 👁 in `docs/deed-smoke-test-plan.md`. Write these as **prompt
+page "for anything that looks broken" on desktop and on a phone, and
+side-by-side comparisons of custom pages with Live. Write these as **prompt
 cases** (Rule 2 in `test-plans/README.md`), not as cases to automate. Start
 the Steps cell with `**Prompt:** [<name>](prompts/<name>.md)` and say in the
 Expected result what passes and what fails. You can't write the prompt file

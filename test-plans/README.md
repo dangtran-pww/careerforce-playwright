@@ -255,9 +255,14 @@ is an example.
   ```
 
   Results go to `reports/prompt-runs/`. `claude` must be installed and
-  logged in. Each run costs Claude usage. Set `PROMPT_MODEL=sonnet` in
-  `.env` for a cheaper model. A check that compares is stopped after 15
-  minutes (`PROMPT_COMPARE_TIMEOUT_MS`), and other checks after 6.
+  logged in. Claude Code runs headless with only the Playwright MCP's
+  browser tools, so it can't run commands or edit files. It is told to stay
+  read-only (no forms that change data, no logout), but a browser that can
+  click can submit a form, so word admin prompts carefully. Each run costs
+  Claude usage. Set `PROMPT_MODEL=sonnet` in `.env` for a cheaper model. A
+  check that compares is stopped after 15 minutes
+  (`PROMPT_COMPARE_TIMEOUT_MS`) or 100 turns, and other checks after 6
+  minutes (`PROMPT_TIMEOUT_MS`) or 40 turns.
 - **Basic Auth:** the browser sends one set of credentials. Comparing QA with
   Stage works when both use `BASIC_AUTH_USER`. If you set different
   credentials per environment (`BASIC_AUTH_USER_STAGE`), the comparison site

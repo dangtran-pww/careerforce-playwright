@@ -10,8 +10,7 @@ Implemented test: `tests/smoke/admin-reports/admin-reports.spec.ts`
 
 **Devices: desktop only.** Admin and editor screens are not tested on a phone (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`).
 
-Split out from [deed-smoke-test-plan.md](../docs/deed-smoke-test-plan.md) /
-[smoke-public-site.md](smoke-public-site.md).
+Split out from [smoke-public-site.md](smoke-public-site.md).
 Covers read-only admin report checks that need a logged-in admin session, as
 opposed to the anonymous plan's fully-anonymous suite.
 
@@ -63,7 +62,7 @@ To run a single case, add `-g`, e.g. `-g "AR-1"`.
 |---|---|---|---|---|---|
 | AR-1 | Status report has no new errors | Admin | `goto('/admin/reports/status')` | "Status report" heading visible; every row whose severity is "Error" has its title present in the known-issues allowlist for the current environment (e.g. Solr "Content" error); any "Error" row *not* in the allowlist fails the test | Needs `tests/helpers/known-issues.ts` — an allowlist of accepted errors/warnings, keyed by env, so new errors fail the test instead of being silently accepted. Ownership of updating it is still open (see below). |
 | AR-2 | Translations warning matches environment | Admin | `goto('/admin/reports/translations')` | Warning banner/text visible on stage and prod; absent on QA | Env-conditional: stage behaves like prod, not QA — use `isStage(baseUrl) || isProd(baseUrl)` from `tests/helpers/environment.ts`. Confirm stage's exact hostname pattern when generating (see open question 2). |
-| AR-3 | Search index item counts are sane | Admin | `goto('/admin/config/search/search-api')` | Each of the 4 indexes — Appointment Occurrences, Events More Like This, General site content index, Occupations — shows an indexed item count > 0 and no error/red status indicator | Read-only — do **not** trigger "Index now" here, that belongs to the search-api maintenance suite (`docs/deed-smoke-test-plan.md` §3, stage/QA only) |
+| AR-3 | Search index item counts are sane | Admin | `goto('/admin/config/search/search-api')` | Each of the 4 indexes — Appointment Occurrences, Events More Like This, General site content index, Occupations — shows an indexed item count > 0 and no error/red status indicator | Read-only — do **not** trigger "Index now" here, that belongs to the [admin maintenance plan](smoke-admin-maintenance.md) (stage/QA only) |
 
 ## Implementation notes
 
@@ -106,15 +105,15 @@ qa.careerforce.link, Drupal 11.4 / Claro theme:
 
 ## Non-goals (explicitly out of scope for this plan)
 
-- `/admin/reports/dblog` (recent log messages) — `docs/deed-smoke-test-plan.md`
-  §1 flags this as needing human judgment on what counts as a regression;
-  stays a manual check, not automated here.
+- `/admin/reports/dblog` (recent log messages) — needs human judgment on what counts as a
+  regression; stays a manual check, not automated here.
 - Search-api reindex / "Index now" actions — stage/QA only
-  (`docs/deed-smoke-test-plan.md` §3).
+  ([smoke-admin-maintenance.md](smoke-admin-maintenance.md)).
 - `/admin/reports/status/rebuild` (permissions rebuild) — stage/QA only,
-  triggers a write action (`docs/deed-smoke-test-plan.md` §9).
-- Admin/customer-support profile edit views (`docs/deed-smoke-test-plan.md`
-  §22) — different persona, not read-only, out of scope here.
+  triggers a write action
+  ([smoke-admin-maintenance.md](smoke-admin-maintenance.md)).
+- Admin/customer-support profile edit views
+  ([smoke-profile.md](smoke-profile.md)) — different persona, not read-only, out of scope here.
 
 ## Open questions before writing code
 

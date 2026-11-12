@@ -251,19 +251,11 @@ export interface SuitePlan {
   allNoProd?: boolean; // so the plan is skipped on production
 }
 
-export interface SuitePrompt {
-  id: string;
-  name: string;
-  role?: string;
-  prompt: string;
-}
-
 export interface SuiteSummary {
   slug: string;
   name: string;
   summary?: string;
   plans: SuitePlan[];
-  prompts: SuitePrompt[];
   lastRun?: Run | null;
 }
 
@@ -406,8 +398,9 @@ export interface PromptCompare {
   baselineFrom?: string | null; // baseline: the run it came from; null if none
 }
 
-// One prompt check's result: a suite's prompt step, or a plan's prompt case
-// in a plan run (Run.prompts) or a suite's plan step (SuiteStep.prompts).
+// One prompt check's result: a plan's prompt case in a plan run
+// (Run.prompts) or a suite's plan step (SuiteStep.prompts), or a suite's
+// prompt step in a run from before suites dropped them.
 export interface PromptResult {
   id?: string;
   title?: string;
@@ -435,7 +428,7 @@ export interface PromptResult {
 
 export interface SuiteStep extends TestReport {
   n: number;
-  kind: 'plan' | 'prompt';
+  kind: 'plan' | 'prompt'; // 'prompt': only in older runs
   title: string;
   status: string; // a key of STEP_STATUS
   dir: string;
@@ -448,7 +441,7 @@ export interface SuiteStep extends TestReport {
   projects?: string[];
   command?: string;
   prompts?: PromptResult[]; // the plan's prompt cases
-  // prompt steps
+  // prompt steps (older runs only)
   role?: string;
   file?: string;
   prompt?: string;

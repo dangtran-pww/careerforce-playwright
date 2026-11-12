@@ -4,8 +4,7 @@ Status: ready to generate
 Implemented test: —
 Prod: No: saves goals and assessment results on the job seeker account.
 
-Split out from [deed-smoke-test-plan.md](../docs/deed-smoke-test-plan.md)
-§11, Phase 2. The [anonymous smoke plan](smoke-public-site.md)
+The [anonymous smoke plan](smoke-public-site.md)
 (CT-1 .. CT-3) already covers these tools for a logged-out visitor; the
 source checklist asks for them to be tested "both as anon user and career
 seeker". This plan covers the logged-in parts, mainly "add to goals".

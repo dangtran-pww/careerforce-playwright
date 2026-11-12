@@ -48,8 +48,8 @@ The checks don't cover emails or anything that takes longer than a single
 visit. Run them after each deployment to confirm the site still works for the
 public.
 
-The checks come from the DEED smoke-testing checklist
-([deed-smoke-test-plan.md](../docs/deed-smoke-test-plan.md)).
+The checks come from the team's manual checklist on Confluence,
+[DEED Smoke Testing Template](https://portland-webworks.atlassian.net/wiki/spaces/MNDEED/pages/1540882433).
 
 ## Login
 

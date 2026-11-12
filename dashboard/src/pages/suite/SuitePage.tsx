@@ -17,10 +17,10 @@ import { toggled } from '../../lib/sets';
 import { defaultChoice, neededLogins, type SuiteChoice } from './choice';
 import { PlanPanel } from './PlanPanel';
 import { RunRefused, type Refusal } from './RunRefused';
-import { PlanChecklist, PromptChecklist } from './StepChecklists';
+import { PlanChecklist } from './StepChecklists';
 
-// #/suites/<slug> — one suite: pick its steps and run it. The logins the
-// chosen steps need show in the header's Login Sessions panel.
+// #/suites/<slug> — one suite: pick its plans and run it. The logins the
+// chosen plans need show in the header's Login Sessions panel.
 export function SuitePage() {
   const { slug } = useParams();
   const { data, error } = useApi<SuiteResponse>(`/api/suites/${slug}`);
@@ -59,14 +59,14 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
   const [shownPlan, setShownPlan] = useState<string | null>(null);
   const closePanel = useCallback(() => setShownPlan(null), []);
 
-  // Tick or untick one step in one of the two lists.
-  const toggle = (list: 'plans' | 'prompts') => (key: string, on: boolean) =>
+  // Tick or untick one plan.
+  const toggle = (key: string, on: boolean) =>
     setChoice((c: SuiteChoice) => ({
       ...c,
-      [list]: toggled(c[list], key, on),
+      plans: toggled(c.plans, key, on),
     }));
 
-  const total = choice.plans.size + choice.prompts.size;
+  const total = choice.plans.size;
   // On production the chosen plans run without their no-prod cases; a plan
   // whose cases are all no-prod is skipped.
   const chosenPlans = suite.plans.filter((p) => choice.plans.has(p.slug));
@@ -75,7 +75,6 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
     : [];
   const blocked =
     env.production &&
-    choice.prompts.size === 0 &&
     chosenPlans.length > 0 &&
     chosenPlans.every((p) => p.allNoProd);
   const logins = neededLogins(suite, choice, env);
@@ -127,14 +126,9 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
           <PlanChecklist
             suite={suite}
             selected={choice.plans}
-            onToggle={toggle('plans')}
+            onToggle={toggle}
             shownPlan={shownPlan}
             onShowPlan={setShownPlan}
-          />
-          <PromptChecklist
-            suite={suite}
-            selected={choice.prompts}
-            onToggle={toggle('prompts')}
           />
           <label className="check">
             <input
@@ -147,14 +141,15 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
             <span>Show the browser while the tests run</span>
           </label>
           <p className="note small">
-            Steps run one after another: plans, then prompts. Stop ends the
-            current step and skips the rest. Each prompt runs Claude Code
-            (claude -p) and uses your Claude plan or API credits.
+            Plans run one after another, each with its prompt cases after its
+            tests. Stop ends the current plan and skips the rest. Each prompt
+            case runs Claude Code (claude -p) and uses your Claude plan or API
+            credits.
           </p>
           <p className="note small">
             {logins.length
               ? `Logs in as ${logins.map((l) => l.role).join(', ')}. `
-              : 'The chosen steps need no login. '}
+              : 'The chosen plans need no login. '}
             {logins.length > 0 && (
               <button type="button" className="link" onClick={openPanel}>
                 Check the login sessions
@@ -170,7 +165,6 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
                 setRefusal(null);
                 return start(`/api/suites/${suite.slug}/run`, {
                   plans: [...choice.plans],
-                  prompts: [...choice.prompts],
                   headed: choice.headed,
                 });
               }}
@@ -179,7 +173,7 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
                 ? 'Another run is in progress'
                 : blocked
                   ? 'Not on Production'
-                  : `Run ${plural(total, 'step')} on ${env.name}`}
+                  : `Run ${plural(total, 'plan')} on ${env.name}`}
             </AsyncButton>
           </div>
         </section>

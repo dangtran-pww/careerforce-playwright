@@ -1,6 +1,5 @@
-// Runs a suite (test-suites/*.md) for the dashboard: its plans, then its
-// prompts, one step after another, on the
-// environment picked in the dashboard. Uses the run lifecycle in lifecycle.mjs,
+// Runs a suite (test-suites/*.md) for the dashboard: its plans, one step
+// after another, on the environment picked in the dashboard. Uses the run lifecycle in lifecycle.mjs,
 // so a suite takes the same one-run-at-a-time lock and can be stopped the
 // same way (Stop ends the current step and skips the rest).
 //
@@ -8,10 +7,11 @@
 //   run.json                 kind "suite", env and the steps
 //   output.log               every step's output
 //   steps/<n>-<step>/        one folder per step:
-//     plan:    results.json, report/, test-results/, and prompts/<case>/
-//              for the plan's prompt cases
-//     prompt:  mcp.json, stream.jsonl (Claude's own log), screenshots/
-//              (see prompt.mjs)
+//     results.json, report/, test-results/, and prompts/<case>/ for the
+//     plan's prompt cases (see prompt.mjs)
+//
+// Runs from before suites dropped their own prompt steps can still have
+// steps of kind "prompt"; the run page shows them.
 
 import { join } from 'node:path';
 import { hostOf } from '../../../scripts/lib/site.mjs';
@@ -38,28 +38,24 @@ import {
 import {
   promptCaseEntries,
   promptsStatus,
-  runCheckInRun,
   runPromptCases,
 } from './prompt-step.mjs';
 
 // ---- starting --------------------------------------------------------------
 
 /**
- * Start a suite run. `choice` says which steps to run:
- * { env, plans: [slug], prompts: [id], headed, compare, checkLogin }.
- * Leaving `plans` / `prompts` out runs all of them. `checkLogin(role, env)`
+ * Start a suite run. `choice` says which plans to run:
+ * { env, plans: [slug], headed, compare, checkLogin }.
+ * Leaving `plans` out runs all of them. `checkLogin(role, env)`
  * resolves to a session check ({ role, status, message, loginCommand }).
  */
 export async function startSuiteRun(suite, choice) {
   const { env, headed = false, compare, checkLogin } = choice;
-  const pick = (all, chosen, key) =>
-    chosen ? all.filter((x) => chosen.includes(x[key])) : all;
+  const plans = choice.plans
+    ? suite.plans.filter((p) => choice.plans.includes(p.slug))
+    : suite.plans;
 
-  const plans = pick(suite.plans, choice.plans, 'slug');
-  const prompts = pick(suite.prompts, choice.prompts, 'id');
-
-  if (!plans.length && !prompts.length)
-    throw new ApiError(400, 'Pick at least one plan or prompt to run.');
+  if (!plans.length) throw new ApiError(400, 'Pick at least one plan to run.');
 
   // The plans that will actually run (a plan with no tests yet is skipped).
   // On production a no-prod plan, or one whose cases are all no-prod, is
@@ -97,7 +93,6 @@ export async function startSuiteRun(suite, choice) {
     for (const c of plan ? promptCaseEntries(plan, env) : [])
       if (c.role) needed.add(c.role);
   }
-  for (const p of prompts) if (p.role) needed.add(p.role);
   const logins = await Promise.all(
     [...needed].map((role) => checkLogin(role, env)),
   );
@@ -140,17 +135,6 @@ export async function startSuiteRun(suite, choice) {
           : (offProd ?? 'No tests yet.'),
     });
   }
-  for (const p of prompts)
-    add({
-      id: p.id,
-      kind: 'prompt',
-      title: `${p.id}: ${p.name}`,
-      slug: p.slug,
-      file: p.file,
-      prompt: p.prompt,
-      role: p.role,
-      viewports: p.viewports,
-    });
   for (const step of steps) step.dir = `steps/${step.n}-${step.id}`;
 
   const now = new Date();
@@ -174,14 +158,14 @@ export async function startSuiteRun(suite, choice) {
   const dir = await beginRun(meta);
 
   launch(meta, () =>
-    run(meta, dir, { planSteps, prompts, env, headed, compare }),
+    run(meta, dir, { planSteps, env, headed, compare }),
   );
   return meta;
 }
 
 // ---- running ---------------------------------------------------------------
 
-async function run(meta, dir, { planSteps, prompts, env, headed, compare }) {
+async function run(meta, dir, { planSteps, env, headed, compare }) {
   for (const step of meta.steps) {
     if (isStopped()) {
       step.status = 'skipped';
@@ -200,18 +184,8 @@ async function run(meta, dir, { planSteps, prompts, env, headed, compare }) {
     log(`\n=== ${step.n}. ${step.title}\n`);
     const stepDir = join(dir, step.dir);
     try {
-      if (step.kind === 'plan') {
-        const { plan } = planSteps.find((p) => p.entry.slug === step.plan);
-        await planStep(step, stepDir, plan, { env, headed, compare, meta });
-      } else {
-        const check = prompts.find((p) => p.id === step.id);
-        await runCheckInRun(step, check, {
-          env,
-          compareChoice: compare,
-          dir: stepDir,
-          meta,
-        });
-      }
+      const { plan } = planSteps.find((p) => p.entry.slug === step.plan);
+      await planStep(step, stepDir, plan, { env, headed, compare, meta });
     } catch (err) {
       step.status = 'error';
       step.error = err.message;
@@ -257,6 +231,6 @@ async function planStep(step, stepDir, plan, { env, headed, compare, meta }) {
     meta,
   });
   const status = combinedStatus(testStatus, promptsStatus(step.prompts));
-  // A step that needs a look is "unsure", like a prompt step.
+  // A step that needs a look is "unsure", like a prompt case.
   step.status = status === 'attention' ? 'unsure' : status;
 }

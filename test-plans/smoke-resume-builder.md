@@ -4,9 +4,6 @@ Status: ready to generate
 Implemented test: —
 Prod: No: creates, edits and uploads resumes on the job seeker account.
 
-Split out from [deed-smoke-test-plan.md](../docs/deed-smoke-test-plan.md)
-§14, Phase 2.
-
 ## Running it
 
 ```bash

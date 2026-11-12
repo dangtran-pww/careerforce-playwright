@@ -63,7 +63,6 @@ suiteRoutes.post(
     z.object({
       env: envField,
       plans: strings.optional(),
-      prompts: strings.optional(),
       headed: flag,
       compare: compareField,
     }),
@@ -74,7 +73,6 @@ suiteRoutes.post(
     const run = await startSuiteRun(suite, {
       env: envParam(body.env),
       plans: body.plans,
-      prompts: body.prompts,
       headed: body.headed === true,
       compare: compareParam(body.compare),
       checkLogin: checkSessionOnce,

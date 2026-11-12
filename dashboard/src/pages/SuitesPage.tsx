@@ -64,13 +64,9 @@ function SuiteTable({ suites }: { suites: SuiteSummary[] }) {
           ),
         },
         {
-          head: 'Steps',
+          head: 'Plans',
           className: 'cell-nowrap',
-          cell: (suite) =>
-            [
-              plural(suite.plans.length, 'plan'),
-              plural(suite.prompts.length, 'prompt'),
-            ].join(' · '),
+          cell: (suite) => plural(suite.plans.length, 'plan'),
         },
         {
           head: `Last run on ${currentEnv.name}`,

@@ -1,9 +1,8 @@
 // Prompt checks: checks Claude does by looking at the site in a browser
 // (`claude -p` with the Playwright MCP), written as a prompt instead of test
-// code. Each is a file in test-plans/prompts/<slug>.md, used by
-//   - test plans: a case whose Steps cell starts with
-//     **Prompt:** [<slug>](prompts/<slug>.md) (see test-plans/README.md, Rule 2);
-//   - suites: their "## Prompts" table (test-suites/README.md).
+// code. Each is a file in test-plans/prompts/<slug>.md, used by a test plan
+// case whose Steps cell starts with **Prompt:** [<slug>](prompts/<slug>.md)
+// (see test-plans/README.md, Rule 2).
 //
 // Shared by the dashboard (dashboard/server/), scripts/check-plans.mjs and
 // scripts/run-prompt.mjs. A prompt file:
