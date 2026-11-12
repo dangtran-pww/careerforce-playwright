@@ -453,18 +453,23 @@ Conventions:
 - `smoke-resume-builder.md` — Status: ready to generate.
 - `smoke-profile.md` — Status: ready to generate.
   Job seeker and admin profile edits.
-- `functional-job-search-search.md` — Status: ready to generate.
+- `functional-job-search-search.md` — Status: implemented.
+  Implemented test: `tests/functional/job-search/search.spec.ts`.
   Job Search part 1: keyword, location formats, distance, empty, SOC and
   hostile input, location suggestions. Prod-safe.
-- `functional-job-search-sort-filters-paging.md` — Status: ready to
-  generate. Part 2: sort orders, Company and City filters (incl. the
-  company cache check), paging, the address, Back/Forward, deep links.
-  Prod-safe.
-- `functional-job-search-posting-accessibility.md` — Status: ready to
-  generate. Part 3: one job on its own, Share, apply link, bad job IDs, the
-  visitor's login dialog, phone width, keyboard, names and headings.
-  Prod-safe.
-- `functional-job-search-logged-in.md` — Status: ready to generate.
-  Part 4: a logged-in job seeker's bookmarks, saved searches, Jobs for me,
-  career goals and region, the log-in hand-off, and privacy. No-prod cases
-  (all but PV-4, PV-5), `jobseeker` login.
+- `functional-job-search-sort-filters-paging.md` — Status: implemented.
+  Implemented tests: `tests/functional/job-search/sort-filters.spec.ts`,
+  `paging-url-state.spec.ts`. Part 2: sort orders, Company and City filters
+  (incl. the company cache check), paging, the address, Back/Forward, deep
+  links. Prod-safe.
+- `functional-job-search-posting-accessibility.md` — Status: implemented.
+  Implemented tests: `tests/functional/job-search/posting.spec.ts`,
+  `responsive.spec.ts`, `accessibility.spec.ts`. Part 3: one job on its own,
+  Share, apply link, bad job IDs, the visitor's login dialog, phone width,
+  keyboard, names and headings. Prod-safe.
+- `functional-job-search-logged-in.md` — Status: partially implemented
+  (every case generated; only PV-5 verified against a live site). Implemented
+  tests: `tests/functional/job-search/logged-in/*.spec.ts`. Part 4: a
+  logged-in job seeker's bookmarks, saved searches, Jobs for me, career goals
+  and region, the log-in hand-off, and privacy. No-prod cases (all but PV-4,
+  PV-5), `jobseeker` login.

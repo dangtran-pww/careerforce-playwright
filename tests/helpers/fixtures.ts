@@ -1,4 +1,4 @@
-import { test as base, expect } from '@playwright/test';
+import { test as base, expect, type Page } from '@playwright/test';
 
 import { isTracking, isWafChallenge } from './blocked-hosts.mjs';
 
@@ -55,21 +55,28 @@ export const test = base.extend<{
     async ({ page, isMobile }, use, testInfo) => {
       await use();
       if (!isMobile || testInfo.status !== testInfo.expectedStatus) return;
-      const { scrollWidth, viewportWidth } = await page.evaluate(() => ({
-        scrollWidth: document.documentElement.scrollWidth,
-        viewportWidth: document.documentElement.clientWidth,
-      }));
-      const culprit =
-        scrollWidth > viewportWidth ? await page.evaluate(widestOverflow) : '';
-      expect(
-        scrollWidth,
-        `Page scrolls sideways on mobile (${page.url()}): ` +
-          `content is ${scrollWidth}px wide on a ${viewportWidth}px screen. ` +
-          `Widest element: ${culprit ?? 'unknown'}`,
-      ).toBeLessThanOrEqual(viewportWidth);
+      await expectNoHorizontalScroll(page);
     },
     { auto: true },
   ],
 });
+
+// The check behind `noHorizontalScroll`, for fixtures that add their own
+// end-of-test checks (tests/functional/job-search/fixtures.ts): they call it
+// before their own, so a failure of theirs doesn't skip it.
+export async function expectNoHorizontalScroll(page: Page) {
+  const { scrollWidth, viewportWidth } = await page.evaluate(() => ({
+    scrollWidth: document.documentElement.scrollWidth,
+    viewportWidth: document.documentElement.clientWidth,
+  }));
+  const culprit =
+    scrollWidth > viewportWidth ? await page.evaluate(widestOverflow) : '';
+  expect(
+    scrollWidth,
+    `Page scrolls sideways on mobile (${page.url()}): ` +
+      `content is ${scrollWidth}px wide on a ${viewportWidth}px screen. ` +
+      `Widest element: ${culprit ?? 'unknown'}`,
+  ).toBeLessThanOrEqual(viewportWidth);
+}
 
 export { expect };
