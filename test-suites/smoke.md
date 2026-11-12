@@ -1,9 +1,9 @@
 # [Suite] - Smoke
 
-The smoke check: every smoke plan, with their prompt cases (such as the
-homepage comparison HP-5). On Production the dashboard skips the no-prod
-plans and leaves out the no-prod cases of the others (see
-[Keeping tests off Production](../test-plans/README.md#keeping-tests-off-production)).
+A quick check after each deploy that the main parts of CareerForce still
+work: the public site and Job Search for visitors, a job seeker's tools,
+profile and resume, and the admin and editor screens (reports, search
+maintenance, blocks, CKEditor, publishing and media).
 
 **Order:** 1
 
@@ -20,9 +20,9 @@ yet" and skipped.
 | smoke-job-search | smoke-desktop, smoke-mobile |
 | smoke-admin-reports | smoke-desktop |
 | smoke-admin-maintenance | smoke-desktop |
-| smoke-block-placement | (default) |
-| smoke-ckeditor | (default) |
-| smoke-content-lifecycle | (default) |
+| smoke-block-placement | smoke-desktop |
+| smoke-ckeditor | smoke-desktop |
+| smoke-content-lifecycle | smoke-desktop |
 | smoke-jobseeker-tools | (default) |
 | smoke-media | (default) |
 | smoke-profile | (default) |

@@ -1,7 +1,7 @@
 # [Smoke] - Block Placement - Test Plan
 
-Status: ready to generate
-Implemented test: —
+Status: implemented
+Implemented test: tests/smoke/block-placement/*.spec.ts
 Prod: No: places a block that every visitor sees.
 
 Devices: desktop only. Admin and editor screens are not tested on a phone (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`).

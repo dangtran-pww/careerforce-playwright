@@ -1,7 +1,7 @@
 # [Smoke] - CKEditor 5 - Test Plan
 
-Status: ready to generate
-Implemented test: —
+Status: implemented
+Implemented test: tests/smoke/ckeditor/*.spec.ts
 Prod: No: creates and deletes test pages.
 
 Devices: desktop only. Admin and editor screens are not tested on a phone (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`).

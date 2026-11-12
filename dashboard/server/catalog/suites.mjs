@@ -51,7 +51,9 @@ function parseSuite(slug, text) {
     .join('\n')
     .split(/\n\s*\n/)
     .map((p) => p.trim())
-    .find((p) => p && !/^\**[A-Z][\w ]+:/.test(p));
+    // Skip option lines such as "**Order:** 1": a one-word label. A
+    // sentence like "The smoke check: …" is the summary.
+    .find((p) => p && !/^\**[A-Z]\w*:/.test(p));
 
   const plans = rows(lines, 'Plans').map(([plan, projects]) => ({
     slug: clean(plan).replace(/`/g, ''),

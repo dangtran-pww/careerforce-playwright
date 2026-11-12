@@ -444,11 +444,14 @@ Conventions:
   `tests/smoke/admin-maintenance/*.spec.ts`. No-prod plan.
   Permissions rebuild, search-api rebuild tracking and reindex, and
   search checks (site, events, appointments, similar events, occupations).
-- `smoke-content-lifecycle.md` — Status: ready to generate.
+- `smoke-content-lifecycle.md` — Status: implemented.
+  Implemented tests: `tests/smoke/content-lifecycle/*.spec.ts`. No-prod plan.
   Publish/unpublish, revisions, translation.
-- `smoke-ckeditor.md` — Status: ready to generate.
+- `smoke-ckeditor.md` — Status: implemented.
+  Implemented tests: `tests/smoke/ckeditor/*.spec.ts`. No-prod plan.
 - `smoke-media.md` — Status: ready to generate.
-- `smoke-block-placement.md` — Status: ready to generate.
+- `smoke-block-placement.md` — Status: implemented.
+  Implemented test: `tests/smoke/block-placement/*.spec.ts`. No-prod plan.
 - `smoke-job-search.md` — Status: partially implemented (SS-1 to SS-3 and
   MD-1 to MD-6 generated but not yet verified against a live site). Implemented tests:
   `tests/smoke/job-search/*.spec.ts`. Search and results, filters and sort

@@ -1611,7 +1611,9 @@ tr.row-below td {
 
 /* A native popover: it sits in the top layer, just under the top bar below
    the Logins button (LoginsMenu.tsx sets --logins-left), and scrolls on its
-   own when the cards don't fit. */
+   own when the cards don't fit. The scrollbar's space is kept even when it
+   isn't needed, so the cards don't reflow when it appears as answers come in
+   (that reflow sometimes left cards drawn on top of each other). */
 .logins-panel {
   position: fixed;
   inset: auto;
@@ -1621,7 +1623,9 @@ tr.row-below td {
   max-height: calc(100vh - var(--topbar-height, 56px) - 24px);
   margin: 0;
   padding: 16px;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
   background: var(--bg);
   color: var(--text);
   border: 1px solid var(--control-border);
