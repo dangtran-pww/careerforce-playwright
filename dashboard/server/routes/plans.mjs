@@ -7,14 +7,22 @@ import { z } from 'zod';
 import { loadPlan, loadPlans } from '../catalog/plans.mjs';
 import { explainCase, savedExplanation } from '../claude/explain.mjs';
 import { latestReview, reviewCase } from '../claude/review.mjs';
-import { envParam, publicEnv } from '../environments.mjs';
+import { compareParam, envParam, publicEnv } from '../environments.mjs';
 import { fromRoot } from '../paths.mjs';
 import { ApiError } from '../errors.mjs';
 import { listRuns } from '../runs/history.mjs';
 import { activeRunId } from '../runs/lifecycle.mjs';
 import { startRun } from '../runs/plan-run.mjs';
 import { openUiMode } from '../ui-mode.mjs';
-import { CASE_ID, SLUG, envField, flag, jsonBody, strings } from './shared.mjs';
+import {
+  CASE_ID,
+  SLUG,
+  compareField,
+  envField,
+  flag,
+  jsonBody,
+  strings,
+} from './shared.mjs';
 
 export const planRoutes = new Hono();
 
@@ -77,6 +85,7 @@ planRoutes.post(
       projects: strings.optional(),
       cases: strings.optional(),
       headed: flag,
+      compare: compareField,
     }),
   ),
   async (c) => {
@@ -87,6 +96,7 @@ planRoutes.post(
       projects: body.projects,
       cases: body.cases ?? [],
       headed: body.headed === true,
+      compare: compareParam(body.compare),
     });
     return c.json(run, 201);
   },

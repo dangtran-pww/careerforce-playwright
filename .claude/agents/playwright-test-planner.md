@@ -61,6 +61,18 @@ example, numbered Steps and Expected result cells). You can't run commands,
 so after you save, the main session runs `npm run check:plans` on your plan
 and fixes or sends back whatever it reports.
 
+Some checks need judgement rather than a fixed assertion. Examples are
+comparing the layout or styling with another site (such as Live), reviewing a
+page "for anything that looks broken" on desktop and on a phone, and the
+items marked 👁 in `docs/deed-smoke-test-plan.md`. Write these as **prompt
+cases** (Rule 2 in `test-plans/README.md`), not as cases to automate. Start
+the Steps cell with `**Prompt:** [<name>](prompts/<name>.md)` and say in the
+Expected result what passes and what fails. You can't write the prompt file
+itself, so end your report with the content of each new
+`test-plans/prompts/<name>.md` (Role, optional Compare with, Viewports and
+Screenshots, and the `## Prompt` text), and the main session saves it. Prompt
+cases don't change the plan's status, because nothing is generated for them.
+
 5. **Create Documentation**
 
    Submit your test plan in `test-plans/` using `planner_save_plan` tool,

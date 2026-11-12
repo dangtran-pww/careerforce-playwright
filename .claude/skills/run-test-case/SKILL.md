@@ -31,6 +31,10 @@ If no ID was given, ask for one and stop.
    - The **Scope** section, for warnings such as "run off-peak", long
      runtimes, or data dependencies.
 
+If the case's Steps cell starts with `**Prompt:** [<name>](prompts/<name>.md)`,
+it is a **prompt case** with no test code. Skip steps 2 to 7 and follow
+"Prompt cases" at the end of this file.
+
 ## 2. Find the test that implements the case
 
 Specs title their tests with the case ID first, for example
@@ -205,3 +209,67 @@ Then list these variants, each built from the same command:
 Repeat any warning from step 3 that applies (for example that a `stage`
 case must never point at production, or that it takes minutes and should run
 off-peak).
+
+## Prompt cases
+
+A prompt case (Rule 2 in `test-plans/README.md`) is run by Claude in a
+browser from its prompt file, `test-plans/prompts/<name>.md`, with
+`scripts/run-prompt.mjs`. It gives a verdict (pass, fail or unsure), findings
+and screenshots.
+
+1. Read the prompt file. Note its **Role**, **Compare with** and
+   **Viewports**, and what the prompt asks for.
+2. Apply the no-prod rule from step 3. Map the target URL to an environment
+   id: `qa`, `stage`, `prod`, `sandbox` or `local` (see
+   `tests/helpers/environments.mts`).
+3. If the prompt compares (`Compare with` is anything but `none`), ask with
+   AskUserQuestion which site to compare with. Offer the environment's
+   default first (QA → Stage, Stage → Production, Production → the baseline,
+   which is the screenshots of its last run there), then the other
+   environments and `baseline`. On Production, explain the baseline: run it
+   before the deploy and again after it, and the second run reports what
+   changed. A first run with no baseline only reviews the page.
+4. If the role is not anonymous, check its session as in step 4.
+5. Show the command, then run it. It takes several minutes, so give the Bash
+   call a timeout of 20 minutes or run it in the background. It needs the
+   network and starts `claude`, so if the sandbox blocks it, run it outside
+   the sandbox.
+
+   ```bash
+   npm run prompt -- <ID> --env <env-id> [--compare <env-id|baseline>]
+   ```
+
+   Leave out `--compare` for the default. The exit code is 0 for pass, 1 for
+   fail and 2 for unsure or no verdict. The output ends with the verdict,
+   the findings, each screenshot path and the `result.json` path.
+6. Read `result.json` and look at the key screenshots (Read them) before you
+   describe them.
+
+Report in this shape:
+
+```markdown
+## <ID> — <title>: PASSED | FAILED | UNSURE
+
+**Plan:** test-plans/<plan>.md · **Prompt:** test-plans/prompts/<name>.md
+**Environment:** <BASE_URL> · **Compared with:** <site and URL | baseline from <run> | no baseline, review only>
+**Viewports:** <e.g. desktop 1280×800, phone 390×844> · **Claude:** <turns> turns, $<cost>
+
+### What Claude did
+1. <In plain words, from the prompt and Claude's findings: which pages, which
+   viewports, which sites>
+
+### Result
+<Claude's summary. Then each finding: Problem or Note, the viewport, the
+text, and the screenshot file that shows it.>
+
+### Screenshots
+<Paths under reports/prompt-runs/<run>/screenshots/, paired by viewport and
+site.>
+
+### Run it yourself
+npm run prompt -- <ID> --env <env-id> [--compare …]
+```
+
+A verdict is Claude's judgement, not a fixed check. When it fails, say what
+looks wrong and on which site and viewport, and suggest that the user look at
+the screenshots before they file a bug.

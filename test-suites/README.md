@@ -4,7 +4,9 @@ A suite is one run made of several steps, started from the test dashboard
 (`npm run dashboard` → **Suites**). The steps run one after another on the
 environment picked in the dashboard's header:
 
-1. **Plans:** test plans from `test-plans/`, run with Playwright.
+1. **Plans:** test plans from `test-plans/`, run with Playwright. A plan's
+   prompt cases ([Rule 2](../test-plans/README.md#rule-2-prompt-cases)) run
+   after its tests.
 2. **Prompts:** checks Claude does by looking at the site in a browser
    (`claude -p` with the Playwright MCP). Each one ends with a verdict: pass,
    fail or unsure, with a summary, findings and screenshots.
@@ -14,8 +16,8 @@ environment picked in the dashboard's header:
 `jobseeker-registration.md`, `resume-builder.md`, `events.md` and
 `appointments.md` are placeholders with
 no steps yet. Add a suite by adding a `.md`
-file here. Each prompt is its own file in `prompts/`, so several suites can
-share one. The dashboard reads both the next time the Suites page loads.
+file here. Each prompt is its own file in `test-plans/prompts/`, shared with
+the plans' prompt cases, so several suites and plans can use one. The dashboard reads both the next time the Suites page loads.
 
 ## Format
 
@@ -37,8 +39,8 @@ One paragraph saying what the suite is for. The dashboard shows it.
 
 | ID | Prompt |
 |---|---|
-| PR-1 | [homepage-layout](prompts/homepage-layout.md) |
-| PR-2 | [admin-content-list](prompts/admin-content-list.md) |
+| PR-1 | [main-menu-landing-pages](../test-plans/prompts/main-menu-landing-pages.md) |
+| PR-2 | [admin-content-list](../test-plans/prompts/admin-content-list.md) |
 ```
 
 Any section can be left out. Text between a heading and its table is for
@@ -65,9 +67,10 @@ reads the plans. See
 ### Prompts
 
 `ID` is the check's ID in this suite. `Prompt` is the prompt file in
-`prompts/`: a link to it as above, or just its name (`homepage-layout`). A
-missing file, or one without a `## Prompt` section, is listed as a problem
-and the check is left out.
+`test-plans/prompts/`: a link to it as above, or just its name
+(`admin-content-list`). A missing file, or one with a problem (no
+`## Prompt` section, a field that can't be read), is listed as a problem and
+the check is left out.
 
 A prompt file looks like this:
 
@@ -88,12 +91,17 @@ anything.
 - The `#` heading is the check's name on the dashboard.
 - `Role` is `anonymous` or a role with a saved login (`admin`, `jobseeker`,
   ...).
+- `Compare with`, `Viewports` and `Screenshots` are optional. They let a
+  check compare the site with another environment, or with its own last run,
+  at several sizes. See
+  [Rule 2: Prompt cases](../test-plans/README.md#rule-2-prompt-cases).
 - Everything under `## Prompt` (up to the next `##` heading) is sent to
   Claude as written, so it can run over several lines and use lists. Write
   it as one check with a clear pass/fail, the way you'd ask a tester: what
   to open, what must be there, and what must not happen.
 
-How a prompt runs (`dashboard/server/runs/suite-run.mjs`):
+How a prompt runs (`dashboard/server/runs/prompt.mjs`, shared by suite runs,
+plan runs and `npm run prompt`):
 
 - Claude Code runs headless with only the Playwright MCP's browser tools. It
   can't run commands or edit files. It is told to stay read-only (no forms
@@ -107,6 +115,8 @@ How a prompt runs (`dashboard/server/runs/suite-run.mjs`):
 - Each prompt costs Claude usage, shown on the run page. Set
   `PROMPT_MODEL=sonnet` (or `haiku`) in `.env` for a cheaper model. A prompt
   that runs longer than 6 minutes is stopped (`PROMPT_TIMEOUT_MS`), as is one
-  that goes past 40 turns (`PROMPT_MAX_TURNS`).
+  that goes past 40 turns (`PROMPT_MAX_TURNS`). A prompt that compares gets
+  15 minutes and 100 turns (`PROMPT_COMPARE_TIMEOUT_MS`,
+  `PROMPT_COMPARE_MAX_TURNS`).
 - `claude` must be installed and logged in on the machine running the
   dashboard.

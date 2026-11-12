@@ -31,5 +31,5 @@ saves, bookmarks and cleans up, is run by hand from
 
 | ID | Prompt |
 |---|---|
-| PR-1 | [job-search-jobseeker-tools](prompts/job-search-jobseeker-tools.md) |
-| PR-2 | [job-search-jobs-for-me](prompts/job-search-jobs-for-me.md) |
+| PR-1 | [job-search-jobseeker-tools](../test-plans/prompts/job-search-jobseeker-tools.md) |
+| PR-2 | [job-search-jobs-for-me](../test-plans/prompts/job-search-jobs-for-me.md) |

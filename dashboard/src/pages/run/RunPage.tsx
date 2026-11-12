@@ -3,6 +3,8 @@ import { useParams } from 'react-router';
 import type { Run } from '../../api/types';
 import { ErrorBox, Loading } from '../../components/Callouts';
 import { BackLink } from '../../components/PageTitle';
+import { PromptCases } from '../../components/PromptCases';
+import { RunSummary } from '../../components/RunSummary';
 import { SuiteSteps } from '../../components/SuiteSteps';
 import { TestResults } from '../../components/TestResults';
 import { CasePanelContext, type ShownCase } from '../../hooks/useCasePanel';
@@ -70,16 +72,39 @@ export function RunPage() {
 }
 
 function RunResults({ run }: { run: Run }) {
-  if (run.kind === 'suite') return <SuiteSteps run={run} />;
+  if (run.kind === 'suite')
+    return (
+      <>
+        {run.status !== 'running' &&
+          run.steps?.some((s) => s.kind === 'plan' && s.stats) && (
+            <RunSummary runId={run.id} />
+          )}
+        <SuiteSteps run={run} />
+      </>
+    );
+  return (
+    <>
+      <RunTests run={run} />
+      {!!run.prompts?.length && <PromptCases prompts={run.prompts} />}
+    </>
+  );
+}
+
+// A plan run's Playwright results (none when only prompt cases ran).
+function RunTests({ run }: { run: Run }) {
+  if (run.command === null) return null;
   if (run.stats)
     return (
-      <TestResults
-        runId={run.id}
-        planSlug={run.plan}
-        stats={run.stats}
-        results={run.results}
-        errors={run.errors}
-      />
+      <>
+        {run.status !== 'running' && <RunSummary runId={run.id} />}
+        <TestResults
+          runId={run.id}
+          planSlug={run.plan}
+          stats={run.stats}
+          results={run.results}
+          errors={run.errors}
+        />
+      </>
     );
   if (run.status === 'error')
     return (

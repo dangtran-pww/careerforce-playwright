@@ -8,35 +8,26 @@
 //   run.json                 kind "suite", env and the steps
 //   output.log               every step's output
 //   steps/<n>-<step>/        one folder per step:
-//     plan:    results.json, report/, test-results/
+//     plan:    results.json, report/, test-results/, and prompts/<case>/
+//              for the plan's prompt cases
 //     prompt:  mcp.json, stream.jsonl (Claude's own log), screenshots/
+//              (see prompt.mjs)
 
-import { createWriteStream } from 'node:fs';
-import { mkdir, readdir, writeFile } from 'node:fs/promises';
-import { join, relative, resolve } from 'node:path';
-import { authFile, hostOf } from '../../../scripts/lib/site.mjs';
+import { join } from 'node:path';
+import { hostOf } from '../../../scripts/lib/site.mjs';
 import { allNoProd, loadPlan } from '../catalog/plans.mjs';
-import {
-  CLAUDE,
-  NOT_STARTED,
-  answerOf,
-  claudeArgs,
-  stoppedReason,
-} from '../claude/run.mjs';
 import { publicEnv } from '../environments.mjs';
 import { ApiError } from '../errors.mjs';
-import { RUNS_DIR } from '../paths.mjs';
 import {
   beginRun,
   endRun,
   isStopped,
-  killChild,
   launch,
   log,
   newRunId,
   save,
-  spawnStep,
 } from './lifecycle.mjs';
+import { combinedStatus } from './plan-run.mjs';
 import {
   checkPlanRunnable,
   planArgs,
@@ -44,25 +35,23 @@ import {
   runPlaywright,
   shownCommand,
 } from './playwright.mjs';
-
-// A prompt that takes longer than this is stopped and marked as an error.
-const PROMPT_TIMEOUT_MS = Number(process.env.PROMPT_TIMEOUT_MS ?? 6 * 60_000);
-const PROMPT_MAX_TURNS = process.env.PROMPT_MAX_TURNS ?? '40';
-// PROMPT_MODEL (e.g. sonnet, haiku) picks a cheaper model than your default.
-const PROMPT_MODEL = process.env.PROMPT_MODEL;
-
-const relRun = (path) => relative(resolve(RUNS_DIR), resolve(path));
+import {
+  promptCaseEntries,
+  promptsStatus,
+  runCheckInRun,
+  runPromptCases,
+} from './prompt-step.mjs';
 
 // ---- starting --------------------------------------------------------------
 
 /**
  * Start a suite run. `choice` says which steps to run:
- * { env, plans: [slug], prompts: [id], headed, checkLogin }.
+ * { env, plans: [slug], prompts: [id], headed, compare, checkLogin }.
  * Leaving `plans` / `prompts` out runs all of them. `checkLogin(role, env)`
  * resolves to a session check ({ role, status, message, loginCommand }).
  */
 export async function startSuiteRun(suite, choice) {
-  const { env, headed = false, checkLogin } = choice;
+  const { env, headed = false, compare, checkLogin } = choice;
   const pick = (all, chosen, key) =>
     chosen ? all.filter((x) => chosen.includes(x[key])) : all;
 
@@ -103,8 +92,11 @@ export async function startSuiteRun(suite, choice) {
   // same). A missing, expired or non-admin session stops the run before
   // anything starts, with what to do for each one.
   const needed = new Set();
-  for (const { plan } of planSteps)
+  for (const { plan } of planSteps) {
     for (const role of plan?.roles ?? []) needed.add(role);
+    for (const c of plan ? promptCaseEntries(plan, env) : [])
+      if (c.role) needed.add(c.role);
+  }
   for (const p of prompts) if (p.role) needed.add(p.role);
   const logins = await Promise.all(
     [...needed].map((role) => checkLogin(role, env)),
@@ -137,8 +129,10 @@ export async function startSuiteRun(suite, choice) {
       title: plan ? `${plan.type} - ${plan.name}` : (entry.name ?? entry.slug),
       plan: entry.slug,
       projects: plan
-        ? planArgs(plan, { env, projects: entry.projects }).projects
+        ? (planArgs(plan, { env, projects: entry.projects })?.projects ?? [])
         : [],
+      // The plan's prompt cases, run after its tests.
+      prompts: plan ? promptCaseEntries(plan, env) : [],
       skipReason: !entry.found
         ? 'Not in test-plans/.'
         : plan
@@ -151,9 +145,11 @@ export async function startSuiteRun(suite, choice) {
       id: p.id,
       kind: 'prompt',
       title: `${p.id}: ${p.name}`,
+      slug: p.slug,
       file: p.file,
       prompt: p.prompt,
       role: p.role,
+      viewports: p.viewports,
     });
   for (const step of steps) step.dir = `steps/${step.n}-${step.id}`;
 
@@ -166,6 +162,7 @@ export async function startSuiteRun(suite, choice) {
     env: publicEnv(env),
     site: hostOf(env),
     headed,
+    compare: compare ?? null,
     // Kept for the runs table, which lists projects and cases.
     projects: [],
     cases: [],
@@ -176,13 +173,15 @@ export async function startSuiteRun(suite, choice) {
   };
   const dir = await beginRun(meta);
 
-  launch(meta, () => run(meta, dir, { planSteps, env, headed }));
+  launch(meta, () =>
+    run(meta, dir, { planSteps, prompts, env, headed, compare }),
+  );
   return meta;
 }
 
 // ---- running ---------------------------------------------------------------
 
-async function run(meta, dir, { planSteps, env, headed }) {
+async function run(meta, dir, { planSteps, prompts, env, headed, compare }) {
   for (const step of meta.steps) {
     if (isStopped()) {
       step.status = 'skipped';
@@ -203,9 +202,15 @@ async function run(meta, dir, { planSteps, env, headed }) {
     try {
       if (step.kind === 'plan') {
         const { plan } = planSteps.find((p) => p.entry.slug === step.plan);
-        await planStep(step, stepDir, plan, env, headed);
+        await planStep(step, stepDir, plan, { env, headed, compare, meta });
       } else {
-        await promptStep(step, stepDir, env);
+        const check = prompts.find((p) => p.id === step.id);
+        await runCheckInRun(step, check, {
+          env,
+          compareChoice: compare,
+          dir: stepDir,
+          meta,
+        });
       }
     } catch (err) {
       step.status = 'error';
@@ -229,200 +234,29 @@ function suiteStatus(meta) {
   return s.every((x) => x === 'skipped') ? 'error' : 'passed';
 }
 
-async function planStep(step, stepDir, plan, env, headed) {
-  const { args } = planArgs(plan, { env, projects: step.projects, headed });
-  step.command = shownCommand(env, ['playwright', 'test', ...args]);
-  const result = await runPlaywright({
-    dir: stepDir,
-    env,
-    args,
-    progress: step,
-  });
-  Object.assign(step, result.summary ?? {});
-  step.exitCode = result.code;
-  step.status = playwrightStatus(result);
-}
-
-// ---- prompts (Claude in a browser) -----------------------------------------
-
-const MCP = 'mcp__playwright-test__';
-// Looking and clicking only: no file writes, no test generation, no
-// arbitrary code (so no browser_evaluate: page JS could send requests that
-// change data with the session's login).
-const PROMPT_TOOLS = [
-  'planner_setup_page',
-  'browser_navigate',
-  'browser_navigate_back',
-  'browser_snapshot',
-  'browser_take_screenshot',
-  'browser_click',
-  'browser_hover',
-  'browser_type',
-  'browser_press_key',
-  'browser_select_option',
-  'browser_wait_for',
-  'browser_resize',
-  'browser_tabs',
-  'browser_console_messages',
-  'browser_network_requests',
-].map((t) => MCP + t);
-
-const VERDICT_SCHEMA = {
-  type: 'object',
-  properties: {
-    verdict: { type: 'string', enum: ['pass', 'fail', 'unsure'] },
-    summary: {
-      type: 'string',
-      description: 'One or two sentences: what was checked and the outcome.',
-    },
-    findings: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          severity: { type: 'string', enum: ['problem', 'note'] },
-          text: { type: 'string' },
-          screenshot: {
-            type: 'string',
-            description: 'File name of the screenshot that shows it, if any.',
-          },
-        },
-        required: ['severity', 'text'],
-      },
-    },
-  },
-  required: ['verdict', 'summary', 'findings'],
-};
-
-function wrapPrompt(step, env, shotsDir) {
-  const who = step.role
-    ? `logged in as ${step.role}`
-    : 'as an anonymous visitor';
-  return `You are doing one check of a smoke test of the CareerForce website at ${env.baseURL} (${env.name} environment), ${who}.
-
-Setup: first call planner_setup_page with project "seed" and seedFile "tests/seed.spec.ts". That opens a browser on the site${step.role ? `, already logged in as ${step.role}` : ''}. Then use the browser tools. Paths such as /user/login are on ${env.baseURL}.
-
-Rules:
-- Read-only. Do not submit forms that create, change or delete anything, do not log out, and do not change any setting. Searching and opening pages is fine.
-- Take a screenshot of what you check with browser_take_screenshot (scale "css"), saving it as "${shotsDir}/<two-digit number>-<short-name>.png". Take at least 1 and at most 6.
-- Judge only what the check asks. Verdict "fail" when something it asks about is missing, broken or shows an error; "unsure" when you couldn't tell (the page didn't load, you were blocked). Name the screenshot that shows each finding.
-
-The check:
-${step.prompt}`;
-}
-
-// One line of Claude's stream, as a short line for the run's output.
-function describe(event) {
-  if (event.type !== 'assistant') return '';
-  return (event.message?.content ?? [])
-    .map((part) => {
-      if (part.type === 'text' && part.text.trim())
-        return `  ${part.text.trim().replace(/\n+/g, '\n  ')}\n`;
-      if (part.type === 'tool_use') {
-        const input = JSON.stringify(part.input ?? {});
-        return `  → ${part.name.replace(MCP, '')} ${input.length > 140 ? `${input.slice(0, 137)}…` : input}\n`;
-      }
-      return '';
-    })
-    .join('');
-}
-
-async function promptStep(step, stepDir, env) {
-  const shotsDir = join(stepDir, 'screenshots');
-  await mkdir(shotsDir, { recursive: true });
-  const mcpConfig = join(stepDir, 'mcp.json');
-  const serverEnv = {
-    BASE_URL: env.baseURL,
-    SEED_STORAGE_STATE: step.role ? resolve(authFile(step.role, env)) : '',
-  };
-  await writeFile(
-    mcpConfig,
-    JSON.stringify(
-      {
-        mcpServers: {
-          'playwright-test': {
-            command: 'npx',
-            args: ['playwright', 'run-test-mcp-server'],
-            env: serverEnv,
-          },
-        },
-      },
-      null,
-      2,
-    ),
-  );
-
-  // One stream, so the lines stay in order.
-  const stream = createWriteStream(join(stepDir, 'stream.jsonl'));
-  stream.on('error', () => {}); // Claude's own log only; never fails the step
-  let buffer = '';
-  let result = null;
-  const onStdout = (text) => {
-    buffer += text;
-    const lines = buffer.split('\n');
-    buffer = lines.pop();
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      stream.write(`${line}\n`);
-      let event;
-      try {
-        event = JSON.parse(line);
-      } catch {
-        log(`${line}\n`);
-        continue;
-      }
-      if (event.type === 'result') result = event;
-      else log(describe(event));
-    }
-  };
-
-  const timer = setTimeout(() => {
-    log(
-      `\n[dashboard] The prompt took longer than ${PROMPT_TIMEOUT_MS / 60000} minutes. Stopping it.\n`,
-    );
-    step.timedOut = true;
-    killChild();
-  }, PROMPT_TIMEOUT_MS);
-  const { code } = await spawnStep(
-    CLAUDE,
-    claudeArgs(wrapPrompt(step, env, resolve(shotsDir)), VERDICT_SCHEMA, {
-      tools: PROMPT_TOOLS,
-      maxTurns: PROMPT_MAX_TURNS,
-      model: PROMPT_MODEL,
-      stream: true,
-      mcpConfig,
-    }),
-    { env: serverEnv, onStdout },
-  ).finally(() => clearTimeout(timer));
-  if (buffer.trim()) onStdout('\n');
-  await new Promise((done) => stream.end(done));
-
-  step.exitCode = code;
-  step.costUsd = result?.total_cost_usd ?? null;
-  step.turns = result?.num_turns ?? null;
-  const verdict = answerOf(result);
-  step.screenshots = (await readdir(shotsDir).catch(() => []))
-    .filter((f) => /\.(png|jpe?g|webp)$/i.test(f))
-    .sort()
-    .map((f) => relRun(join(shotsDir, f)));
-
-  if (verdict?.verdict) {
-    step.verdict = verdict.verdict;
-    step.summary = verdict.summary;
-    step.findings = verdict.findings ?? [];
-    step.status =
-      verdict.verdict === 'pass'
-        ? 'passed'
-        : verdict.verdict === 'fail'
-          ? 'failed'
-          : 'unsure';
-  } else {
-    step.status = isStopped() ? 'stopped' : 'error';
-    step.error = step.timedOut
-      ? 'Timed out before giving a verdict.'
-      : (stoppedReason(result) ??
-        (code === null
-          ? NOT_STARTED
-          : `Claude finished without a verdict (exit code ${code}).`));
+// A plan: Playwright for its tests (if it has any), then its prompt cases.
+async function planStep(step, stepDir, plan, { env, headed, compare, meta }) {
+  const chosen = planArgs(plan, { env, projects: step.projects, headed });
+  let testStatus = null;
+  if (chosen) {
+    step.command = shownCommand(env, ['playwright', 'test', ...chosen.args]);
+    const result = await runPlaywright({
+      dir: stepDir,
+      env,
+      args: chosen.args,
+      progress: step,
+    });
+    Object.assign(step, result.summary ?? {});
+    step.exitCode = result.code;
+    testStatus = playwrightStatus(result);
   }
+  await runPromptCases(step.prompts, plan, {
+    env,
+    compareChoice: compare,
+    dir: stepDir,
+    meta,
+  });
+  const status = combinedStatus(testStatus, promptsStatus(step.prompts));
+  // A step that needs a look is "unsure", like a prompt step.
+  step.status = status === 'attention' ? 'unsure' : status;
 }

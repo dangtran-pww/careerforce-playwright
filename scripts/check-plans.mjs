@@ -8,8 +8,9 @@
 // Adding a rule: write it up in the README, then add { id, name, check } to
 // RULES. `check` gets one plan (see readPlan) and returns problems as
 // { line, caseId?, message }.
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { PROMPTS_DIR, parsePrompt, promptSlugInCell } from './lib/prompts.mjs';
 
 // ---- Reading a plan --------------------------------------------------------
 
@@ -99,6 +100,34 @@ const RULES = [
           add(
             `${s.count} steps but ${e.count} expected items. Match them by step, or say which step the checks follow ("After step 2, …").`,
           );
+      }
+      return problems;
+    },
+  },
+  {
+    id: 2,
+    name: 'Prompt cases',
+    check(plan) {
+      const problems = [];
+      for (const c of plan.cases) {
+        const steps = c.cells['Steps'];
+        if (steps === undefined) continue;
+        const add = (message) => problems.push({ line: c.line, caseId: c.id, message });
+        const slug = promptSlugInCell(steps);
+        if (slug === null) {
+          if (/\*\*Prompt:\*\*/i.test(steps))
+            add('Steps: put "**Prompt:** [<name>](prompts/<name>.md)" at the start of the cell.');
+          continue;
+        }
+        if (!/^\s*\*\*Prompt:\*\*\s*\[[\w-]+\]\(prompts\/[\w-]+\.md\)/i.test(steps))
+          add(`Steps: link the prompt file as "**Prompt:** [${slug || '<name>'}](prompts/${slug || '<name>'}.md)".`);
+        const file = join(PROMPTS_DIR, `${slug}.md`);
+        if (!slug || !existsSync(file)) {
+          add(`No prompt file ${file}.`);
+          continue;
+        }
+        for (const problem of parsePrompt(slug, readFileSync(file, 'utf8')).problems)
+          add(`${file}: ${problem}`);
       }
       return problems;
     },

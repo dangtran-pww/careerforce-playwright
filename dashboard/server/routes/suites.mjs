@@ -4,13 +4,20 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { loadSuite, loadSuites } from '../catalog/suites.mjs';
-import { envParam, publicEnv } from '../environments.mjs';
+import { compareParam, envParam, publicEnv } from '../environments.mjs';
 import { ApiError } from '../errors.mjs';
 import { listRuns } from '../runs/history.mjs';
 import { activeRunId } from '../runs/lifecycle.mjs';
 import { startSuiteRun } from '../runs/suite-run.mjs';
 import { checkSessionOnce } from '../sessions.mjs';
-import { SLUG, envField, flag, jsonBody, strings } from './shared.mjs';
+import {
+  SLUG,
+  compareField,
+  envField,
+  flag,
+  jsonBody,
+  strings,
+} from './shared.mjs';
 
 export const suiteRoutes = new Hono();
 
@@ -58,6 +65,7 @@ suiteRoutes.post(
       plans: strings.optional(),
       prompts: strings.optional(),
       headed: flag,
+      compare: compareField,
     }),
   ),
   async (c) => {
@@ -68,6 +76,7 @@ suiteRoutes.post(
       plans: body.plans,
       prompts: body.prompts,
       headed: body.headed === true,
+      compare: compareParam(body.compare),
       checkLogin: checkSessionOnce,
     });
     return c.json(run, 201);

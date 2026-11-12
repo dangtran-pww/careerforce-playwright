@@ -1,40 +1,47 @@
 import type { Dispatch, SetStateAction } from 'react';
-import type { Plan } from '../../api/types';
+import type { Plan, PlanCase } from '../../api/types';
 import { CaseDetails } from '../../components/CaseDetails';
 import { CaseProjects } from '../../components/CaseProjects';
 import { NoProdBadge, otherTags } from '../../components/NoProdBadge';
-import { PlanRunButton } from '../../components/PlanRunButton';
-import { Table, VisuallyHidden } from '../../components/Table';
+import { Table } from '../../components/Table';
 import { Tags } from '../../components/Tags';
 import { useEnv } from '../../hooks/useEnv';
-import { toggled } from '../../lib/sets';
-import { planCommand, runBody, type PlanChoice } from './choice';
+import { runColumn, selectColumn } from './caseColumns';
+import { planCommand, type PlanChoice } from './choice';
 
 interface Props {
   plan: Plan;
+  cases: PlanCase[]; // the plan's test cases (not its prompt cases)
   choice: PlanChoice;
   setChoice: Dispatch<SetStateAction<PlanChoice>>;
   activeRun: string | null;
 }
 
-// The plan's cases; each opens to show its steps, expected result and the
-// command that runs it on its own (with the projects and headed choice from
-// the run panel). When the plan has tests, each case can be ticked (to run
-// only the ticked ones) or run on its own.
-export function CasesTable({ plan, choice, setChoice, activeRun }: Props) {
+// The plan's test cases; each opens to show its steps, expected result and
+// the command that runs it on its own (with the projects and headed choice
+// from the run panel). When the plan has tests, each case can be ticked (to
+// run only the ticked ones) or run on its own. Prompt cases have their own
+// table (PromptCasesTable).
+export function CasesTable({
+  plan,
+  cases,
+  choice,
+  setChoice,
+  activeRun,
+}: Props) {
   const { currentEnv } = useEnv();
-  const runnable = plan.runnable;
+  const hasTests = plan.hasTests ?? plan.runnable;
 
   return (
     <Table
-      rows={plan.cases}
+      rows={cases}
       rowKey={(c) => c.id}
       expand={(c) => (
         <CaseDetails
           planSlug={plan.slug}
           testCase={c}
           command={
-            runnable && c.testCount > 0
+            hasTests && c.testCount > 0
               ? planCommand(
                   plan,
                   { ...choice, cases: new Set([c.id]) },
@@ -46,24 +53,7 @@ export function CasesTable({ plan, choice, setChoice, activeRun }: Props) {
       )}
       expandLabel={(c) => `Details of ${c.id}`}
       columns={[
-        runnable && {
-          head: <VisuallyHidden>Select</VisuallyHidden>,
-          cell: (c) => (
-            <input
-              type="checkbox"
-              name="case"
-              aria-label={`Select ${c.id}`}
-              disabled={!c.testCount}
-              checked={choice.cases.has(c.id)}
-              onChange={(e) =>
-                setChoice((ch) => ({
-                  ...ch,
-                  cases: toggled(ch.cases, c.id, e.target.checked),
-                }))
-              }
-            />
-          ),
-        },
+        hasTests && selectColumn(choice, setChoice),
         { head: 'ID', className: 'mono', cell: (c) => c.id },
         {
           head: 'Case',
@@ -75,37 +65,16 @@ export function CasesTable({ plan, choice, setChoice, activeRun }: Props) {
             </>
           ),
         },
-        runnable && {
+        hasTests && {
           head: 'Projects',
           cell: (c) => <CaseProjects testCase={c} />,
         },
-        runnable && {
+        hasTests && {
           head: 'Tests',
           className: (c) => (c.testCount ? undefined : 'note'),
           cell: (c) => c.testCount || 'none',
         },
-        runnable && {
-          head: <VisuallyHidden>Actions</VisuallyHidden>,
-          className: 'cell-action',
-          cell: (c) =>
-            c.testCount > 0 && (
-              <PlanRunButton
-                plan={plan}
-                body={runBody(choice, [c.id])}
-                className="ghost"
-                disabled={
-                  Boolean(activeRun) || (currentEnv.production && c.noProd)
-                }
-                title={
-                  currentEnv.production && c.noProd
-                    ? `${c.id} is no-prod, so it never runs on Production`
-                    : undefined
-                }
-              >
-                Run
-              </PlanRunButton>
-            ),
-        },
+        hasTests && runColumn(plan, choice, currentEnv, activeRun),
       ]}
     />
   );

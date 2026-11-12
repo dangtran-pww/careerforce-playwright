@@ -183,7 +183,7 @@ async function generate(runId, ref, refresh) {
 }
 
 // The plan case whose tests include this one, for what it should check.
-async function caseOf(planSlug, file, line) {
+export async function caseOf(planSlug, file, line) {
   const plan = planSlug && (await loadPlan(planSlug).catch(() => null));
   const testCase = plan?.cases.find((c) =>
     c.locations?.some(
@@ -201,7 +201,7 @@ const here = (path) => relative(process.cwd(), path);
 
 // The titles of the steps down to the one that failed, e.g.
 // ["Upcoming Training Programs lists items"].
-function failedStepPath(steps = []) {
+export function failedStepPath(steps = []) {
   for (const s of steps) {
     if (!s.error) continue;
     return [s.title, ...failedStepPath(s.steps)];

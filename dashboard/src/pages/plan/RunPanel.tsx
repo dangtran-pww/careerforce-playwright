@@ -6,7 +6,8 @@ import { useEnv } from '../../hooks/useEnv';
 import { plural } from '../../lib/format';
 import { offProdReason } from '../../lib/prod';
 import { toggled } from '../../lib/sets';
-import { planCommand, runBody, type PlanChoice } from './choice';
+import { comparesSites, planCommand, runBody, type PlanChoice } from './choice';
+import { CompareWith } from './CompareWith';
 
 interface Props {
   plan: Plan;
@@ -24,6 +25,10 @@ export function RunPanel({ plan, choice, setChoice, activeRun }: Props) {
     ? offProdReason(plan, [...choice.cases])
     : null;
   const noProd = plan.noProdCases;
+  const promptCases = new Set(plan.promptCases ?? []);
+  // Only prompt cases picked: no Playwright run, so no project is needed.
+  const promptsOnly =
+    n > 0 && [...choice.cases].every((id) => promptCases.has(id));
 
   return (
     <section className="card" aria-labelledby="run-heading">
@@ -69,6 +74,18 @@ export function RunPanel({ plan, choice, setChoice, activeRun }: Props) {
           </label>
         ))}
       </fieldset>
+      {comparesSites(plan) && (
+        <CompareWith
+          value={choice.compare}
+          onChange={(compare) => setChoice((c) => ({ ...c, compare }))}
+        />
+      )}
+      {promptCases.size > 0 && (
+        <p className="note">
+          Prompt cases ({[...promptCases].join(', ')}) are checked by Claude
+          after the tests, and cost Claude usage.
+        </p>
+      )}
       <label className="check">
         <input
           type="checkbox"
@@ -101,7 +118,9 @@ export function RunPanel({ plan, choice, setChoice, activeRun }: Props) {
           plan={plan}
           body={runBody(choice)}
           disabled={
-            Boolean(activeRun) || Boolean(blocked) || choice.projects.size === 0
+            Boolean(activeRun) ||
+            Boolean(blocked) ||
+            (choice.projects.size === 0 && !promptsOnly)
           }
           title={blocked ?? undefined}
         >

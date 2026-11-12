@@ -18,9 +18,12 @@ export const fromRoot = (...parts) => join(ROOT, ...parts);
 
 export const PLANS_DIR = 'test-plans';
 export const SUITES_DIR = 'test-suites';
-export const PROMPTS_DIR = join(SUITES_DIR, 'prompts');
+// Prompt checks, used by plan cases and suites; see scripts/lib/prompts.mjs.
+export { PROMPTS_DIR } from '../../scripts/lib/prompts.mjs';
 // One folder per dashboard run (gitignored); see runs/lifecycle.mjs.
 export const RUNS_DIR = join('reports', 'dashboard-runs');
+// One folder per prompt check run by scripts/run-prompt.mjs (gitignored).
+export const PROMPT_RUNS_DIR = join('reports', 'prompt-runs');
 // Saved explanations of plan cases (gitignored); see claude/explain.mjs.
 export const EXPLANATIONS_DIR = join('reports', 'explanations');
 export const APP_DIST_DIR = join('dashboard', 'dist');

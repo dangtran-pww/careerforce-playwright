@@ -40,6 +40,7 @@
         "test:ui": "playwright test --ui",
         "format": "prettier --write \"**/*.{ts,md}\"",
         "check:plans": "node scripts/check-plans.mjs",
+        "prompt": "node scripts/run-prompt.mjs",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
         "typecheck": "tsc --noEmit && tsc --noEmit -p dashboard"

@@ -31,6 +31,10 @@ Test plans for this project live in `test-plans/`. Before generating a test:
   list. Do not edit the plan file yourself — you do not have an edit
   tool; the caller applies that status change.
 
+Skip prompt cases: cases whose Steps cell starts with
+`**Prompt:** [<name>](prompts/<name>.md)` (Rule 2 in `test-plans/README.md`).
+Claude runs them from their prompt file, so they never get test code.
+
 # For each test you generate
 - Obtain the test plan with all the steps and verification specification
 - Run the `generator_setup_page` tool to set up page for the scenario

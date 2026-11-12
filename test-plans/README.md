@@ -103,6 +103,9 @@ waiting and what is covered.
 The status answers one question: does the test file currently match this
 plan? If not, what kind of work is needed to make it match again?
 
+A [prompt case](#rule-2-prompt-cases) has no test code. It matches the plan
+once its prompt file exists, so adding one doesn't change the plan's status.
+
 - `ready to generate` — no test script exists yet. The plan is ready for
   Claude or a developer to turn into a test script. Adding cases to a plan
   in this status changes nothing — it stays ready to generate.
@@ -165,6 +168,7 @@ the script if it can be checked automatically.
 | # | Rule | Checked by script |
 |---|---|---|
 | 1 | [Steps and Expected result cells](#rule-1-steps-and-expected-result-cells) | Yes |
+| 2 | [Prompt cases](#rule-2-prompt-cases) | Yes |
 
 ### Rule 1: Steps and Expected result cells
 
@@ -188,6 +192,80 @@ shows them as numbered lists. [smoke-job-search.md](smoke-job-search.md) and
 
 The script reports number gaps, cells with several sentences and no
 numbers, and numbered Steps and Expected results whose counts differ.
+
+### Rule 2: Prompt cases
+
+Some checks need judgement, not a fixed assertion: "review the homepage for
+layout problems, side by side with Live, on desktop and on a phone". Write
+these as a **prompt case**. It has no test code. Claude opens the site in a
+browser, follows a prompt, and gives a verdict (pass, fail or unsure) with
+findings and screenshots. HP-5 in [smoke-public-site.md](smoke-public-site.md)
+is an example.
+
+- **The case row:** the Steps cell starts with
+  `**Prompt:** [<name>](prompts/<name>.md)`, followed by one sentence saying
+  what Claude does. The Expected result says what passes and fails, as for any
+  case (Rule 1 applies).
+- **The prompt file:** `test-plans/prompts/<name>.md`. Suites can use the
+  same file.
+
+  ```md
+  # Homepage layout compared with the comparison site
+
+  **Role:** anonymous
+  **Compare with:** default
+  **Viewports:** desktop 1280x800, phone 390x844
+  **Screenshots:** 16
+
+  Notes for people (where the check comes from). Ignored.
+
+  ## Prompt
+
+  Review the homepage (/) for layout and styling problems, ...
+  ```
+
+  - `Role`: `anonymous`, or a role with a saved login.
+  - `Compare with` (optional; default `none`): `default` compares with the
+    environment's own comparison site (QA → Stage, Stage → Production). On
+    Production, `default` compares with the **baseline**: the screenshots of
+    the last run of the same check there. Run the check before a deploy and
+    again after it, and the second run reports what the deploy changed. You
+    can also write `baseline` or an environment id (`stage`, `prod`). A run
+    can pick another site to compare with: "Compare with" on the plan page,
+    or `--compare` on the command line. A check that compares with another
+    site must be anonymous, because a saved login only works on its own
+    environment.
+  - `Viewports` (optional; default `desktop 1280x800`): the sizes to check,
+    as `<name> <width>x<height>`.
+  - `Screenshots` (optional): the most Claude may take. The default is 6, or
+    16 when comparing.
+  - Everything under `## Prompt` is sent to Claude as written. Write it the
+    way you'd ask a tester: what to open, what to look at, and what counts as
+    a problem. Content that differs between sites (jobs, events, dates) is
+    never a difference.
+- **Status:** a prompt case counts as implemented once its prompt file
+  exists. The test generator skips it.
+- **Running it:** the dashboard runs prompt cases after the plan's tests, or
+  one on its own with its Run button. From a terminal:
+
+  ```bash
+  npm run prompt -- HP-5 --env qa                 # compares QA with Stage
+  npm run prompt -- HP-5 --env qa --compare prod  # compares QA with Production
+  npm run prompt -- HP-5 --env prod               # compares with its last run there
+  ```
+
+  Results go to `reports/prompt-runs/`. `claude` must be installed and
+  logged in. Each run costs Claude usage. Set `PROMPT_MODEL=sonnet` in
+  `.env` for a cheaper model. A check that compares is stopped after 15
+  minutes (`PROMPT_COMPARE_TIMEOUT_MS`), and other checks after 6.
+- **Basic Auth:** the browser sends one set of credentials. Comparing QA with
+  Stage works when both use `BASIC_AUTH_USER`. If you set different
+  credentials per environment (`BASIC_AUTH_USER_STAGE`), the comparison site
+  asks for its own and the check comes back unsure.
+
+The script checks that the Steps cell starts with the link, that the prompt
+file exists and has a `## Prompt` section, and that its Role, Compare with,
+Viewports and Screenshots can be read.
 
 ### Checking a plan
 

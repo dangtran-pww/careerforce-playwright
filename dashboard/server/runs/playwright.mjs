@@ -35,11 +35,36 @@ const runsAnyCase = (plan, project, cases) =>
  * Playwright arguments that run a plan's chosen projects and cases on `env`.
  * On production the plan's no-prod cases are left out (and refused when they
  * are all that was asked for).
+ *
+ * Prompt cases have no tests (runs/prompt-step.mjs runs them), so they are
+ * left out here. Null when there is nothing for Playwright to run: the plan
+ * has no tests, or only prompt cases were picked, or on production every
+ * case with tests is no-prod while a prompt case still runs.
  */
 export function planArgs(
   plan,
   { env, projects, cases = [], headed = false } = {},
 ) {
+  const isTestCase = (id) =>
+    plan.cases.some((c) => c.id === id && c.kind !== 'prompt');
+  const promptIds = plan.cases
+    .filter((c) => c.kind === 'prompt')
+    .map((c) => c.id);
+  if (!plan.hasTests) return null;
+  if (cases.length && cases.some((id) => promptIds.includes(id))) {
+    const testCases = cases.filter(isTestCase);
+    if (!testCases.length) return null;
+    cases = testCases;
+  }
+  if (
+    !cases.length &&
+    env?.production &&
+    promptIds.length &&
+    plan.cases
+      .filter((c) => c.kind !== 'prompt' && c.testCount > 0)
+      .every((c) => c.noProd)
+  )
+    return null;
   const known = new Set(plan.projects.map((p) => p.name));
   const chosen = (
     projects ?? plan.projects.filter((p) => p.selected).map((p) => p.name)
@@ -78,7 +103,9 @@ export function planArgs(
   const runnableCases = chosenCases.length
     ? chosenCases
     : noProd.length
-      ? plan.cases.filter((c) => !c.noProd).map((c) => c.id)
+      ? plan.cases
+          .filter((c) => !c.noProd && c.kind !== 'prompt')
+          .map((c) => c.id)
       : [];
 
   // With cases picked (or no-prod ones left out), only the projects that run

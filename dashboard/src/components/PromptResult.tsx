@@ -1,0 +1,121 @@
+import type { Finding, PromptResult as Result } from '../api/types';
+import { plural } from '../lib/format';
+import { runFile } from '../lib/runs';
+
+// One Claude check's result: who it ran as, what it compared with, the
+// prompt, then Claude's summary, findings and screenshots. Used for a
+// suite's prompt steps and for a plan's prompt cases.
+export function PromptResult({
+  result: r,
+  promptOpen = true,
+}: {
+  result: Result;
+  promptOpen?: boolean;
+}) {
+  return (
+    <>
+      <p className="note">
+        {r.role ? `As ${r.role}` : 'As an anonymous visitor'}
+        {r.viewports?.length
+          ? `, at ${r.viewports.map((v) => `${v.name} ${v.width}×${v.height}`).join(' and ')}`
+          : ''}
+        {r.file ? ` (${r.file})` : ''}.
+      </p>
+      <CompareNote result={r} />
+      {r.prompt &&
+        (promptOpen ? (
+          <pre className="prompt-text">{r.prompt}</pre>
+        ) : (
+          <details>
+            <summary className="note">The prompt</summary>
+            <pre className="prompt-text">{r.prompt}</pre>
+          </details>
+        ))}
+      {r.status === 'running' && (
+        <p className="note">
+          Claude is checking the site. Its actions show in the Output panel.
+        </p>
+      )}
+      {r.summary && (
+        <p>
+          <strong>{r.summary}</strong>
+        </p>
+      )}
+      {!!r.findings?.length && (
+        <ul className="findings">
+          {r.findings.map((f, i) => (
+            <FindingItem key={i} finding={f} />
+          ))}
+        </ul>
+      )}
+      {!!r.screenshots?.length && <Shots paths={r.screenshots} />}
+      {!!r.baselineScreenshots?.length && (
+        <details>
+          <summary className="note">
+            The baseline it compared with ({r.baselineScreenshots.length})
+          </summary>
+          <Shots paths={r.baselineScreenshots} />
+        </details>
+      )}
+      {r.turns != null && (
+        <p className="note small">
+          {plural(r.turns, 'turn')}
+          {r.costUsd != null ? ` · $${r.costUsd.toFixed(2)}` : ''}
+        </p>
+      )}
+    </>
+  );
+}
+
+function CompareNote({ result: r }: { result: Result }) {
+  const c = r.compare;
+  if (!c || c.mode === 'none') return null;
+  if (c.mode === 'site')
+    return (
+      <p className="note">
+        Compared side by side with <strong>{c.envName}</strong> ({c.baseURL}).
+      </p>
+    );
+  return (
+    <p className="note">
+      {c.baselineFrom
+        ? `Compared with the baseline: the screenshots of ${c.baselineFrom}.`
+        : 'No earlier run to compare with, so Claude reviewed the pages on their own. The next run compares with these screenshots.'}
+    </p>
+  );
+}
+
+function FindingItem({ finding: f }: { finding: Finding }) {
+  return (
+    <li>
+      {f.severity === 'problem' ? (
+        <span className="badge badge-bad small">Problem</span>
+      ) : (
+        <span className="badge badge-neutral small">Note</span>
+      )}{' '}
+      {f.viewport && <span className="note small">[{f.viewport}] </span>}
+      {f.text}
+      {f.screenshot && <span className="note small"> ({f.screenshot})</span>}
+    </li>
+  );
+}
+
+function Shots({ paths }: { paths: string[] }) {
+  return (
+    <div className="shots">
+      {paths.map((path) => (
+        <Thumbnail key={path} path={path} />
+      ))}
+    </div>
+  );
+}
+
+function Thumbnail({ path }: { path: string }) {
+  const name = path.split('/').at(-1);
+  return (
+    <a href={runFile(path)} target="_blank" rel="noopener">
+      <img src={runFile(path)} alt={`Screenshot ${name}`} loading="lazy" />
+      {name}
+    </a>
+  );
+}

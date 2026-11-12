@@ -3,7 +3,8 @@
 //
 //   runClaude()   one question, one JSON answer, read-only tools: explaining
 //                 a case (explain.mjs), reviewing it (review.mjs), explaining
-//                 a failed test (failure.mjs). At most CLAUDE_CONCURRENCY run
+//                 a failed test (failure.mjs); or no tools: summarizing a
+//                 run's failures (summary.mjs). At most CLAUDE_CONCURRENCY run
 //                 at once; the rest wait their turn.
 //   claudeArgs()  the arguments only, for a caller that runs `claude` itself:
 //                 a suite's prompt steps (runs/suite-run.mjs) run it as a step of
@@ -37,18 +38,21 @@ const DENIED_TOOLS = [
   'Task',
 ];
 
+const READ_TOOLS = ['Read', 'Grep', 'Glob'];
+
 export const NOT_STARTED = `Couldn't start \`${CLAUDE}\`. Is Claude Code installed and logged in?`;
 
 /**
  * Arguments for `claude -p`: answer `text` with JSON that fits `schema`,
  * using only `tools`. `stream` asks for stream-json (one JSON event per
  * line, the result last) instead of a single JSON result. `mcpConfig` is
- * the only MCP config it loads; without one it loads none.
+ * the only MCP config it loads; without one it loads none. `deny` adds to
+ * the tools always denied, e.g. "Read(./.env)".
  */
 export function claudeArgs(
   text,
   schema,
-  { tools, maxTurns, model, stream = false, mcpConfig } = {},
+  { tools, deny = [], maxTurns, model, stream = false, mcpConfig } = {},
 ) {
   return [
     '-p',
@@ -59,10 +63,10 @@ export function claudeArgs(
     JSON.stringify(schema),
     ...(mcpConfig ? ['--mcp-config', mcpConfig] : []),
     '--strict-mcp-config',
-    '--allowedTools',
-    tools.join(','),
+    ...(tools.length ? ['--allowedTools', tools.join(',')] : []),
     '--disallowedTools',
-    DENIED_TOOLS.join(','),
+    // With no tools, Claude answers from the prompt alone.
+    [...DENIED_TOOLS, ...(tools.length ? [] : READ_TOOLS), ...deny].join(','),
     '--max-turns',
     String(maxTurns),
     ...(model ? ['--model', model] : []),
@@ -171,19 +175,20 @@ export function stopClaudes() {
 }
 
 /**
- * Ask Claude `text`, with the Read, Grep and Glob tools only, for a JSON
- * answer that fits `schema`. Resolves with the `claude -p` JSON result; read
- * it with answerOf() and usageOf().
+ * Ask Claude `text`, with the Read, Grep and Glob tools only (or `tools`,
+ * none for an answer from the prompt alone), for a JSON answer that fits
+ * `schema`. Resolves with the `claude -p` JSON result; read it with
+ * answerOf() and usageOf().
  */
-export async function runClaude(text, schema) {
+export async function runClaude(
+  text,
+  schema,
+  { tools = READ_TOOLS, maxTurns = 30 } = {},
+) {
   await acquire();
   try {
     return await spawnClaude(
-      claudeArgs(text, schema, {
-        tools: ['Read', 'Grep', 'Glob'],
-        maxTurns: 30,
-        model: MODEL,
-      }),
+      claudeArgs(text, schema, { tools, maxTurns, model: MODEL }),
     );
   } finally {
     release();

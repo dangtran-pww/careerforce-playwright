@@ -15,6 +15,12 @@ export const ROLE = '[a-z-]+';
 export const strings = z.array(z.string());
 export const envField = z.string().optional();
 export const flag = z.boolean().optional();
+// What prompt checks that compare sites compare with: an environment id,
+// "baseline" or "default" (see resolveCompare in scripts/lib/prompts.mjs).
+export const compareField = z
+  .string()
+  .regex(/^[\w-]+$/)
+  .optional();
 
 /**
  * Middleware that checks the JSON body against a zod schema; the handler

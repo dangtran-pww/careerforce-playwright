@@ -9,6 +9,9 @@ export interface Env {
   name: string;
   baseURL: string;
   production: boolean;
+  // What prompt cases that compare sites compare it with: an environment id
+  // or "baseline" (its last run's screenshots).
+  compareWith?: string;
 }
 
 export interface EnvironmentsResponse {
@@ -60,6 +63,11 @@ export interface PlanProject extends ProjectTests {
 export interface PlanCase {
   id: string; // e.g. "AM-1"
   title: string;
+  // "prompt": no test code; Claude runs its prompt file in a browser
+  // (test-plans/README.md, Rule 2). Older servers leave it out ("test").
+  kind?: 'test' | 'prompt';
+  prompt?: PromptCheck | null; // its prompt file; null when it's missing
+  promptProblems?: string[]; // what's wrong with that file
   testCount: number;
   // The projects that run its tests (by default), e.g. smoke-desktop.
   projects: ProjectTests[];
@@ -77,6 +85,25 @@ export interface PlanCase {
   details: CaseDetail[];
   // Where its tests are, one per test (not per project).
   locations: CaseLocation[];
+}
+
+// A prompt file in test-plans/prompts/ (scripts/lib/prompts.mjs).
+export interface Viewport {
+  name: string;
+  width: number;
+  height: number;
+}
+
+export interface PromptCheck {
+  slug: string;
+  file: string;
+  name: string;
+  role: string | null;
+  // none | default | baseline | an environment id
+  compare: string;
+  viewports: Viewport[];
+  screenshots: number; // at most
+  prompt: string;
 }
 
 export interface CaseDetail {
@@ -163,7 +190,9 @@ export interface PlanSummary {
   noProdCases: string[]; // left out of runs on production
   roles: string[];
   cases: PlanCase[];
-  runnable: boolean; // has tests
+  runnable: boolean; // has tests or a usable prompt case
+  hasTests?: boolean; // has Playwright tests
+  promptCases?: string[]; // ids of its prompt cases
   testCount: number; // in the projects selected by default
   projects: PlanProject[];
   lastRun?: Run | null;
@@ -338,10 +367,67 @@ export interface FailureExplanationResponse {
   explanation: FailureExplanation;
 }
 
+// GET/POST /api/runs/:id/summary: Claude's quick summary of a run's
+// failures, grouped into the issues behind them
+// (dashboard/server/claude/summary.mjs), saved in the run's folder.
+export interface RunIssue {
+  title: string;
+  cause: FailureCause;
+  tests: string[]; // "<title> (<project>)", plus " — step N" in a suite
+  detail: string;
+  nextStep: string;
+}
+
+export interface RunSummary extends ClaudeUsage {
+  run: string;
+  headline: string;
+  overview: string;
+  issues: RunIssue[];
+  nextSteps: string[];
+}
+
+export interface RunSummaryResponse {
+  summary: RunSummary | null; // GET: null until one is made
+}
+
 export interface Finding {
   severity: 'problem' | 'note';
   text: string;
   screenshot?: string;
+  viewport?: string;
+}
+
+// What a prompt check compared with (dashboard/server/runs/prompt.mjs).
+export interface PromptCompare {
+  mode: 'none' | 'site' | 'baseline';
+  envId?: string; // site
+  envName?: string;
+  baseURL?: string;
+  baselineFrom?: string | null; // baseline: the run it came from; null if none
+}
+
+// One prompt check's result: a suite's prompt step, or a plan's prompt case
+// in a plan run (Run.prompts) or a suite's plan step (SuiteStep.prompts).
+export interface PromptResult {
+  id?: string;
+  title?: string;
+  status: string; // a key of STEP_STATUS
+  slug?: string;
+  file?: string;
+  role?: string | null;
+  prompt?: string;
+  viewports?: Viewport[];
+  startedAt?: string;
+  finishedAt?: string;
+  error?: string;
+  skipReason?: string;
+  compare?: PromptCompare;
+  summary?: string;
+  findings?: Finding[];
+  screenshots?: string[];
+  baselineScreenshots?: string[];
+  turns?: number;
+  costUsd?: number;
 }
 
 export interface SuiteStep extends TestReport {
@@ -358,13 +444,17 @@ export interface SuiteStep extends TestReport {
   plan?: string; // plan slug
   projects?: string[];
   command?: string;
+  prompts?: PromptResult[]; // the plan's prompt cases
   // prompt steps
   role?: string;
   file?: string;
   prompt?: string;
+  viewports?: Viewport[];
+  compare?: PromptCompare;
   summary?: string;
   findings?: Finding[];
   screenshots?: string[];
+  baselineScreenshots?: string[];
   turns?: number;
   costUsd?: number;
 }
@@ -384,7 +474,9 @@ export interface Run extends TestReport {
   projects: string[];
   headed?: boolean;
   steps?: SuiteStep[];
-  command?: string;
+  command?: string | null; // null: only prompt cases ran
+  prompts?: PromptResult[]; // a plan run's prompt cases
+  compare?: string | null; // the "Compare with" choice, if one was made
 }
 
 // GET /api/runs/:id?logFrom=N: the run, and its output from character N.

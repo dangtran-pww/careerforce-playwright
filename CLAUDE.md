@@ -11,6 +11,11 @@ Whenever you write or change a plan in `test-plans/`, follow every rule in
    `1. … 2. …`; more than one check is numbered `**1.** … **2.** …`, and
    item N is the result of step N. Preconditions and notes go before `1.`,
    `**Cleanup:** …` goes last, and numbers run 1, 2, 3 with no gaps.
+2. **Prompt cases:** a check that needs judgement (e.g. layout compared
+   with another site) is a prompt case: its Steps cell starts with
+   `**Prompt:** [<name>](prompts/<name>.md)`, and `test-plans/prompts/<name>.md`
+   has `**Role:**`, optional `**Compare with:**`, `**Viewports:**` and
+   `**Screenshots:**`, and a `## Prompt` section. It has no test code.
 
 Then run `npm run check:plans` and fix every problem it reports in the
 plans you touched before you finish.

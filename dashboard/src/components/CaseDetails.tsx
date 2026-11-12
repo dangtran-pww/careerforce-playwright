@@ -1,6 +1,7 @@
 import type { CaseDetail, PlanCase } from '../api/types';
 import { CaseExplain } from './CaseExplain';
 import { Command } from './Command';
+import { PromptCaseInfo } from './PromptCaseInfo';
 import { inline } from '../lib/inline';
 import { splitNumbered } from '../lib/numbered';
 import { StepList } from './StepList';
@@ -22,7 +23,13 @@ export function CaseDetails({
 }) {
   const locations = testCase.locations ?? [];
   const details = withSteps(testCase.details ?? []);
-  if (!details.length && !locations.length && !command) return null;
+  if (
+    !details.length &&
+    !locations.length &&
+    !command &&
+    testCase.kind !== 'prompt'
+  )
+    return null;
   return (
     <div className="case-details">
       <dl>
@@ -47,6 +54,7 @@ export function CaseDetails({
             </dd>
           </div>
         )}
+        {testCase.kind === 'prompt' && <PromptCaseInfo testCase={testCase} />}
         {command && (
           <div>
             <dt>Command</dt>

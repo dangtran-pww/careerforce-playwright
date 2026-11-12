@@ -19,11 +19,21 @@
 // (`playwright test --list --reporter=json`), so a new project or spec is
 // picked up without changing this file. Test titles start with the case ID
 // ("AR-1: status report ..."), which is how cases are matched to tests.
+//
+// A prompt case has no test code: its Steps cell starts with
+// "**Prompt:** [<slug>](prompts/<slug>.md)", and Claude runs that prompt file
+// in a browser (scripts/lib/prompts.mjs, runs/prompt.mjs). It has
+// kind: 'prompt' and the parsed file in `prompt`.
 
 import { readFile, readdir, stat } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { join } from 'node:path';
+import {
+  PROMPTS_DIR,
+  loadPrompts,
+  promptSlugInCell,
+} from '../../../scripts/lib/prompts.mjs';
 import { PLANS_DIR as plansDir } from '../paths.mjs';
 
 const run = promisify(execFile);
@@ -145,8 +155,12 @@ function parsePlan(slug, text) {
     const prodAt = header.findIndex((h) => /^prod(uction)?$/i.test(clean(h)));
     const prod = clean(prodAt >= 2 ? (cells[prodAt] ?? '') : '');
     const noProd = prod.match(NO_PROD);
+    const stepsAt = header.findIndex((h) => /^steps$/i.test(clean(h)));
+    const promptSlug = stepsAt >= 2 ? promptSlugInCell(cells[stepsAt]) : null;
     cases.push({
       id: cells[0],
+      kind: promptSlug === null ? 'test' : 'prompt',
+      promptSlug,
       title: clean(cells[1] ?? '').replace(/`/g, ''),
       noProd: Boolean(planProd || noProd),
       noProdReason: noProd?.[1] || planProd?.[1] || null,
@@ -239,7 +253,9 @@ const hasCase = (test, id) =>
 /** Whether nothing of `plan` runs on production. */
 export const allNoProd = (plan) => {
   if (plan.noProd) return true;
-  const withTests = plan.cases.filter((c) => c.testCount > 0);
+  const withTests = plan.cases.filter(
+    (c) => c.testCount > 0 || c.kind === 'prompt',
+  );
   return withTests.length > 0 && withTests.every((c) => c.noProd);
 };
 
@@ -277,6 +293,10 @@ function attachTests(plan, all) {
   );
   const runTests = tests.filter((t) => selected.has(t.project));
   for (const c of plan.cases) {
+    if (c.kind === 'prompt') {
+      Object.assign(c, { testCount: 0, projects: [], locations: [], tags: [] });
+      continue;
+    }
     const caseTests = runTests.filter((t) => hasCase(t, c.id));
     c.testCount = caseTests.length;
     // The projects that run it, e.g. smoke-desktop and smoke-mobile, so the
@@ -328,8 +348,30 @@ function attachTests(plan, all) {
     runPaths,
     projects,
     testCount: runTests.length,
+    // Has Playwright tests; runnable also counts its prompt cases (set in
+    // attachPrompts).
+    hasTests: tests.length > 0,
     runnable: tests.length > 0,
   };
+}
+
+// Fills in each prompt case's prompt file (null when the file is missing),
+// and makes a plan with a usable prompt case runnable.
+function attachPrompts(plan, prompts) {
+  for (const c of plan.cases) {
+    if (c.kind !== 'prompt') continue;
+    c.prompt = prompts.get(c.promptSlug) ?? null;
+    c.promptProblems = c.prompt
+      ? c.prompt.problems
+      : [`No prompt file ${PROMPTS_DIR}/${c.promptSlug || '?'}.md.`];
+  }
+  plan.promptCases = plan.cases
+    .filter((c) => c.kind === 'prompt')
+    .map((c) => c.id);
+  plan.runnable =
+    plan.hasTests ||
+    plan.cases.some((c) => c.kind === 'prompt' && !c.promptProblems.length);
+  return plan;
 }
 
 // Every plan lookup (loadPlan) reads all plans again, so what's read from a
@@ -378,9 +420,10 @@ export async function loadPlans({ refresh = false } = {}) {
       throw err;
     });
   }
-  const [{ tests, errors }, names] = await Promise.all([
+  const [{ tests, errors }, names, prompts] = await Promise.all([
     listCache,
     readdir(plansDir),
+    loadPrompts(),
   ]);
   const plans = await Promise.all(
     names
@@ -389,7 +432,10 @@ export async function loadPlans({ refresh = false } = {}) {
         const slug = n.slice(0, -3);
         // Parsed again each time (cheap): attachTests fills in its cases.
         const text = await fromFile(join(plansDir, n), (t) => t);
-        const plan = attachTests(parsePlan(slug, text), tests);
+        const plan = attachPrompts(
+          attachTests(parsePlan(slug, text), tests),
+          prompts,
+        );
         plan.roles = await rolesFor(plan.files);
         return plan;
       }),

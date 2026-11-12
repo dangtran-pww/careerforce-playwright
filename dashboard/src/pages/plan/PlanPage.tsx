@@ -13,6 +13,7 @@ import { useApi } from '../../hooks/useApi';
 import { useEnv } from '../../hooks/useEnv';
 import { PLAN_STATUS } from '../../lib/status';
 import { CasesTable } from './CasesTable';
+import { PromptCasesTable } from './PromptCasesTable';
 import { defaultChoice } from './choice';
 import { NoTestsPanel, RunPanel } from './RunPanel';
 
@@ -39,6 +40,8 @@ export function PlanPage() {
 function PlanDetails({ plan, site, runs, activeRun }: PlanResponse) {
   const { currentEnv } = useEnv();
   const [choice, setChoice] = useState(() => defaultChoice(plan));
+  const testCases = plan.cases.filter((c) => c.kind !== 'prompt');
+  const promptCases = plan.cases.filter((c) => c.kind === 'prompt');
 
   return (
     <>
@@ -93,16 +96,33 @@ function PlanDetails({ plan, site, runs, activeRun }: PlanResponse) {
           <SessionCard key={role} role={role} />
         ))}
       </div>
-      <h2 className="section-title">Cases ({plan.cases.length})</h2>
-      {plan.runnable && (
-        <TestCountNote caseCount={plan.cases.length} projects={plan.projects} />
+      <h2 className="section-title">Cases ({testCases.length})</h2>
+      {plan.hasTests && (
+        <TestCountNote caseCount={testCases.length} projects={plan.projects} />
       )}
       <CasesTable
         plan={plan}
+        cases={testCases}
         choice={choice}
         setChoice={setChoice}
         activeRun={activeRun}
       />
+      {promptCases.length > 0 && (
+        <>
+          <h2 className="section-title">Prompt cases ({promptCases.length})</h2>
+          <p className="note">
+            Checked by Claude in a browser, from a prompt instead of test code.
+            They run after the tests and cost Claude usage.
+          </p>
+          <PromptCasesTable
+            plan={plan}
+            cases={promptCases}
+            choice={choice}
+            setChoice={setChoice}
+            activeRun={activeRun}
+          />
+        </>
+      )}
       <h2 className="section-title">Recent runs</h2>
       <RunsTable runs={runs} showPlan={false} />
     </>

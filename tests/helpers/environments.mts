@@ -24,23 +24,33 @@ export type Environment = {
    * (isActive below).
    */
   local?: boolean;
+  /**
+   * What a prompt check that compares sites ("Compare with: default", see
+   * scripts/lib/prompts.mjs) compares this environment with: another
+   * environment's id, or "baseline" for the screenshots of the last run of
+   * the same check here. A run can pick another.
+   */
+  compareWith?: string;
 };
 
 const KNOWN: Environment[] = [
   {
     id: 'qa',
+    compareWith: 'stage',
     name: 'QA',
     baseURL: 'https://qa.careerforce.link',
     production: false,
   },
   {
     id: 'stage',
+    compareWith: 'prod',
     name: 'Stage',
     baseURL: 'https://stage.careerforce.link',
     production: false,
   },
   {
     id: 'sandbox',
+    compareWith: 'stage',
     name: 'Sandbox',
     baseURL: (
       process.env.SANDBOX_URL ?? 'https://sandbox.careerforce.link'
@@ -49,6 +59,7 @@ const KNOWN: Environment[] = [
   },
   {
     id: 'local',
+    compareWith: 'qa',
     name: 'Local',
     baseURL: (
       process.env.LOCAL_URL ?? 'https://careerforcemn.ddev.site'
@@ -59,6 +70,7 @@ const KNOWN: Environment[] = [
   // Last in the picker, after every test environment.
   {
     id: 'prod',
+    compareWith: 'baseline',
     name: 'Production',
     baseURL: 'https://careerforce.mn.gov',
     production: true,

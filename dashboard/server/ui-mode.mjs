@@ -7,6 +7,7 @@
 // the one before. The dashboard closes it when it stops.
 
 import { spawn } from 'node:child_process';
+import { ApiError } from './errors.mjs';
 import { killGroup } from './lib/processes.mjs';
 import {
   checkPlanRunnable,
@@ -31,7 +32,13 @@ export function closeUiMode() {
  */
 export function openUiMode(plan, { env, projects, cases = [] } = {}) {
   checkPlanRunnable(plan);
-  const { args } = planArgs(plan, { env, projects, cases });
+  const chosen = planArgs(plan, { env, projects, cases });
+  if (!chosen)
+    throw new ApiError(
+      400,
+      'Prompt cases have no test code to open in UI mode. Run them instead.',
+    );
+  const { args } = chosen;
   const fullArgs = ['playwright', 'test', ...args, '--ui'];
   closeUiMode();
 

@@ -13,6 +13,15 @@ export function envParam(id) {
 }
 
 /**
+ * A run's "Compare with" choice for prompt checks that compare sites: an
+ * environment id, "baseline" or "default" (undefined means default).
+ */
+export function compareParam(choice) {
+  if (!choice || choice === 'default' || choice === 'baseline') return choice;
+  return envParam(choice).id;
+}
+
+/**
  * What the page is told, and a run's run.json records, about an
  * environment: no credentials.
  */
@@ -21,4 +30,5 @@ export const publicEnv = (env) => ({
   name: env.name,
   baseURL: env.baseURL,
   production: env.production,
+  compareWith: env.compareWith ?? 'baseline',
 });

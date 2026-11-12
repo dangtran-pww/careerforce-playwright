@@ -679,6 +679,19 @@ legend {
   margin: 12px 0;
 }
 
+/* A labelled control on its own line, e.g. "Compare with" on the plan page. */
+.field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 10px 0;
+}
+
+.field select {
+  max-width: 100%;
+}
+
 .card .command {
   margin-bottom: 4px;
 }
@@ -1827,4 +1840,60 @@ dialog.modal::backdrop {
   flex: none;
   align-items: center;
   gap: 8px;
+}
+
+/* "Summarize the failures" on a plan run's page, above its results
+   (RunSummary.tsx). */
+.run-summary {
+  margin: 24px 0 0;
+  line-height: 1.5;
+}
+
+.run-summary p {
+  margin: 6px 0;
+}
+
+.run-summary .callout {
+  margin: 12px 0 0;
+}
+
+.run-summary h6 {
+  margin: 14px 0 4px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+
+.run-issues {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.run-issue {
+  margin: 8px 0 0;
+  padding: 8px 12px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.run-issue-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+.run-issue-tests {
+  margin: 4px 0;
+  padding-left: 20px;
+  font-size: var(--fs-sm);
+}
+
+.run-summary .claude-usage {
+  margin: 12px 0 0;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
 }

@@ -1,7 +1,8 @@
 # [Suite] - Smoke
 
-The smoke check: every smoke plan and a few checks Claude does by looking at
-the pages. On Production the dashboard skips the no-prod plans and leaves out
+The smoke check: every smoke plan (with their prompt cases, such as the
+homepage comparison HP-5) and a few checks Claude does by looking at the
+pages. On Production the dashboard skips the no-prod plans and leaves out
 the no-prod cases of the others (see
 [Keeping tests off Production](../test-plans/README.md#keeping-tests-off-production)).
 
@@ -32,6 +33,5 @@ yet" and skipped.
 
 | ID | Prompt |
 |---|---|
-| PR-1 | [homepage-layout](prompts/homepage-layout.md) |
-| PR-2 | [main-menu-landing-pages](prompts/main-menu-landing-pages.md) |
-| PR-3 | [admin-content-list](prompts/admin-content-list.md) |
+| PR-1 | [main-menu-landing-pages](../test-plans/prompts/main-menu-landing-pages.md) |
+| PR-2 | [admin-content-list](../test-plans/prompts/admin-content-list.md) |

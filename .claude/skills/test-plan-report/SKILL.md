@@ -113,6 +113,23 @@ Read each test's spec code and the page objects it uses
 (`tests/pages/*.page.ts`). They tell you what each step means in plain
 language.
 
+### Prompt cases
+
+Prompt cases (rows whose Steps cell starts with `**Prompt:**`, Rule 2 in
+`test-plans/README.md`) have no tests, so the Playwright run above leaves
+them out. Run each one that may run on this environment, one after another:
+
+```bash
+npm run prompt -- <ID> --env <env-id>
+```
+
+Use the environment's default comparison site unless the user asked for
+another one; in that case add `--compare <env-id|baseline>`. Each run takes
+several minutes, needs the network, and starts `claude` (run it outside the
+sandbox if it is blocked). Then copy its folder, the one named on the
+`Result:` line, into `$OUT/prompts/<ID>/`, and read `result.json` and the
+screenshots there.
+
 ## 5. Write `$OUT/report.md`
 
 Use this shape:
@@ -180,6 +197,15 @@ Rules for the steps:
 - **Skipped tests:** give the skip reason from the annotations.
 - **Annotations** that the test logged (for example a picked event ID) go
   under the test as "Notes".
+- **Prompt cases** go in the Summary table and get a section like the
+  others, marked "(checked by Claude)". Say what the case compared
+  (another site with its URL, the baseline run, or "no baseline, review
+  only") and at which viewports. Give Claude's summary, and each finding as a
+  numbered step with its viewport and its screenshot, using paths such as
+  `prompts/HP-5/screenshots/01-home-desktop-qa.png`. Show the screenshots
+  of the two sites one after the other. Unsure counts as ⚠️ in the result
+  line. The verdict is Claude's judgement, so say so in one line under the
+  heading.
 
 Image paths in the report are relative to `report.md`, for example
 `screenshots/01-hp-1/01.jpeg`. That keeps the folder portable: zip it, or
@@ -192,9 +218,10 @@ Reply briefly with:
 - The report path, `reports/<plan>-<stamp>/report.md`, as a clickable link.
 - The result line, and the ID of each failed test with a one-line cause.
 - **Not implemented:** compare the plan's test case IDs with the IDs in
-  `steps.json`. List each plan case that has no test that ran, with its
-  title and the plan's pending note if there is one. If every case ran,
-  say "None".
+  `steps.json`, plus the prompt cases that ran. List each plan case that has
+  no test or prompt run, with its title and the plan's pending note if there
+  is one. If every case ran, say "None".
+- For prompt cases: the Claude cost of each one (from `result.json`).
 - **Technical details:** the run command, the raw error of each failed
   test, and the command to replay one trace:
   `npx playwright show-trace <OUT>/test-output/<test-folder>/trace.zip`.

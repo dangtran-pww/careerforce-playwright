@@ -1,5 +1,5 @@
 // /api/runs: run history, one run's progress, stopping it, and asking
-// Claude Code why a test failed.
+// Claude Code why a test failed or to summarize a run's failures.
 
 import { Hono } from 'hono';
 import { z } from 'zod';
@@ -8,6 +8,7 @@ import {
   savedFailureExplanations,
   testRef,
 } from '../claude/failure.mjs';
+import { savedRunSummary, summarizeRun } from '../claude/summary.mjs';
 import { ApiError } from '../errors.mjs';
 import { getRun, listRuns } from '../runs/history.mjs';
 import { activeRunId, stopRun } from '../runs/lifecycle.mjs';
@@ -53,6 +54,26 @@ runRoutes.post(
       }),
     });
   },
+);
+
+// GET /api/runs/:id/summary — the saved summary of a run's failures,
+// or null.
+runRoutes.get(`${RUN}/summary`, async (c) =>
+  c.json({ summary: await savedRunSummary(c.req.param('id')) }),
+);
+
+// POST /api/runs/:id/summary — ask Claude Code to group a run's failures
+// (a suite run's plan steps together) into the issues behind them: { refresh? }. Errors only, no
+// files read, so it takes seconds. Saved in the run's folder.
+runRoutes.post(
+  `${RUN}/summary`,
+  jsonBody(z.looseObject({ refresh: flag })),
+  async (c) =>
+    c.json({
+      summary: await summarizeRun(c.req.param('id'), {
+        refresh: c.req.valid('json').refresh === true,
+      }),
+    }),
 );
 
 // POST /api/runs/:id/stop — stop a run in progress.

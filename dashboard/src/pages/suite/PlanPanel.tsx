@@ -2,23 +2,18 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router';
 import type { PlanResponse } from '../../api/types';
 import { Badge } from '../../components/Badge';
-import { CaseDetails } from '../../components/CaseDetails';
-import { CaseProjects } from '../../components/CaseProjects';
 import { CloseButton } from '../../components/CloseButton';
-import { NoProdBadge, PlanNoProdBadge } from '../../components/NoProdBadge';
+import { PlanNoProdBadge } from '../../components/NoProdBadge';
 import { ErrorBox, Loading } from '../../components/Callouts';
 import { Facts } from '../../components/Facts';
 import { Modal } from '../../components/Modal';
 import { PlanMarkdown } from '../../components/PlanMarkdown';
 import { PlanOverview } from '../../components/PlanOverview';
-import { PlanRunButton } from '../../components/PlanRunButton';
-import { Table, VisuallyHidden } from '../../components/Table';
-import { TestCountNote } from '../../components/TestCountNote';
 import { ToggleButton } from '../../components/ToggleButton';
 import { useApi } from '../../hooks/useApi';
 import { useEnv } from '../../hooks/useEnv';
 import { PLAN_STATUS } from '../../lib/status';
-import { planCommand } from '../plan/choice';
+import { PanelCases } from './PanelCases';
 
 export const PLAN_PANEL_ID = 'plan-panel';
 
@@ -150,92 +145,11 @@ export function PlanPanel({
                 : `Show test files (${plan.files.length})`}
             </ToggleButton>
           )}
-          <h3 className="side-panel-title">Cases ({plan.cases.length})</h3>
-          {plan.runnable && (
-            <TestCountNote
-              caseCount={plan.cases.length}
-              projects={plan.projects}
-            />
-          )}
-          <Table
-            rows={plan.cases}
-            rowKey={(c) => c.id}
-            expand={(c) => (
-              <CaseDetails
-                planSlug={plan.slug}
-                testCase={c}
-                command={
-                  plan.runnable && c.testCount > 0
-                    ? planCommand(
-                        plan,
-                        {
-                          projects: new Set(
-                            projects.length
-                              ? projects
-                              : plan.projects
-                                  .filter((p) => p.selected)
-                                  .map((p) => p.name),
-                          ),
-                          cases: new Set([c.id]),
-                          headed,
-                        },
-                        currentEnv,
-                      )
-                    : undefined
-                }
-              />
-            )}
-            expandLabel={(c) => `Details of ${c.id}`}
-            columns={[
-              { head: 'ID', className: 'mono', cell: (c) => c.id },
-              {
-                head: 'Case',
-                cell: (c) => (
-                  <>
-                    {c.title}
-                    {!plan.noProd && <NoProdBadge testCase={c} />}
-                  </>
-                ),
-              },
-              plan.runnable && {
-                head: 'Projects',
-                cell: (c) => <CaseProjects testCase={c} only={projects} />,
-              },
-              plan.runnable && {
-                head: 'Tests',
-                className: (c) => (c.testCount ? undefined : 'note'),
-                cell: (c) => c.testCount || 'none',
-              },
-              plan.runnable && {
-                head: <VisuallyHidden>Actions</VisuallyHidden>,
-                className: 'cell-action',
-                cell: (c) =>
-                  c.testCount > 0 && (
-                    <PlanRunButton
-                      plan={plan}
-                      body={{
-                        projects: projects.length ? projects : undefined,
-                        cases: [c.id],
-                        headed,
-                      }}
-                      className="small"
-                      disabled={
-                        Boolean(activeRun) ||
-                        Boolean(currentEnv.production && c.noProd)
-                      }
-                      title={
-                        activeRun
-                          ? 'Another run is in progress'
-                          : currentEnv.production && c.noProd
-                            ? `${c.id} is no-prod, so it never runs on Production`
-                            : `Run ${c.id} on ${currentEnv.name}`
-                      }
-                    >
-                      Run
-                    </PlanRunButton>
-                  ),
-              },
-            ]}
+          <PanelCases
+            plan={plan}
+            projects={projects}
+            headed={headed}
+            activeRun={activeRun}
           />
           <p className="actions">
             <Link className="button" to={`/plans/${plan.slug}`}>

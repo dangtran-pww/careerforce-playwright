@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import type { Finding, Run, SuiteStep } from '../api/types';
-import { duration, elapsed, plural, testProgress } from '../lib/format';
+import type { Run, SuiteStep } from '../api/types';
+import { duration, elapsed, testProgress } from '../lib/format';
 import { runFile } from '../lib/runs';
 import { STEP_KIND, STEP_STATUS } from '../lib/status';
 import { Badge } from './Badge';
 import { ErrorBox } from './Callouts';
 import { Command } from './Command';
+import { PromptCases } from './PromptCases';
+import { PromptResult } from './PromptResult';
 import { TestResults } from './TestResults';
 
 // Steps in these states start open.
@@ -61,13 +63,24 @@ function StepBody({ run, step }: { run: Run; step: SuiteStep }) {
     <>
       {step.error && <ErrorBox>{step.error}</ErrorBox>}
       {step.kind === 'plan' && <PlanStep run={run} step={step} />}
-      {step.kind === 'prompt' && <PromptStep step={step} />}
+      {step.kind === 'prompt' && <PromptResult result={step} />}
     </>
   );
 }
 
-// A test plan step: its command and Playwright results.
+// A test plan step: its command and Playwright results, then its prompt
+// cases.
 function PlanStep({ run, step }: { run: Run; step: SuiteStep }) {
+  return (
+    <>
+      <PlanTests run={run} step={step} />
+      {!!step.prompts?.length && <PromptCases prompts={step.prompts} />}
+    </>
+  );
+}
+
+function PlanTests({ run, step }: { run: Run; step: SuiteStep }) {
+  if (!step.command && step.prompts?.length) return null; // prompt cases only
   return (
     <>
       {step.command && <Command text={step.command} />}
@@ -103,73 +116,5 @@ function PlanStep({ run, step }: { run: Run; step: SuiteStep }) {
         )
       )}
     </>
-  );
-}
-
-// A Claude check: the prompt, then Claude's summary, findings and
-// screenshots.
-function PromptStep({ step }: { step: SuiteStep }) {
-  return (
-    <>
-      <p className="note">
-        {step.role ? `As ${step.role}` : 'As an anonymous visitor'}
-        {step.file ? ` (${step.file})` : ''}:
-      </p>
-      <pre className="prompt-text">{step.prompt}</pre>
-      {step.status === 'running' && (
-        <p className="note">
-          Claude is checking the site. Its actions show in the Output panel.
-        </p>
-      )}
-      {step.summary && (
-        <p>
-          <strong>{step.summary}</strong>
-        </p>
-      )}
-      {!!step.findings?.length && (
-        <ul className="findings">
-          {step.findings.map((f, i) => (
-            <FindingItem key={i} finding={f} />
-          ))}
-        </ul>
-      )}
-      {!!step.screenshots?.length && (
-        <div className="shots">
-          {step.screenshots.map((path) => (
-            <Thumbnail key={path} path={path} />
-          ))}
-        </div>
-      )}
-      {step.turns != null && (
-        <p className="note small">
-          {plural(step.turns, 'turn')}
-          {step.costUsd != null ? ` · $${step.costUsd.toFixed(2)}` : ''}
-        </p>
-      )}
-    </>
-  );
-}
-
-function FindingItem({ finding: f }: { finding: Finding }) {
-  return (
-    <li>
-      {f.severity === 'problem' ? (
-        <span className="badge badge-bad small">Problem</span>
-      ) : (
-        <span className="badge badge-neutral small">Note</span>
-      )}{' '}
-      {f.text}
-      {f.screenshot && <span className="note small"> ({f.screenshot})</span>}
-    </li>
-  );
-}
-
-function Thumbnail({ path }: { path: string }) {
-  const name = path.split('/').at(-1);
-  return (
-    <a href={runFile(path)} target="_blank" rel="noopener">
-      <img src={runFile(path)} alt={`Screenshot ${name}`} loading="lazy" />
-      {name}
-    </a>
   );
 }

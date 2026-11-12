@@ -3,22 +3,18 @@
 // the dashboard:
 //   ## Plans              test plans from test-plans/, by slug
 //   ## Prompts            checks Claude does in a browser (claude -p), each
-//                         one a file in test-suites/prompts/
+//                         one a file in test-plans/prompts/ (shared with
+//                         the plans' prompt cases; scripts/lib/prompts.mjs)
 // See test-suites/README.md for the format.
 
 import { readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
+import { loadPrompts } from '../../../scripts/lib/prompts.mjs';
 import {
   PROMPTS_DIR as promptsDir,
   SUITES_DIR as suitesDir,
 } from '../paths.mjs';
 import { allNoProd, clean, loadPlans, tableRows } from './plans.mjs';
-const ANONYMOUS = ['', '-', '—', 'anonymous', 'none'];
-
-const role = (cell) =>
-  ANONYMOUS.includes(clean(cell ?? '').toLowerCase())
-    ? null
-    : clean(cell).replace(/`/g, '').toLowerCase();
 
 // The lines of the "## <name>" section (up to the next "## ").
 function section(lines, name) {
@@ -105,46 +101,6 @@ function promptSlug(cell) {
     .trim();
 }
 
-// test-suites/prompts/<slug>.md:
-//   # <Name>
-//   **Role:** anonymous | admin | jobseeker | ...
-//   (notes for people, ignored)
-//   ## Prompt
-//   <the prompt, sent to Claude as written>
-function parsePrompt(slug, text) {
-  const lines = text.split('\n');
-  const heading = lines.find((l) => l.startsWith('# '));
-  const start = lines.findIndex((l) => /^##\s+Prompt\b/i.test(l));
-  const end = lines.findIndex((l, i) => i > start && /^##\s/.test(l));
-  return {
-    slug,
-    name: heading ? heading.slice(2).trim() : slug,
-    role: role(option(lines, 'Role') ?? ''),
-    prompt:
-      start < 0
-        ? ''
-        : lines
-            .slice(start + 1, end < 0 ? undefined : end)
-            .join('\n')
-            .trim(),
-  };
-}
-
-async function loadPrompts() {
-  const names = await readdir(promptsDir).catch(() => []);
-  const prompts = await Promise.all(
-    names
-      .filter((n) => n.endsWith('.md') && n !== 'README.md')
-      .map(async (n) =>
-        parsePrompt(
-          n.slice(0, -3),
-          await readFile(join(promptsDir, n), 'utf8'),
-        ),
-      ),
-  );
-  return new Map(prompts.map((p) => [p.slug, p]));
-}
-
 // Joins each plan entry to the plan itself, and lists what's wrong with
 // the suite file (unknown plans and prompt files, duplicate IDs).
 function resolve(suite, allPlans, allPrompts) {
@@ -157,17 +113,16 @@ function resolve(suite, allPlans, allPrompts) {
       );
       return [];
     }
-    if (!prompt.prompt) {
+    if (prompt.problems.length) {
       problems.push(
-        `${entry.id}: ${promptsDir}/${entry.file}.md has no "## Prompt" section.`,
+        `${entry.id}: ${promptsDir}/${entry.file}.md: ${prompt.problems.join(' ')}`,
       );
       return [];
     }
     return [
       {
         ...entry,
-        file: `${promptsDir}/${entry.file}.md`,
-        ...withoutSlug(prompt),
+        ...withoutProblems(prompt),
       },
     ];
   });
@@ -231,7 +186,7 @@ function resolve(suite, allPlans, allPrompts) {
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-const withoutSlug = ({ slug, ...rest }) => rest;
+const withoutProblems = ({ problems, ...rest }) => rest;
 
 export async function loadSuites({ refresh = false } = {}) {
   const [{ plans }, names, prompts] = await Promise.all([
