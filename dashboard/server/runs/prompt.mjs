@@ -5,7 +5,7 @@
 //   - plan runs, for the plan's prompt cases (plan-run.mjs);
 //   - suite runs, for the prompt cases of their plans and their own prompt
 //     steps (suite-run.mjs);
-//   - scripts/run-prompt.mjs, outside the dashboard (the skills use it).
+//   - scripts/run-prompt.mjs, outside the dashboard (`npm run prompt`).
 // The caller passes `io`, which runs the `claude` process and logs its
 // actions, so this file doesn't depend on the dashboard's run lifecycle.
 //
@@ -40,6 +40,7 @@ import {
   answerOf,
   claudeArgs,
   stoppedReason,
+  usageOf,
 } from '../claude/run.mjs';
 
 // A check that takes longer than this is stopped and marked as an error.
@@ -239,8 +240,10 @@ function promptResultsOf(meta) {
  * → Promise<{ code }>, log(text), isStopped(), kill() }.
  *
  * Resolves with { status, verdict, summary, findings, screenshots,
- * baselineScreenshots, compare, turns, costUsd, error }; status is passed,
- * failed, unsure, stopped or error.
+ * baselineScreenshots, compare, turns, costUsd, model, tokens, durationMs,
+ * error }; status is passed, failed, unsure, stopped or error. `tokens` is
+ * { in, cached, out } (usageOf() in claude/run.mjs); `durationMs` is the
+ * wall-clock time of the `claude` process, browser startup included.
  */
 export async function runPromptCheck({
   check,
@@ -357,9 +360,11 @@ export async function runPromptCheck({
       mcpConfig,
     },
   );
+  const spawnedAt = Date.now();
   const { code } = await io
     .spawn(CLAUDE, args, { env: serverEnv, onStdout })
     .finally(() => clearTimeout(timer));
+  const durationMs = Date.now() - spawnedAt;
   if (buffer.trim()) onStdout('\n');
   await new Promise((done) => stream.end(done));
 
@@ -367,6 +372,10 @@ export async function runPromptCheck({
     compare: compareInfo,
     turns: result?.num_turns ?? null,
     costUsd: result?.total_cost_usd ?? null,
+    // Tokens and model even when Claude stopped without a verdict: a
+    // timed-out or stopped check still cost something.
+    ...(result ? usageOf(result, MODEL ?? null) : { model: null }),
+    durationMs,
     screenshots: (await listImages(shotsDir)).map((f) =>
       rel(join(shotsDir, f)),
     ),

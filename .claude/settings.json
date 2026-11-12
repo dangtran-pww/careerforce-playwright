@@ -2,7 +2,11 @@
   "sandbox": {
     "excludedCommands": ["npx playwright"],
     "network": {
-      "allowedDomains": ["*.careerforce.link"]
+      "allowedDomains": [
+        "*.careerforce.link", 
+        "careerforce.mn.gov", 
+        "careerforcemn.ddev.site"
+      ]
     }
   },
   "permissions": {

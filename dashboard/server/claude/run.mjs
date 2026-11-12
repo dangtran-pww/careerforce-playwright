@@ -107,14 +107,15 @@ export function claudeError(result, fallback) {
 // `claude -p` JSON result. `modelUsage` has one entry per model (Claude Code
 // may also call a small model on the side); the one with the most output is
 // the one that answered. Tokens in counts cached input too, since a long
-// read of the code is mostly cache reads.
-export function usageOf(result) {
+// read of the code is mostly cache reads. `fallbackModel` is the model to
+// name when the result doesn't say.
+export function usageOf(result, fallbackModel = MODEL) {
   const perModel = Object.entries(result.modelUsage ?? {});
   if (!perModel.length) {
     const u = result.usage;
-    if (!u) return { model: MODEL };
+    if (!u) return { model: fallbackModel };
     return {
-      model: MODEL,
+      model: fallbackModel,
       tokens: tokens(
         u.input_tokens,
         u.cache_read_input_tokens,

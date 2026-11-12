@@ -120,8 +120,7 @@ export default defineConfig({
     // Smoke suite: every spec from a test-plans/smoke-*.md, one folder per
     // plan (tests/smoke/<area>/): quick checks to run after each deploy.
     // Most are prod-safe. The ones that aren't are tagged `@no-prod` and are
-    // left out on production (see the top of this file) and by
-    // `npm run test:smoke`. No default login: a spec that
+    // left out on production (see the top of this file). No default login: a spec that
     // needs a role calls `useRole('<role>')` (tests/helpers/roles.ts), which
     // needs `npm run login:manual -- <role> --env <env>` to have been run
     // first. Admin and editor areas run on desktop only

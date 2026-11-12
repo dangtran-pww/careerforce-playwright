@@ -5,7 +5,7 @@
 **Implemented test:** `tests/smoke/job-search/*.spec.ts`
 
 No-prod cases: SS and MD (see the Prod column). On Production, the
-dashboard and `npm run test:smoke` run the JS and JF cases only.
+dashboard and Playwright run the JS and JF cases only.
 
 SS and MD are tagged `@no-prod`, run on desktop and phone, and need a saved
 session from `npm run login:manual -- jobseeker`.
@@ -36,8 +36,8 @@ Stage, and **Production**. They live in `tests/smoke/job-search/`.
 The SS and MD cases log in as a job seeker and save, bookmark and remove
 things on that account, so they run on **QA and Stage only**, never on
 Production. They live in the same folder, tagged `@no-prod`: on
-Production, Playwright leaves them out, and `npm run test:smoke` leaves them
-out everywhere (see
+Production, Playwright leaves them out, and `--grep-invert @no-prod` leaves
+them out elsewhere (see
 [Keeping tests off Production](README.md#keeping-tests-off-production)).
 Each test removes what it added, even when it fails.
 
@@ -212,9 +212,9 @@ Every case is generated:
 | Project | Runs | Cases |
 |---|---|---|
 | `smoke-desktop` on QA or Stage | 19 | JS-1 to JS-5, JF-1 to JF-5, SS-1 to SS-3, MD-1 to MD-6 |
-| `smoke-desktop` on Production, or with `npm run test:smoke` | 10 | JS-1 to JS-5, JF-1 to JF-5 (SS and MD are left out) |
+| `smoke-desktop` on Production, or with `--grep-invert @no-prod` | 10 | JS-1 to JS-5, JF-1 to JF-5 (SS and MD are left out) |
 | `smoke-mobile` on QA or Stage | 16 | JS-1 to JS-5, JF-4, JF-5, SS-1 to SS-3, MD-1 to MD-6 |
-| `smoke-mobile` on Production, or with `npm run test:smoke` | 7 | JS-1 to JS-5, JF-4, JF-5 (SS and MD are left out) |
+| `smoke-mobile` on Production, or with `--grep-invert @no-prod` | 7 | JS-1 to JS-5, JF-4, JF-5 (SS and MD are left out) |
 
 If the total is different, or anything fails, see
 [When something fails](README.md#when-something-fails).

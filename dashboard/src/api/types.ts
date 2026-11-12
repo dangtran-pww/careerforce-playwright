@@ -428,6 +428,9 @@ export interface PromptResult {
   baselineScreenshots?: string[];
   turns?: number;
   costUsd?: number;
+  model?: string | null;
+  tokens?: { in: number; cached: number; out: number }; // in counts cached
+  durationMs?: number; // the `claude` process, browser startup included
 }
 
 export interface SuiteStep extends TestReport {
@@ -457,6 +460,9 @@ export interface SuiteStep extends TestReport {
   baselineScreenshots?: string[];
   turns?: number;
   costUsd?: number;
+  model?: string | null;
+  tokens?: { in: number; cached: number; out: number };
+  durationMs?: number;
 }
 
 export interface Run extends TestReport {

@@ -35,8 +35,8 @@ Log in first ([Login](#login)), then run the cases:
 npx playwright test tests/smoke/admin-reports
 ```
 
-These cases are part of the `smoke` project, so `npm run test:smoke` runs
-them along with every other smoke plan. The admin `storageState` is set at
+These cases are part of the `smoke` project, so running the smoke projects
+runs them along with every other smoke plan. The admin `storageState` is set at
 the top of the spec file, so each case is listed on its own (no
 `describe` group).
 

@@ -27,7 +27,7 @@ const INDEXES = [
   { label: 'Occupations', machineName: 'occupations' },
 ];
 
-// Occupations is ~26k items; a full reindex takes minutes.
+// Occupations is ~35k items; a full reindex takes minutes.
 const BATCH_TIMEOUT = 25 * 60_000;
 
 test.describe('AM-2: rebuild tracking and reindex', { tag: '@no-prod' }, () => {
@@ -36,7 +36,14 @@ test.describe('AM-2: rebuild tracking and reindex', { tag: '@no-prod' }, () => {
       test.setTimeout(2 * BATCH_TIMEOUT + 60_000);
       const index = new SearchApiIndexPage(page, machineName);
 
+      const indexNow = page.getByRole('button', { name: 'Index now' });
       await index.goto();
+      const before = await index.progress();
+      if (before.total > 0 && before.indexed === before.total) {
+        // Nothing left to index, so the button is disabled.
+        await expect(indexNow).toBeDisabled();
+      }
+
       await index.rebuildTracking(BATCH_TIMEOUT);
       const afterRebuild = await index.progress();
       expect(
@@ -44,6 +51,7 @@ test.describe('AM-2: rebuild tracking and reindex', { tag: '@no-prod' }, () => {
         `"${label}" progress after rebuild tracking: "${afterRebuild.text}"`,
       ).toBeGreaterThan(0);
       expect(afterRebuild.indexed, afterRebuild.text).toBe(0);
+      await expect(indexNow).toBeEnabled();
 
       await index.indexNow(BATCH_TIMEOUT);
       await index.goto();
@@ -99,7 +107,10 @@ test.describe('AM-3: searches work after reindex', { tag: '@no-prod' }, () => {
   }) => {
     test.setTimeout(5 * 60_000);
     const links = await new EventsSearchPage(page).allEventLinks();
-    expect(links.length, 'events search returned no event links').toBeGreaterThan(0);
+    expect(
+      links.length,
+      'events search returned no event links',
+    ).toBeGreaterThan(0);
 
     const picked = [...links].sort(() => Math.random() - 0.5).slice(0, 10);
     test.info().annotations.push({
@@ -115,10 +126,18 @@ test.describe('AM-3: searches work after reindex', { tag: '@no-prod' }, () => {
       if ((await similar.block.count()) === 0) continue;
 
       const ids = await similar.linkedEventIds();
-      expect(ids.length, `event ${id}: Similar Events block has no event links`).toBeGreaterThan(0);
+      expect(
+        ids.length,
+        `event ${id}: Similar Events block has no event links`,
+      ).toBeGreaterThan(0);
       for (const linked of ids) {
-        expect(linked, `event ${id}: similar-event link has no event id`).not.toBe('');
-        expect(linked, `event ${id}: Similar Events links to itself`).not.toBe(id);
+        expect(
+          linked,
+          `event ${id}: similar-event link has no event id`,
+        ).not.toBe('');
+        expect(linked, `event ${id}: Similar Events links to itself`).not.toBe(
+          id,
+        );
       }
       withSimilar.push(id);
     }

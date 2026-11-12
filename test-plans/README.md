@@ -286,11 +286,12 @@ that must not are marked no-prod (see
 
 The Smoke suite (`test-suites/smoke.md`) lists every smoke plan. On
 Production the dashboard runs it without the no-prod plans and cases.
-`npm run test:smoke` leaves out every test tagged `@no-prod`, on any
-environment:
+On QA and Stage, `--grep-invert @no-prod` leaves out every test tagged
+`@no-prod`:
 
 ```bash
-npm run test:smoke                              # prod-safe smoke tests, desktop and phone
+npx playwright test --project=smoke-desktop --project=smoke-mobile  # desktop and phone
+npx playwright test --project=smoke-desktop --project=smoke-mobile --grep-invert @no-prod  # prod-safe only
 npx playwright test tests/smoke/admin-reports   # one plan
 npx playwright test --project=smoke-mobile      # phone only
 ```
@@ -432,8 +433,9 @@ Conventions:
   Implemented tests: `tests/smoke/anonymous/*.spec.ts`.
 - `smoke-admin-reports.md` — Status: implemented.
   Implemented test: `tests/smoke/admin-reports/admin-reports.spec.ts`.
-- `smoke-admin-maintenance.md` — Status: partially implemented (AM-1,
-  AM-2 not yet verified). Implemented tests:
+- `smoke-admin-maintenance.md` — Status: needs update (AM-2: the
+  rebuild-tracking confirm page is `/rebuild-tracker`; AM-1 not yet run).
+  Implemented tests:
   `tests/smoke/admin-maintenance/*.spec.ts`. No-prod plan.
   Permissions rebuild, search-api rebuild tracking and reindex, and
   search checks (site, events, appointments, similar events, occupations).

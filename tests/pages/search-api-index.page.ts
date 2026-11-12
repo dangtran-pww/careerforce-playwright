@@ -5,8 +5,8 @@ import { expect, type Locator, type Page } from '@playwright/test';
 // Progress/status selectors are the ones AR-3 already uses
 // (tests/smoke/admin-reports/admin-reports.spec.ts).
 //
-// The button labels and the confirm step are Search API defaults and have
-// NOT been checked against a live admin session yet — see the plan's status.
+// Button labels and the confirm page checked on QA with an admin session,
+// 2026-11-12.
 export class SearchApiIndexPage {
   readonly page: Page;
   readonly machineName: string;
@@ -47,14 +47,17 @@ export class SearchApiIndexPage {
     return /\berror\b/.test(cls);
   }
 
-  // "Rebuild tracking information" goes to a confirm form; confirming may
-  // run a tracking batch before landing back on the index page.
+  // "Rebuild tracking information" goes to a confirm form at
+  // …/index/<id>/rebuild-tracker ("Confirm" / "Cancel"); confirming may run
+  // a tracking batch before landing back on the index page.
   async rebuildTracking(batchTimeout: number) {
     await this.page
       .getByRole('button', { name: 'Rebuild tracking information' })
       .click();
-    await this.page.waitForURL(/\/rebuild-tracking/);
-    await this.page.getByRole('button', { name: /confirm|rebuild/i }).click();
+    await this.page.waitForURL(/\/rebuild-tracker$/);
+    await this.page
+      .getByRole('button', { name: 'Confirm', exact: true })
+      .click();
     await waitForBatch(this.page, batchTimeout);
     await this.goto();
   }

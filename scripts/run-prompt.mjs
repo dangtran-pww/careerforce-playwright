@@ -1,7 +1,6 @@
 // Runs one prompt check outside the dashboard: a plan's prompt case by its
 // ID, or a prompt file by its name. Claude Code looks at the site in a
-// browser and gives a verdict (see dashboard/server/runs/prompt.mjs). Used by
-// the /run-test-case and /test-plan-report skills.
+// browser and gives a verdict (see dashboard/server/runs/prompt.mjs).
 //
 // Usage:
 //   npm run prompt -- <case-id> [--env qa] [--compare stage|prod|baseline|default|none] [--out <dir>]
@@ -211,6 +210,23 @@ await writeFile(
   ),
 );
 
+// "claude-sonnet-4-6, 23 turns, 412,300 tokens in (398,100 cached) / 6,210
+// out, $0.41, 2m 13s".
+function claudeUsage(r) {
+  const n = (x) => x.toLocaleString('en-US');
+  const s = Math.round((r.durationMs ?? 0) / 1000);
+  return [
+    r.model,
+    r.turns != null && `${r.turns} turns`,
+    r.tokens &&
+      `${n(r.tokens.in)} tokens in (${n(r.tokens.cached)} cached) / ${n(r.tokens.out)} out`,
+    r.costUsd != null && `$${r.costUsd.toFixed(2)}`,
+    s < 60 ? `${s}s` : `${Math.floor(s / 60)}m ${s % 60}s`,
+  ]
+    .filter(Boolean)
+    .join(', ');
+}
+
 const shotsBase = values.out ? dir : OUT_ROOT;
 console.log(
   `\n${result.status.toUpperCase()}: ${result.summary ?? result.error}`,
@@ -222,8 +238,7 @@ for (const f of result.findings ?? [])
 console.log(`\nScreenshots: ${resolve(shotsBase)}/…`);
 for (const s of result.screenshots) console.log(`  ${join(shotsBase, s)}`);
 console.log(`Result: ${join(dir, 'result.json')}`);
-if (result.costUsd != null)
-  console.log(`Claude: ${result.turns} turns, $${result.costUsd.toFixed(2)}`);
+console.log(`Claude: ${claudeUsage(result)}`);
 process.exit(
   result.status === 'passed' ? 0 : result.status === 'failed' ? 1 : 2,
 );

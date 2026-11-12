@@ -14,17 +14,13 @@ scripts/
                              # storageState (Google blocks sign-in in an automated browser)
   open-browser.mjs          # `npm run browser [-- <role> [path]]` — Playwright's Chromium on the
                              # site for manual checks, tracking blocked in every tab
-  trace-steps.mjs           # per-step screenshots from a traced run (/test-plan-report)
-  confluence-report.mjs     # uploads a report and its screenshots to Confluence
-                             # (/publish-report-confluence)
   lib/site.mjs              # environments and logins, shared by the scripts and the dashboard
 dashboard/                  # `npm run dashboard` — local test dashboard (see "Test dashboard")
   server/                   #   Node server and JSON API (Hono): index.mjs starts it,
                              #   app.mjs mounts routes/; catalog/ reads plans and suites,
                              #   runs/ runs them, claude/ asks Claude Code
   src/                      #   React app (Vite + TypeScript); dist/ is its build (gitignored)
-.claude/skills/             # Claude Code skills: run-test-case, test-plan-report,
-                             # publish-report-confluence (see "Test reports and Confluence")
+.claude/skills/             # Claude Code skills: ask-kb, update-kb
 reports/                    # generated test reports (gitignored)
 tests/
   pages/                    # Page objects for the CareerForce smoke suite below
@@ -53,9 +49,9 @@ npx playwright install chromium
 cp .env.example .env   # fill in BASIC_AUTH_USER/PASSWORD for QA's Basic Auth gate
 npm run login:manual -- admin   # once per session expiry; admin-reports needs it
                                 # (logs in to BASE_URL's environment; add --env stage for Stage)
-npm run test:smoke                               # desktop and phone, no @no-prod tests
-npx playwright test --project=smoke-desktop      # desktop only; on QA/Stage this also
-                                                 # runs the @no-prod tests
+npx playwright test --project=smoke-desktop --project=smoke-mobile  # desktop and phone
+npx playwright test --project=smoke-desktop      # desktop only
+# On QA/Stage these also run the @no-prod tests; add --grep-invert @no-prod to skip them.
 
 # Logged-in tests: log in by hand once per role (auth is SSO, so this step
 # can't be automated — and Google blocks sign-in from Playwright's own
@@ -139,8 +135,8 @@ them `<suite>-<device>`:
   either suite: every test of a no-prod plan (`Prod: No` in its header), or
   the tests of a no-prod case (`No` in the plan's Prod column). It's decided
   per plan or case, not by whether a test changes data. When `BASE_URL` is
-  production, every project leaves them out, whatever the command, and
-  `npm run test:smoke` leaves them out everywhere (see test-plans/README.md,
+  production, every project leaves them out, whatever the command; elsewhere,
+  `--grep-invert @no-prod` leaves them out (see test-plans/README.md,
   "Keeping tests off Production"). Tag tests that change data
   `@desktop-only` too, unless the phone is what's being tested.
 
@@ -220,29 +216,6 @@ tests left behind. No heavy style preset is included.
 4. Run it green on staging before adding another test. A small trusted
    suite beats a large flaky one.
 
-## Test reports and Confluence
-
-Two Claude Code skills turn a test plan run into a report that QA, project
-managers, and the client can read:
-
-1. `/test-plan-report <plan>` runs every case of an `implemented` plan with
-   tracing on, and writes `reports/<plan>-<stamp>/report.md`. The report
-   explains each step in plain language, with a screenshot of the page after
-   it.
-2. `/publish-report-confluence <report-dir> <confluence-url>` publishes that
-   report as a new Confluence page under the page or space you give. It
-   uploads every screenshot and then reads the live page back to confirm that
-   each one is shown.
-
-**Always publish with the skill.** Don't paste the report into Confluence or
-write the page HTML by hand (or ask Claude to). Confluence silently drops an
-image that sits inside a numbered list item. The report puts each screenshot
-inside its numbered step, so a hand-made page loses images with no error. The
-first smoke-anonymous page lost 13 of its 24 screenshots this way.
-`scripts/confluence-report.mjs` ends the list before each image and resumes the
-numbering after it. It refuses to build the page if any image is missing or
-not uploaded. After publishing, the skill counts the images on the live page.
-
 ## Test dashboard
 
 ```bash
@@ -306,14 +279,6 @@ the app is laid out and how to add a page, see the comment at the top of
 `dashboard/src/main.tsx`.
 
 ## Troubleshooting
-
-- **Screenshots are missing on a Confluence report page:** the page was built
-  by hand, not with `/publish-report-confluence` (see "Test reports and
-  Confluence"). Publish it again with the skill. Pointing it at the existing
-  page updates that page.
-- **The Confluence upload fails with `getaddrinfo EAI_AGAIN`:** Node is not
-  using the sandbox's network proxy. Run the upload with
-  `NODE_USE_ENV_PROXY=1` in front, as the skill does.
 
 - **Logged-in tests fail with a storage state / ENOENT error:** run `npm run
   login:manual -- <role> --env <env>` to (re)create

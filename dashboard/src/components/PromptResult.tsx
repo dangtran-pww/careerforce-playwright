@@ -1,5 +1,5 @@
 import type { Finding, PromptResult as Result } from '../api/types';
-import { plural } from '../lib/format';
+import { duration, modelName, plural } from '../lib/format';
 import { runFile } from '../lib/runs';
 
 // One Claude check's result: who it ran as, what it compared with, the
@@ -57,13 +57,39 @@ export function PromptResult({
           <Shots paths={r.baselineScreenshots} />
         </details>
       )}
-      {r.turns != null && (
-        <p className="note small">
-          {plural(r.turns, 'turn')}
-          {r.costUsd != null ? ` · $${r.costUsd.toFixed(2)}` : ''}
-        </p>
-      )}
+      <UsageNote result={r} />
     </>
+  );
+}
+
+// What the check took: model, turns, tokens, cost and time. Older results
+// have only turns and cost.
+function UsageNote({ result: r }: { result: Result }) {
+  const n = (x: number) => x.toLocaleString();
+  const parts = [
+    r.model && modelName(r.model),
+    r.turns != null && plural(r.turns, 'turn'),
+    r.tokens && (
+      <span
+        key="tokens"
+        title={`${n(r.tokens.cached)} of the ${n(r.tokens.in)} input tokens were read from the prompt cache`}
+      >
+        {n(r.tokens.in)} tokens in · {n(r.tokens.out)} out
+      </span>
+    ),
+    r.costUsd != null && `$${r.costUsd.toFixed(2)}`,
+    r.durationMs != null && duration(r.durationMs),
+  ].filter(Boolean);
+  if (!parts.length) return null;
+  return (
+    <p className="note small">
+      {parts.map((p, i) => (
+        <span key={i}>
+          {i > 0 && ' · '}
+          {p}
+        </span>
+      ))}
+    </p>
   );
 }
 

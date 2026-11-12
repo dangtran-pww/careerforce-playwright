@@ -1,16 +1,25 @@
 # [Smoke] - Admin Maintenance - Test Plan
 
-Status: partially implemented
+Status: needs update
 Implemented test: tests/smoke/admin-maintenance/*.spec.ts
 Prod: No: rebuilds permissions and reindexes the search indexes.
-Pending cases: AM-1, AM-2 — generated but not yet verified against a live
-admin session (the saved admin session had expired). AM-3, AM-4, AM-5
-verified on QA, 2026-10-29.
+Updated cases: AM-2 — the rebuild-tracking confirm page is
+`/admin/config/search/search-api/index/<id>/rebuild-tracker` with a
+"Confirm" button, but `SearchApiIndexPage.rebuildTracking()` waits for a URL
+matching `/rebuild-tracking`, so it times out. "Index now" is disabled until
+tracking is rebuilt (checked on QA with the admin session, 2026-11-12).
+Pending cases: AM-1 — generated; its page and button checked on QA on
+2026-11-12, but the rebuild itself hasn't been run by the test yet. AM-3,
+AM-4, AM-5 verified on QA, 2026-10-29.
 
 Devices: desktop only. Admin and editor screens are not tested on a phone (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`).
 
 Split out from [deed-smoke-test-plan.md](../docs/deed-smoke-test-plan.md)
-§3 (search-api maintenance) and §9 (permissions rebuild), Phase 2. These
+§3 (search-api maintenance) and §9 (permissions rebuild), Phase 2, which
+come from the team's manual checklist on Confluence,
+[DEED Smoke Testing Template](https://portland-webworks.atlassian.net/wiki/spaces/MNDEED/pages/1540882433)
+(the Stage run of 2026-10-30 also rebuilt and reindexed Appointment
+Occurrences and Events More Like This, and searched both). These
 are the admin write actions that the
 [admin reports plan](smoke-admin-reports.md) deliberately leaves
 out because they change site state.
@@ -24,7 +33,7 @@ out because they change site state.
 | **How to log in** | By hand, once per environment: `npm run login:manual -- admin --env <qa\|stage>` (without `--env`, it uses the environment `BASE_URL` in `.env` points at). A Chromium window opens on the login page. Click "PWW Staff Log In" and finish the Google sign-in. The session is saved as soon as you're back on the site, then close the window. The tests can't log in themselves: Google blocks sign-in from a browser Playwright controls. |
 | **Saved session** | `playwright/.auth/<env>/admin.json`, one file per environment, shared with [smoke-admin-reports](smoke-admin-reports.md). A QA session doesn't work on Stage. |
 | **Site password gate** | QA and Stage also ask for the Basic Auth username and password. The tests and the login window both take it from `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` in `.env` ([one-time setup](README.md#one-time-setup)). |
-| **When it expires** | Run the login command again. Each spec calls `useRole('admin')`, which checks the session before the first test; if it has expired, the tests fail with the login command to fix it. Drupal can also end the session early, e.g. when the same account logs in somewhere else. AM-1 and AM-2 are still unverified because the session had expired. |
+| **When it expires** | Run the login command again. Each spec calls `useRole('admin')`, which checks the session before the first test; if it has expired, the tests fail with the login command to fix it. Drupal can also end the session early, e.g. when the same account logs in somewhere else. |
 | **Environments** | QA and Stage only. The plan is no-prod (`Prod: No` in the header): AM-1 and AM-2 change site state, and AM-3 to AM-5 run after AM-2. |
 
 ## Running it
@@ -39,7 +48,7 @@ npx playwright test tests/smoke/admin-maintenance --grep "AM-3|AM-4|AM-5" --proj
 
 Runs in the `smoke-desktop` project (admin-maintenance is desktop only). The
 plan is no-prod and every test is tagged `@no-prod`, so it never runs on
-Production, and `npm run test:smoke` leaves it out (see
+Production, and `--grep-invert @no-prod` leaves it out elsewhere (see
 [README → Keeping tests off Production](README.md#keeping-tests-off-production)).
 
 ## Scope
@@ -65,13 +74,15 @@ Production, and `npm run test:smoke` leaves it out (see
 
 ## Test cases
 
-| ID | Title | Persona | Steps | Assertions | Notes |
+Every case runs as `admin`.
+
+| ID | Test | Page | Steps | Expected result | Notes |
 |---|---|---|---|---|---|
-| AM-1 | Permissions rebuild completes | Admin | `goto('/admin/reports/status/rebuild')`, click "Rebuild permissions", wait for the batch page to finish | Success message (e.g. "Content permissions have been rebuilt") visible; no error messages | Source checklist: "should complete successfully with no errors/issues" |
-| AM-2 | Rebuild tracking and reindex, per index | Admin | Data-driven over the 4 indexes below. For each: `goto('/admin/config/search/search-api/index/<machine-name>')` → "Rebuild tracking information" → confirm → "Index now" → wait for the batch page to finish (it runs in the browser, not via cron/queue) | After rebuild tracking: success message, and the progress shows `0/<N> indexed` with N > 0. After Index now: batch success message; progress shows `N/N indexed`; no error status row | Rebuild and reindex stay in one test per index so a failure never leaves an index empty and unnoticed. Read counts with the same selectors AR-3 uses (`.search-api-index-status .progress__description`, `.search-api-index-summary--status`) |
-| AM-3 | Searches work after reindex | Admin | After AM-2, data-driven over the 5 searches below: run each search with its keyword | Each search returns results (result count > 0, or at least one result row where there is no count summary) | Confirms every reindexed index is usable again, not just "indexed". Reuse `SearchPage` where the page uses the same view pattern (summary header + `.views-row`). The events search does **not** fit it — see "Events search page" below |
-| AM-4 | Events search sort and filters | Admin | After AM-2, data-driven over the cases in "Events search sort and filter cases" below: `goto('/education-and-training/events?<query>')` | Per case, see the table | Filters go in the URL rather than through the form. The page renders the filter form several times (desktop sidebar, mobile drawer, sort-only form in the header), so clicking the form needs scoping to one copy |
-| AM-5 | Appointments search date strip and filters | Admin | After AM-2, run the cases in "Appointments search cases" below. Most cases first find a **reference day**: the first day in the strip (this week, then next week) with ≥ 2 slots | Per case, see the table | Same thinking as AM-4: never assert fixed counts or location names, only relations to the unfiltered results on the same day. Don't click a booking link through to submission, because that would create a real booking |
+| AM-1 | Permissions rebuild completes | `/admin/reports/status/rebuild` | 1. Open the page. 2. Click "Rebuild permissions" and wait for the batch page to finish. | **1.** The heading reads "Are you sure you want to rebuild the permissions on site content?", with "Rebuild permissions" and "Cancel" buttons. **2.** A status message says the content permissions have been rebuilt, and there is no error message. | Source checklist: "should complete successfully with no errors/issues" |
+| AM-2 | Rebuild tracking and reindex, per index | `/admin/config/search/search-api/index/<machine-name>` | Repeat for each of the 4 indexes below. 1. Open the index page. 2. Click "Rebuild tracking information"; on the confirm page, click "Confirm". 3. Click "Index now" and wait for the batch page to finish (it runs in the browser, not through cron). | **1.** The progress shows `N/N indexed` with N > 0, and "Index now" is disabled because nothing is left to index. **2.** The confirm page is `/admin/config/search/search-api/index/<machine-name>/rebuild-tracker` and asks "Are you sure you want to rebuild the tracking data for the search index <name>?". After confirming, back on the index page: a status message, the progress shows `0/N indexed`, and "Index now" is enabled. **3.** A status message says the batch finished; the progress shows `N/N indexed`; the Status row (`.search-api-index-summary--status`) isn't marked as an error, and there is no error message. | Rebuild and reindex stay in one test per index so a failure never leaves an index empty and unnoticed. Progress: `.search-api-index-status .progress__description`, the same selector AR-3 uses. The page also lists each datasource ("Datasource Content (2068/2068 indexed)"); see the counts below |
+| AM-3 | Searches work after reindex | See "Searches for AM-3" | After AM-2, run each of the 5 searches below with its keyword. | Each search returns results: a result count above 0, or at least one result where the page has no count. | Confirms every reindexed index is usable again, not just "indexed". Reuse `SearchPage` where the page uses the same view pattern (summary header + `.views-row`). The events search does **not** fit it — see "Events search page" below |
+| AM-4 | Events search sort and filters | `/education-and-training/events?<query>` | After AM-2, open the page with each query in "Events search sort and filter cases" below. | Each case's result is in that table. | Filters go in the URL rather than through the form. The page renders the filter form several times (desktop sidebar, mobile drawer, sort-only form in the header), so clicking the form needs scoping to one copy |
+| AM-5 | Appointments search date strip and filters | `/connect-careerforce/schedule-an-appointment` | After AM-2, run the cases in "Appointments search cases" below, most of which start from a **reference day** (the first day in the strip, this week then next week, with at least 2 slots). | Each case's result is in that table. | Same thinking as AM-4: never assert fixed counts or location names, only relations to the unfiltered results on the same day. Don't click a booking link through to submission, because that would create a real booking |
 
 Indexes for AM-2:
 
@@ -92,8 +103,18 @@ Searches for AM-3:
 | Events more like this | `events_mlt` | "Similar Events" block on event detail pages (`/events/event-occurrence/<id>`) | n/a. Collect every event link from the events search (`a.cf-events-search-card-link`, all pager pages), pick 10 at random, and open each. Pass if **at least one** shows the block with ≥ 1 event; for every page that has the block, each similar-event link must point to `/events/event-occurrence/<id>` and not to the event itself. See "Similar Events block" below |
 | Occupations | `occupations` | `/explore/careers?otitle=<keyword>` | Run three times: "taxi driver", "nurse", "project manager" |
 
-Source-checklist reference counts (at the time of writing — not asserted,
-counts change with content): General 4351/4351, Occupations 26471/26471.
+Counts on QA on 2026-11-12 (not asserted, they change with content). The
+Confluence checklist still lists General 4351 and Occupations 26471, which
+are out of date. Each index page shows the overall progress, one line per
+datasource, and "There are N items indexed on the server"; the server count
+is lower than the tracked count on every index except Occupations.
+
+| Index | Progress | Datasources | On the server |
+|---|---|---|---|
+| Appointment Occurrences | 529/529 | Appointment Occurrence 529 | 60 |
+| Events More Like This | 462/462 | Occurrence 461, External Session 1 | 416 |
+| General site content index | 4574/4574 | Location 1175, Group 846, Occurrence 461, External Session 1, Content 2068, Taxonomy term 23 | 4132 |
+| Occupations | 35280/35280 | O*Net Occupations 1016, Military MOC data 34264 | 35280 |
 
 ### Events search page
 
@@ -309,6 +330,12 @@ Notes from verification:
 - Every date-strip link and the Reset button do a full page load, so the
   page object waits for the URL to change before reading the page.
 - Reset also drops `start`, so it returns to today's unfiltered results.
-- AM-1 and AM-2's button labels ("Rebuild permissions", "Rebuild tracking
-  information", the confirm button, "Index now") and success messages are
-  Drupal / Search API defaults, not yet checked on QA.
+- AM-1 and AM-2's pages and buttons were checked on QA with the admin
+  session on 2026-11-12, without clicking them: "Rebuild permissions" /
+  "Cancel" on the permissions page; "Index now", "Queue all items for
+  reindexing", "Clear all indexed data" and "Rebuild tracking information"
+  on each index page; "Confirm" / "Cancel" on `/rebuild-tracker`. The
+  success messages are Drupal / Search API defaults and are still unchecked.
+- `tests/pages/search-api-index.page.ts`: `rebuildTracking()` must wait for
+  `/rebuild-tracker`, not `/rebuild-tracking`, and its comment saying the
+  labels are unchecked can go.
