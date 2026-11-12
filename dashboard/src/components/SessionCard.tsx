@@ -51,6 +51,9 @@ export function SessionCard({
       {session?.message && !checking && (
         <p className="message">{session.message}</p>
       )}
+      {session?.detailsNote && !checking && (
+        <p className="note small">{session.detailsNote}</p>
+      )}
       {session &&
         NEEDS_LOGIN.includes(session.status) &&
         session.loginCommand && (
@@ -63,6 +66,16 @@ export function SessionCard({
         <Facts
           items={[
             session.email && ['Logged in as', session.email],
+            session.profileType !== undefined && [
+              'Profile type',
+              session.profileType || 'None',
+            ],
+            session.roles && [
+              'Roles',
+              session.roles.length
+                ? session.roles.join(', ')
+                : 'Authenticated user',
+            ],
             ['Checked', <TimeAgo iso={session.checkedAt} />],
             ['Session saved', <TimeAgo iso={session.savedAt} />],
           ]}
@@ -77,8 +90,12 @@ export function SessionCard({
   );
 }
 
-// "platform-manager" → "Platform manager".
+// Roles whose id doesn't read well as a name.
+const ROLE_LABELS: Record<string, string> = { jobseeker: 'Job Seeker' };
+
+// "platform-manager" → "Platform manager", "jobseeker" → "Job Seeker".
 function roleLabel(role: string) {
+  if (ROLE_LABELS[role]) return ROLE_LABELS[role];
   const words = role.replace(/-/g, ' ');
   return words[0].toUpperCase() + words.slice(1);
 }

@@ -1,13 +1,10 @@
 import { useEffect } from 'react';
-import { Route, Routes, useLocation } from 'react-router';
+import { Navigate, Route, Routes, useLocation } from 'react-router';
 import { Header } from './components/Header';
 import { useEnv } from './hooks/useEnv';
 import { NotFoundPage } from './pages/NotFoundPage';
-import { OverviewPage } from './pages/OverviewPage';
 import { PlanPage } from './pages/plan/PlanPage';
-import { PlansPage } from './pages/PlansPage';
 import { RunPage } from './pages/run/RunPage';
-import { RunsPage } from './pages/RunsPage';
 import { SuitePage } from './pages/suite/SuitePage';
 import { SuitesPage } from './pages/SuitesPage';
 
@@ -29,12 +26,10 @@ export function App() {
           route or the environment changes. */}
       <main id="view" tabIndex={-1} key={`${currentEnv.id}:${pathname}`}>
         <Routes>
-          <Route path="/" element={<OverviewPage />} />
+          <Route path="/" element={<Navigate to="/suites" replace />} />
           <Route path="/suites" element={<SuitesPage />} />
           <Route path="/suites/:slug" element={<SuitePage />} />
-          <Route path="/plans" element={<PlansPage />} />
           <Route path="/plans/:slug" element={<PlanPage />} />
-          <Route path="/runs" element={<RunsPage />} />
           <Route path="/runs/:id" element={<RunPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

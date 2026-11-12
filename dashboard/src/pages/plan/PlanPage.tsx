@@ -28,7 +28,7 @@ export function PlanPage() {
   if (error)
     return (
       <>
-        <BackLink to="/plans">← Test plans</BackLink>
+        <BackLink to="/suites">← Suites</BackLink>
         <ErrorBox>{error.message}</ErrorBox>
       </>
     );
@@ -42,7 +42,7 @@ function PlanDetails({ plan, site, runs, activeRun }: PlanResponse) {
 
   return (
     <>
-      <BackLink to="/plans">← Test plans</BackLink>
+      <BackLink to="/suites">← Suites</BackLink>
       <TitleRow title={plan.name}>
         <span className="kind-label">{plan.type}</span>
         <Badge map={PLAN_STATUS} value={plan.status} />

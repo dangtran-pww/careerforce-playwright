@@ -34,6 +34,13 @@ export interface Session {
   // The logged-in account's email; only when the site accepts the session
   // and the account's edit form shows it.
   email?: string;
+  // The account's profile type (Job Seeker, Partner, Staff; '' for none),
+  // from its own pages, and roles ([] for none; shown as "Authenticated
+  // user"), from the People list via
+  // the admin session. When the roles can't be read, detailsNote says why.
+  profileType?: string;
+  roles?: string[];
+  detailsNote?: string;
   message?: string;
   loginCommand?: string;
 }
@@ -369,11 +376,6 @@ export interface Run extends TestReport {
   headed?: boolean;
   steps?: SuiteStep[];
   command?: string;
-}
-
-export interface RunsResponse {
-  runs: Run[];
-  activeRun: string | null;
 }
 
 // GET /api/runs/:id?logFrom=N: the run, and its output from character N.

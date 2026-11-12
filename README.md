@@ -266,32 +266,32 @@ A local page for seeing and running the tests:
   `BASE_URL` is only the default. Production shows a red bar. Plans that change
   data can't run on Production. Each run records its environment, and its
   command starts with `BASE_URL=...` so it can be run the same way by hand.
-- **Overview:** whether the saved admin session for the picked environment
-  (`playwright/.auth/<env>/admin.json`) still logs in. It asks the site, the same way `useRole`
+- **Login Sessions** (header menu): whether the saved session of each role for
+  the picked environment (`playwright/.auth/<env>/<role>.json`) still logs in. It asks the site, the same way `useRole`
   (`tests/helpers/roles.ts`) does, because Drupal can end a session (autologout after
   inactivity) long before the cookie's expiry date. If the session has
-  expired, the page shows the `npm run login:manual -- admin --env <env>`
+  expired, its card shows the `npm run login:manual -- <role> --env <env>`
   command to fix it. Press "Check again" afterwards.
 - **Suites:** run several plans and Claude prompts as one run. Suites are
   Markdown files in `test-suites/` (format in `test-suites/README.md`). On a
   suite's page, untick any step and see the logins the chosen steps need. The
   run page shows each step as it goes: a plan's test results, and a prompt's
   verdict, findings and screenshots.
-- **Plans:** every plan in `test-plans/`, with its status, cases, the
-  roles it logs in as, and its last run. The dashboard reads the status,
+- **Plans:** a suite's plan panel links to the plan's page, with its status,
+  cases, the roles it logs in as, and its recent runs. The dashboard reads the status,
   "Implemented test" and "Pending cases" lines and the case tables from each
   plan (`dashboard/server/catalog/plans.mjs`), and asks Playwright (`--list`) which
   projects and tests each plan maps to. A case maps to the tests whose title
-  or `describe` starts with its ID. **Reload** asks Playwright again after
-  you add or rename tests.
-- **Running a plan:** press **Run** on the list to run a plan with its default
-  projects, or open the plan to pick projects, tick only some cases (or run
+  or `describe` starts with its ID. The list is kept until the dashboard
+  restarts, so restart it after you add or rename tests.
+- **Running a plan:** press **Run** in a suite's plan panel to run a plan with
+  its default projects, or open the plan to pick projects, tick only some cases (or run
   one case from its row), and show the browser. The page shows the exact
   `npx playwright test` command. Every device project that runs the plan's
   tests is ticked by default (e.g. `smoke-desktop` and `smoke-mobile`). On
   Production, a no-prod plan is refused and any other plan runs without its
   no-prod cases; the badges "Not on prod" and "N not on prod" show which.
-- **Runs:** one run at a time (the tests share accounts and a staging
+- **Runs:** listed on each suite's and plan's page. One run at a time (the tests share accounts and a staging
   database). A run's page shows the output live, a **Stop run** button, then
   the passed/failed/flaky/skipped counts, each test's result and error, and
   a link to its Playwright HTML report. Each run keeps its output, JSON and

@@ -44,12 +44,7 @@ export function Header() {
         />
       </div>
       <nav className="nav" aria-label="Dashboard sections">
-        <NavLink to="/" end>
-          Overview
-        </NavLink>
         <NavLink to="/suites">Suites</NavLink>
-        <NavLink to="/plans">Plans</NavLink>
-        <NavLink to="/runs">Runs</NavLink>
         <LoginsMenu />
       </nav>
       <div className="env-picker">

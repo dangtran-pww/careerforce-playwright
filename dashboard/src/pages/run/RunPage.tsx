@@ -26,7 +26,7 @@ export function RunPage() {
   if (error)
     return (
       <>
-        <BackLink to="/runs">← Runs</BackLink>
+        <BackLink to="/suites">← Suites</BackLink>
         <ErrorBox>{error.message}</ErrorBox>
       </>
     );
