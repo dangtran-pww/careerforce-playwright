@@ -1,4 +1,5 @@
 import type {
+  FailureExplanation,
   FailureExplanationsResponse,
   TestRef,
   TestResult,
@@ -11,7 +12,7 @@ import { duration } from '../lib/format';
 import { TEST_OUTCOME, type Tone } from '../lib/status';
 import { Badge } from './Badge';
 import { ErrorBox } from './Callouts';
-import { FailureExplain } from './FailureExplain';
+import { useFailureExplain } from './FailureExplain';
 import { RerunButton } from './RerunButton';
 import { Table, VisuallyHidden } from './Table';
 import { Tags } from './Tags';
@@ -98,28 +99,12 @@ export function TestResults({
           },
           {
             head: 'Test',
+            // The rest of the test (file, rerun buttons, error) is in the
+            // row below, where it has the width of four columns.
             cell: (r) => (
               <>
                 {r.title}
                 <Tags tags={r.tags} />
-                <div className="note small mono test-file">
-                  {r.file}:{r.line}
-                </div>
-                {/* The Project and Took columns are hidden on phones. */}
-                <div className="note small narrow-only">
-                  {r.project} · {duration(r.duration)}
-                </div>
-                <RerunCase
-                  plan={planSlug}
-                  test={r}
-                  caseId={caseOfTest(plan, r.title)}
-                />
-                {r.error && r.outcome !== 'expected' && (
-                  <details>
-                    <summary>Error</summary>
-                    <pre className="error">{r.error}</pre>
-                  </details>
-                )}
               </>
             ),
           },
@@ -141,53 +126,86 @@ export function TestResults({
             },
           },
         ]}
-        // "Why did it fail?" spans Test, Project and Took, so Claude's
-        // answer has room to read.
+        // The test's details and "Why did it fail?" span Test, Project, Took
+        // and Actions, so they have room to read.
         belowFrom={1}
-        below={(r) =>
-          r.error &&
-          (r.outcome === 'unexpected' || r.outcome === 'flaky') && (
-            <FailureExplain
-              runId={runId}
-              test={refOf(r)}
-              saved={savedFor(refOf(r))}
-            />
-          )
-        }
+        below={(r) => (
+          <TestDetails
+            test={r}
+            planSlug={planSlug}
+            caseId={caseOfTest(plan, r.title)}
+            runId={runId}
+            testRef={refOf(r)}
+            saved={savedFor(refOf(r))}
+          />
+        )}
       />
     </>
   );
 }
 
-// Runs the test's case again, on the test's project only, or opens it in
-// Playwright UI mode to run it interactively.
-function RerunCase({
-  plan,
-  test,
+// Under a test's title: its file, the Project and Took values on phones
+// (those columns are hidden there), its error, its buttons (run its case
+// again, open it in UI mode and, for a failure, "Why did it fail?") and
+// Claude's answer.
+function TestDetails({
+  test: r,
+  planSlug,
   caseId,
+  runId,
+  testRef,
+  saved,
 }: {
-  plan?: string;
   test: TestResult;
+  planSlug?: string;
   caseId?: string;
+  runId: string;
+  testRef: TestRef;
+  saved?: FailureExplanation;
 }) {
-  if (!caseId) return null;
+  const failed =
+    Boolean(r.error) && (r.outcome === 'unexpected' || r.outcome === 'flaky');
+  const explain = useFailureExplain({ runId, test: testRef, saved });
+  const explainButton = failed && explain.button;
   return (
-    <div className="rerun-case">
-      <RerunButton
-        planSlug={plan}
-        className="ghost small"
-        body={{ cases: [caseId], projects: [test.project] }}
-      >
-        Run {caseId} ({test.project}) again
-      </RerunButton>
-      <UiModeButton
-        planSlug={plan}
-        className="ghost small"
-        body={{ cases: [caseId], projects: [test.project] }}
-      >
-        Open {caseId} in UI mode
-      </UiModeButton>
-    </div>
+    <>
+      <div className="note small mono test-file">
+        {r.file}:{r.line}
+      </div>
+      <div className="note small narrow-only">
+        {r.project} · {duration(r.duration)}
+      </div>
+      {r.error && r.outcome !== 'expected' && (
+        <details>
+          <summary>Error</summary>
+          <pre className="error">{r.error}</pre>
+        </details>
+      )}
+      {(caseId || explainButton) && (
+        <div className="rerun-case">
+          {caseId && (
+            <>
+              <RerunButton
+                planSlug={planSlug}
+                className="ghost small"
+                body={{ cases: [caseId], projects: [r.project] }}
+              >
+                Run {caseId} ({r.project}) again
+              </RerunButton>
+              <UiModeButton
+                planSlug={planSlug}
+                className="ghost small"
+                body={{ cases: [caseId], projects: [r.project] }}
+              >
+                Open {caseId} in UI mode
+              </UiModeButton>
+            </>
+          )}
+          {explainButton}
+        </div>
+      )}
+      {failed && explain.panel}
+    </>
   );
 }
 

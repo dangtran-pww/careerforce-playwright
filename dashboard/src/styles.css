@@ -1708,8 +1708,8 @@ tr.row-below td {
   margin: 0;
 }
 
-/* "Run SR-1 again" under a test's title in the results table
-   (TestResults.tsx). */
+/* A test's buttons in the results table ("Run SR-1 again", "Open SR-1 in
+   UI mode", "Why did it fail?"), under its error (TestResults.tsx). */
 .rerun-case {
   display: flex;
   flex-wrap: wrap;

@@ -46,7 +46,12 @@ export async function startRun(
   const dir = await beginRun(meta);
 
   launch(meta, async () => {
-    const result = await runPlaywright({ dir, env, args: chosen.args });
+    const result = await runPlaywright({
+      dir,
+      env,
+      args: chosen.args,
+      progress: meta,
+    });
     meta.exitCode = result.code;
     Object.assign(meta, result.summary ?? {});
     meta.status = playwrightStatus(result);

@@ -9,7 +9,7 @@ import { allNoProd, caseGrep } from '../catalog/plans.mjs';
 import { ApiError } from '../errors.mjs';
 import { quote } from '../lib/processes.mjs';
 import { RUNS_DIR } from '../paths.mjs';
-import { isStopped, spawnStep } from './lifecycle.mjs';
+import { isStopped, log, spawnStep } from './lifecycle.mjs';
 
 // Terminal colour codes, in error messages.
 // eslint-disable-next-line no-control-regex
@@ -112,13 +112,48 @@ export const shownCommand = (env, args) =>
 
 // ---- running it ------------------------------------------------------------
 
+// The list reporter's lines: "Running 12 tests using 1 worker" once, then
+// "  ✓   3 [smoke-desktop] › …" as each test ends ("(retry #1)" on a retry).
+const runningLine = /^Running (\d+) tests? using (\d+) workers?/;
+const endedLine = /^\s+[✓✘-]\s+\d+ \[/;
+
+/**
+ * Read Playwright's output as it comes and keep `target.tests` up to date:
+ * { total, workers, done }, so the page can show how many tests the run has
+ * and how many have ended. Returns the stdout handler.
+ */
+function trackTests(target) {
+  let partial = '';
+  return (chunk) => {
+    log(chunk);
+    const lines = (partial + chunk).split('\n');
+    partial = lines.pop();
+    for (const line of lines) {
+      const running = runningLine.exec(line);
+      if (running)
+        target.tests = {
+          total: Number(running[1]),
+          workers: Number(running[2]),
+          done: 0,
+        };
+      else if (
+        target.tests &&
+        endedLine.test(line) &&
+        !/\(retry #\d+\)/.test(line)
+      )
+        target.tests.done++;
+    }
+  };
+}
+
 /**
  * `npx playwright test <args>` against `env`, with its JSON and HTML reports
- * and test output in `dir`. Resolves with { code, summary } where summary is
- * { stats, results, errors } from the JSON report, or null when Playwright
- * stopped before running anything.
+ * and test output in `dir`. While it runs, `progress.tests` says how many
+ * tests it has and how many have ended (see trackTests). Resolves with
+ * { code, summary } where summary is { stats, results, errors } from the JSON
+ * report, or null when Playwright stopped before running anything.
  */
-export async function runPlaywright({ dir, env, args }) {
+export async function runPlaywright({ dir, env, args, progress }) {
   await mkdir(dir, { recursive: true });
   const fullArgs = [
     'playwright',
@@ -135,6 +170,7 @@ export async function runPlaywright({ dir, env, args }) {
       PLAYWRIGHT_HTML_OUTPUT_DIR: join(dir, 'report'),
       PLAYWRIGHT_HTML_OPEN: 'never',
     },
+    onStdout: progress ? trackTests(progress) : undefined,
   });
   let summary = null;
   try {

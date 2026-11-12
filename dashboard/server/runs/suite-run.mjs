@@ -232,7 +232,12 @@ function suiteStatus(meta) {
 async function planStep(step, stepDir, plan, env, headed) {
   const { args } = planArgs(plan, { env, projects: step.projects, headed });
   step.command = shownCommand(env, ['playwright', 'test', ...args]);
-  const result = await runPlaywright({ dir: stepDir, env, args });
+  const result = await runPlaywright({
+    dir: stepDir,
+    env,
+    args,
+    progress: step,
+  });
   Object.assign(step, result.summary ?? {});
   step.exitCode = result.code;
   step.status = playwrightStatus(result);

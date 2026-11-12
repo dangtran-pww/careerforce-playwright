@@ -287,7 +287,16 @@ export interface TestResult {
 }
 
 // What Playwright reported, for a plan run or a suite's plan step.
+// From Playwright's output while it runs: how many tests it has, on how
+// many workers, and how many have ended. Runs from before this have none.
+export interface TestProgress {
+  total: number;
+  workers: number;
+  done: number;
+}
+
 export interface TestReport {
+  tests?: TestProgress;
   stats?: TestStats;
   results?: TestResult[];
   errors?: string[];

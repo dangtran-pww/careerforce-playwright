@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Finding, Run, SuiteStep } from '../api/types';
-import { duration, elapsed, plural } from '../lib/format';
+import { duration, elapsed, plural, testProgress } from '../lib/format';
 import { runFile } from '../lib/runs';
 import { STEP_KIND, STEP_STATUS } from '../lib/status';
 import { Badge } from './Badge';
@@ -83,7 +83,7 @@ function PlanStep({ run, step }: { run: Run; step: SuiteStep }) {
           />
           <div className="actions">
             <a
-              className="button ghost"
+              className="button"
               href={runFile(`${run.id}/${step.dir}/report/`)}
               target="_blank"
               rel="noopener"
@@ -94,7 +94,12 @@ function PlanStep({ run, step }: { run: Run; step: SuiteStep }) {
         </>
       ) : (
         step.status === 'running' && (
-          <p className="note">Running. See the output below.</p>
+          <p className="note">
+            {step.tests
+              ? `Running: ${testProgress(step.tests, true)}.`
+              : 'Running.'}{' '}
+            See the Output panel.
+          </p>
         )
       )}
     </>
@@ -113,7 +118,7 @@ function PromptStep({ step }: { step: SuiteStep }) {
       <pre className="prompt-text">{step.prompt}</pre>
       {step.status === 'running' && (
         <p className="note">
-          Claude is checking the site. Its actions show in the output below.
+          Claude is checking the site. Its actions show in the Output panel.
         </p>
       )}
       {step.summary && (

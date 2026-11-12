@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { post } from '../api/client';
 import type {
   FailureExplanation,
@@ -10,12 +10,16 @@ import { Badge } from './Badge';
 import { ClaudeUsageNote } from './ClaudeUsageNote';
 import { Spinner } from './Spinner';
 
-// "Why did it fail?" under a failed or flaky test on a run's page. The
-// button asks Claude (claude -p, read-only) to look at the error, the
-// screenshot and page snapshot the run saved, and the test code, and explain
-// the failure; it takes about a minute. The answer is saved with the run, so
-// `saved` shows it again on coming back.
-export function FailureExplain({
+// "Why did it fail?" for a failed or flaky test on a run's page. The button
+// asks Claude (claude -p, read-only) to look at the error, the screenshot and
+// page snapshot the run saved, and the test code, and explain the failure; it
+// takes about a minute. The answer is saved with the run, so `saved` shows it
+// again on coming back.
+//
+// Returns the button, to sit with the test's other buttons (null once there
+// is an answer: "Explain again" then sits under the answer), and the panel
+// (progress, error and answer) to show below them.
+export function useFailureExplain({
   runId,
   test,
   saved,
@@ -23,7 +27,7 @@ export function FailureExplain({
   runId: string;
   test: TestRef;
   saved?: FailureExplanation;
-}) {
+}): { button: ReactNode; panel: ReactNode } {
   const [fresh, setFresh] = useState<FailureExplanation | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -48,7 +52,7 @@ export function FailureExplain({
   const button = (
     <button
       type="button"
-      className="ghost small"
+      className={explanation ? 'ghost small' : 'danger small'}
       disabled={busy}
       onClick={explain}
     >
@@ -64,9 +68,8 @@ export function FailureExplain({
     </button>
   );
 
-  return (
+  const panel = (busy || error || explanation) && (
     <div className="failure-explain">
-      {!explanation && button}
       {busy && (
         <p className="note small" role="status">
           Claude is reading the error, the screenshot and the test code. This
@@ -120,4 +123,5 @@ export function FailureExplain({
       )}
     </div>
   );
+  return { button: !explanation && button, panel };
 }

@@ -87,3 +87,11 @@ export function modelName(id: string): string {
   const family = words[0][0].toUpperCase() + words[0].slice(1);
   return ['Claude', family, version].filter(Boolean).join(' ');
 }
+
+// "3 of 12 tests ended, on 1 worker" while running; "12 tests, on 1 worker"
+// after.
+export const testProgress = (
+  { total, workers, done }: { total: number; workers: number; done: number },
+  running: boolean,
+) =>
+  `${running ? `${done} of ${plural(total, 'test')} ended` : plural(total, 'test')}, on ${plural(workers, 'worker')}`;

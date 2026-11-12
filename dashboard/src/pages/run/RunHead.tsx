@@ -11,7 +11,7 @@ import { TitleRow } from '../../components/PageTitle';
 import { TimeAgo } from '../../components/TimeAgo';
 import { UiModeButton } from '../../components/UiModeButton';
 import { useEnv } from '../../hooks/useEnv';
-import { duration } from '../../lib/format';
+import { duration, testProgress } from '../../lib/format';
 import { runDuration, runOwnerPath, whatRan } from '../../lib/runs';
 import { RUN_STATUS } from '../../lib/status';
 
@@ -56,6 +56,8 @@ export function RunHead({ run }: { run: Run }) {
               run.cases.length ? run.cases.join(', ') : 'All',
             ],
             !isSuite && ['Projects', run.projects.join(', ')],
+            !isSuite &&
+              run.tests && ['Tests', testProgress(run.tests, running)],
             run.command && ['Command', <Command text={run.command} />],
           ]}
         />
