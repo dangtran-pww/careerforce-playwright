@@ -14,21 +14,24 @@ import {
 } from './playwright.mjs';
 import {
   promptCaseEntries,
+  promptScheduler,
   promptsStatus,
-  runPromptCases,
+  runPlanWork,
 } from './prompt-step.mjs';
 
 /**
  * Start a run of `plan` on `env`, with the chosen projects (default: the
  * plan's selected ones) and cases (default: all). Playwright runs the cases
- * with tests; then the prompt cases run one by one (prompt-step.mjs),
+ * with tests; the prompt cases run after them (prompt-step.mjs: the Parallel
+ * ones a few at a time, and alongside the tests when the plan is Parallel
+ * too; the others one by one),
  * comparing with `compare` when they compare (default: each environment's
  * own comparison site). Resolves with its run.json once it has started; the
  * run goes on in the background.
  */
 export async function startRun(
   plan,
-  { env, projects, cases = [], headed = false, compare } = {},
+  { env, projects, cases = [], headed = false, compare, suite } = {},
 ) {
   checkPlanRunnable(plan);
   checkPromptCases(plan, env, cases);
@@ -42,6 +45,7 @@ export async function startRun(
     id: newRunId(now, env.id, plan.slug),
     kind: 'plan',
     plan: plan.slug,
+    suite: suite ?? null,
     planName: `${plan.type} - ${plan.name}`,
     projects: chosen?.projects ?? [],
     cases: [...(chosen?.cases ?? []), ...prompts.map((p) => p.id)].filter(
@@ -65,19 +69,21 @@ export async function startRun(
   const dir = await beginRun(meta);
 
   launch(meta, async () => {
-    let testStatus = null;
-    if (chosen) {
-      const result = await runPlaywright({ dir, env, args: chosen.args });
-      meta.exitCode = result.code;
-      Object.assign(meta, result.summary ?? {});
-      testStatus = playwrightStatus(result);
-    }
-    await runPromptCases(prompts, plan, {
-      env,
-      compareChoice: compare,
-      dir,
-      meta,
-    });
+    const runTests =
+      chosen &&
+      (async () => {
+        const result = await runPlaywright({ dir, env, args: chosen.args });
+        meta.exitCode = result.code;
+        Object.assign(meta, result.summary ?? {});
+        return playwrightStatus(result);
+      });
+    const { testStatus, done } = await runPlanWork(
+      prompts,
+      plan,
+      { env, compareChoice: compare, dir, meta, scheduler: promptScheduler() },
+      runTests,
+    );
+    await done;
     meta.status = combinedStatus(testStatus, promptsStatus(prompts));
     await endRun(meta);
   });

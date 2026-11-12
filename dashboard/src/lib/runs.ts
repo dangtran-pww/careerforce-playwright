@@ -7,9 +7,14 @@ import { elapsed, plural } from './format';
 // reports/dashboard-runs/.
 export const runFile = (path: string) => `/runs/${encodeURI(path)}`;
 
-// The route of the plan or suite a run belongs to.
-export const runOwnerPath = (run: Run) =>
-  run.kind === 'suite' ? `/suites/${run.suite}` : `/plans/${run.plan}`;
+// The page a run was started from: its suite's page (for a plan run, with
+// that plan's panel open), or the suite list for an older plan run that
+// didn't record its suite.
+export function runOwnerPath(run: Run): string {
+  if (!run.suite) return '/suites';
+  if (run.kind === 'suite') return `/suites/${run.suite}`;
+  return `/suites/${run.suite}?plan=${encodeURIComponent(run.plan ?? '')}`;
+}
 
 // How long it took, or has taken so far.
 export const runDuration = (run: Run) => elapsed(run.startedAt, run.finishedAt);

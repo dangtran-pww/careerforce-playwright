@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { useParams } from 'react-router';
+import { useParams, useSearchParams } from 'react-router';
 import { ApiError } from '../../api/client';
 import type { Session, SuiteResponse } from '../../api/types';
 import { AsyncButton } from '../../components/AsyncButton';
@@ -56,7 +56,12 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
   });
   // The plan whose details show in the right-hand column; none leaves it
   // empty (the column is always there, so the page never changes width).
-  const [shownPlan, setShownPlan] = useState<string | null>(null);
+  // ?plan=<slug> opens it (a plan run's page links back that way).
+  const [params] = useSearchParams();
+  const [shownPlan, setShownPlan] = useState<string | null>(() => {
+    const p = params.get('plan');
+    return suite.plans.some((x) => x.slug === p) ? p : null;
+  });
   const closePanel = useCallback(() => setShownPlan(null), []);
 
   // Tick or untick one plan.
@@ -178,12 +183,14 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
           </div>
         </section>
         <h2 className="section-title">Recent runs</h2>
-        <RunsTable runs={runs} showPlan={false} />
+        {/* The suite's runs and the plan runs started from its plan panel. */}
+        <RunsTable runs={runs} />
       </div>
       {shownPlan ? (
         <PlanPanel
           key={shownPlan}
           slug={shownPlan}
+          suite={suite.slug}
           onClose={closePanel}
           projects={
             suite.plans.find((p) => p.slug === shownPlan)?.projects ?? []

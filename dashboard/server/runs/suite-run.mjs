@@ -1,5 +1,8 @@
 // Runs a suite (test-suites/*.md) for the dashboard: its plans, one step
-// after another, on the environment picked in the dashboard. Uses the run lifecycle in lifecycle.mjs,
+// after another, on the environment picked in the dashboard. A step's prompt
+// cases marked Parallel go on in the background while the next steps run,
+// as long as those steps' plans are marked Parallel too
+// (test-plans/README.md, Rule 3; see prompt-step.mjs). Uses the run lifecycle in lifecycle.mjs,
 // so a suite takes the same one-run-at-a-time lock and can be stopped the
 // same way (Stop ends the current step and skips the rest).
 //
@@ -37,8 +40,9 @@ import {
 } from './playwright.mjs';
 import {
   promptCaseEntries,
+  promptScheduler,
   promptsStatus,
-  runPromptCases,
+  runPlanWork,
 } from './prompt-step.mjs';
 
 // ---- starting --------------------------------------------------------------
@@ -157,15 +161,16 @@ export async function startSuiteRun(suite, choice) {
   };
   const dir = await beginRun(meta);
 
-  launch(meta, () =>
-    run(meta, dir, { planSteps, env, headed, compare }),
-  );
+  launch(meta, () => run(meta, dir, { planSteps, env, headed, compare }));
   return meta;
 }
 
 // ---- running ---------------------------------------------------------------
 
 async function run(meta, dir, { planSteps, env, headed, compare }) {
+  const scheduler = promptScheduler();
+  // Steps whose prompt cases are still going, finished when they end.
+  const finishing = [];
   for (const step of meta.steps) {
     if (isStopped()) {
       step.status = 'skipped';
@@ -178,25 +183,52 @@ async function run(meta, dir, { planSteps, env, headed, compare }) {
       await save(meta);
       continue;
     }
+    const { plan } = planSteps.find((p) => p.entry.slug === step.plan);
+    // A plan that isn't Parallel may change what other checks see, so it
+    // waits for the background prompts and runs on its own.
+    if (!plan.parallel) await scheduler.idle();
+    if (isStopped()) {
+      step.status = 'skipped';
+      step.skipReason = 'The run was stopped.';
+      continue;
+    }
     step.status = 'running';
     step.startedAt = new Date().toISOString();
     await save(meta);
     log(`\n=== ${step.n}. ${step.title}\n`);
     const stepDir = join(dir, step.dir);
+    let done;
     try {
-      const { plan } = planSteps.find((p) => p.entry.slug === step.plan);
-      await planStep(step, stepDir, plan, { env, headed, compare, meta });
+      done = await planStep(step, stepDir, plan, {
+        env,
+        headed,
+        compare,
+        meta,
+        scheduler,
+      });
     } catch (err) {
-      step.status = 'error';
-      step.error = err.message;
-      log(`\n[dashboard] ${step.title}: ${err.stack}\n`);
+      done = failed(step, err);
     }
-    if (isStopped() && step.status !== 'passed') step.status = 'stopped';
-    step.finishedAt = new Date().toISOString();
-    await save(meta);
+    finishing.push(
+      done.catch((err) => failed(step, err)).then(() => finish(step, meta)),
+    );
   }
+  await Promise.all(finishing);
   meta.status = suiteStatus(meta);
   await endRun(meta);
+}
+
+function failed(step, err) {
+  step.status = 'error';
+  step.error = err.message;
+  log(`\n[dashboard] ${step.title}: ${err.stack}\n`);
+  return Promise.resolve();
+}
+
+async function finish(step, meta) {
+  if (isStopped() && step.status !== 'passed') step.status = 'stopped';
+  step.finishedAt = new Date().toISOString();
+  await save(meta);
 }
 
 function suiteStatus(meta) {
@@ -208,29 +240,41 @@ function suiteStatus(meta) {
   return s.every((x) => x === 'skipped') ? 'error' : 'passed';
 }
 
-// A plan: Playwright for its tests (if it has any), then its prompt cases.
-async function planStep(step, stepDir, plan, { env, headed, compare, meta }) {
+// A plan: Playwright for its tests (if it has any) and its prompt cases
+// (runPlanWork: Parallel ones alongside the tests in a Parallel plan).
+// Resolves once its prompt cases have started, with a promise for when the
+// step is done and has its status.
+async function planStep(
+  step,
+  stepDir,
+  plan,
+  { env, headed, compare, meta, scheduler },
+) {
   const chosen = planArgs(plan, { env, projects: step.projects, headed });
-  let testStatus = null;
-  if (chosen) {
+  if (chosen)
     step.command = shownCommand(env, ['playwright', 'test', ...chosen.args]);
-    const result = await runPlaywright({
-      dir: stepDir,
-      env,
-      args: chosen.args,
-      progress: step,
+  const runTests =
+    chosen &&
+    (async () => {
+      const result = await runPlaywright({
+        dir: stepDir,
+        env,
+        args: chosen.args,
+        progress: step,
+      });
+      Object.assign(step, result.summary ?? {});
+      step.exitCode = result.code;
+      return playwrightStatus(result);
     });
-    Object.assign(step, result.summary ?? {});
-    step.exitCode = result.code;
-    testStatus = playwrightStatus(result);
-  }
-  await runPromptCases(step.prompts, plan, {
-    env,
-    compareChoice: compare,
-    dir: stepDir,
-    meta,
+  const { testStatus, done } = await runPlanWork(
+    step.prompts,
+    plan,
+    { env, compareChoice: compare, dir: stepDir, meta, scheduler },
+    runTests,
+  );
+  return done.then(() => {
+    const status = combinedStatus(testStatus, promptsStatus(step.prompts));
+    // A step that needs a look is "unsure", like a prompt case.
+    step.status = status === 'attention' ? 'unsure' : status;
   });
-  const status = combinedStatus(testStatus, promptsStatus(step.prompts));
-  // A step that needs a look is "unsure", like a prompt case.
-  step.status = status === 'attention' ? 'unsure' : status;
 }

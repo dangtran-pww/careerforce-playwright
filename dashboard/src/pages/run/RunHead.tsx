@@ -56,8 +56,10 @@ export function RunHead({ run }: { run: Run }) {
               run.cases.length ? run.cases.join(', ') : 'All',
             ],
             !isSuite && ['Projects', run.projects.join(', ')],
+            // While it runs, the progress bar below shows this.
             !isSuite &&
-              run.tests && ['Tests', testProgress(run.tests, running)],
+              !running &&
+              run.tests && ['Tests', testProgress(run.tests, false)],
             run.command && ['Command', <Command text={run.command} />],
           ]}
         />
@@ -109,7 +111,9 @@ export function RunHead({ run }: { run: Run }) {
           <Link className="button ghost" to={runOwnerPath(run)}>
             {isSuite
               ? 'Back to the suite to run again'
-              : 'Back to the plan to pick what to run'}
+              : run.suite
+                ? 'Back to the plan to pick what to run'
+                : 'Back to the suites'}
           </Link>
         )}
       </div>

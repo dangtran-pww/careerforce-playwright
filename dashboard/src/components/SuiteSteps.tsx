@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Run, SuiteStep } from '../api/types';
-import { duration, elapsed, testProgress } from '../lib/format';
+import { duration, elapsed } from '../lib/format';
 import { runFile } from '../lib/runs';
 import { STEP_KIND, STEP_STATUS } from '../lib/status';
 import { Badge } from './Badge';
@@ -8,6 +8,7 @@ import { ErrorBox } from './Callouts';
 import { Command } from './Command';
 import { PromptCases } from './PromptCases';
 import { PromptResult } from './PromptResult';
+import { TestProgressBar } from './TestProgressBar';
 import { TestResults } from './TestResults';
 
 // Steps in these states start open.
@@ -15,9 +16,11 @@ const NEEDS_A_LOOK = ['failed', 'error', 'unsure'];
 
 // The steps of a suite run, each a collapsible section with its status and
 // results. A step the user opened or closed stays that way while the run
-// updates; the others open by themselves once they need a look.
+// updates; the others open by themselves while they are the first one
+// running, or once they need a look.
 export function SuiteSteps({ run }: { run: Run }) {
   const [toggled, setToggled] = useState<Record<number, boolean>>({});
+  const firstRunning = run.steps!.find((s) => s.status === 'running')?.n;
 
   return (
     <div className="steps">
@@ -25,7 +28,10 @@ export function SuiteSteps({ run }: { run: Run }) {
         <details
           key={step.n}
           className="step"
-          open={toggled[step.n] ?? NEEDS_A_LOOK.includes(step.status)}
+          open={
+            toggled[step.n] ??
+            (step.n === firstRunning || NEEDS_A_LOOK.includes(step.status))
+          }
           onToggle={(e) => {
             const open = e.currentTarget.open;
             setToggled((t) =>
@@ -106,14 +112,7 @@ function PlanTests({ run, step }: { run: Run; step: SuiteStep }) {
           </div>
         </>
       ) : (
-        step.status === 'running' && (
-          <p className="note">
-            {step.tests
-              ? `Running: ${testProgress(step.tests, true)}.`
-              : 'Running.'}{' '}
-            See the Output panel.
-          </p>
-        )
+        step.status === 'running' && <TestProgressBar tests={step.tests} />
       )}
     </>
   );

@@ -41,12 +41,14 @@ suiteRoutes.get('/', async (c) => {
     activeRun: activeRunId(),
     suites: suites.map((s) => ({
       ...s,
-      lastRun: runs.find((r) => r.suite === s.slug) ?? null,
+      lastRun:
+        runs.find((r) => r.kind === 'suite' && r.suite === s.slug) ?? null,
     })),
   });
 });
 
-// GET /api/suites/:slug — one suite, its steps and recent runs.
+// GET /api/suites/:slug — one suite, its steps and recent runs (its own
+// runs and the plan runs started from its page).
 suiteRoutes.get(SUITE, async (c) => {
   const suite = await suiteOf(c);
   return c.json({

@@ -16,6 +16,11 @@ Whenever you write or change a plan in `test-plans/`, follow every rule in
    `**Prompt:** [<name>](prompts/<name>.md)`, and `test-plans/prompts/<name>.md`
    has `**Role:**`, optional `**Compare with:**`, `**Viewports:**` and
    `**Screenshots:**`, and a `## Prompt` section. It has no test code.
+3. **Parallel:** a plan (`Parallel: yes` in its header) or a prompt file
+   (`**Parallel:** yes`) runs alongside other work only when it only reads
+   the site and nothing it checks depends on other tests. Anything else
+   runs on its own. A Parallel plan can't be `Prod: No` or have no-prod
+   cases.
 
 Then run `npm run check:plans` and fix every problem it reports in the
 plans you touched before you finish.

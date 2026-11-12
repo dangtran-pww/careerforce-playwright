@@ -12,10 +12,11 @@ import {
   defaultChoice,
   planCommand,
   promptCommand,
-} from '../plan/choice';
+} from './planChoice';
 
 interface Props {
   plan: Plan;
+  suite: string; // the suite page it's on; runs started here link back
   projects: string[]; // the suite's projects for this plan
   headed: boolean;
   activeRun: string | null;
@@ -53,6 +54,7 @@ export function PanelCases(props: Props) {
 
 function TestCases({
   plan,
+  suite,
   cases,
   projects,
   headed,
@@ -110,7 +112,7 @@ function TestCases({
           className: (c) => (c.testCount ? undefined : 'note'),
           cell: (c) => c.testCount || 'none',
         },
-        hasTests && runColumn(plan, { projects, headed, activeRun }),
+        hasTests && runColumn(plan, { suite, projects, headed, activeRun }),
       ]}
     />
   );
@@ -118,6 +120,7 @@ function TestCases({
 
 function PromptCases({
   plan,
+  suite,
   cases,
   projects,
   headed,
@@ -164,7 +167,7 @@ function PromptCases({
               ? comparedWith(c, 'default', currentEnv, envById)
               : 'Broken prompt file',
         },
-        runColumn(plan, { projects, headed, activeRun }),
+        runColumn(plan, { suite, projects, headed, activeRun }),
       ]}
     />
   );
@@ -174,16 +177,26 @@ function PromptCases({
 function runColumn(
   plan: Plan,
   {
+    suite,
     projects,
     headed,
     activeRun,
-  }: { projects: string[]; headed: boolean; activeRun: string | null },
+  }: {
+    suite: string;
+    projects: string[];
+    headed: boolean;
+    activeRun: string | null;
+  },
 ) {
   return {
     head: <VisuallyHidden>Actions</VisuallyHidden>,
     className: 'cell-action',
     cell: (c: PlanCase) => (
-      <RunCase plan={plan} testCase={c} {...{ projects, headed, activeRun }} />
+      <RunCase
+        plan={plan}
+        testCase={c}
+        {...{ suite, projects, headed, activeRun }}
+      />
     ),
   };
 }
@@ -191,12 +204,14 @@ function runColumn(
 function RunCase({
   plan,
   testCase: c,
+  suite,
   projects,
   headed,
   activeRun,
 }: {
   plan: Plan;
   testCase: PlanCase;
+  suite: string;
   projects: string[];
   headed: boolean;
   activeRun: string | null;
@@ -211,6 +226,7 @@ function RunCase({
         projects: projects.length ? projects : undefined,
         cases: [c.id],
         headed,
+        suite,
       }}
       className="small"
       disabled={Boolean(activeRun) || Boolean(offProd)}

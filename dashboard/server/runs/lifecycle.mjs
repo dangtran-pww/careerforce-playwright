@@ -1,6 +1,7 @@
 // The run lifecycle: one run at a time (the tests share accounts and a
-// staging database and run with workers: 1, so two runs at once would
-// collide). A run is either one test plan (plan-run.mjs) or a suite of
+// staging database, so two runs at once would collide). Within a run, the
+// plans and prompt cases marked Parallel (test-plans/README.md, Rule 3) can
+// have several processes going at once; Stop ends all of them. A run is either one test plan (plan-run.mjs) or a suite of
 // several steps (suite-run.mjs); both go
 //   beginRun → launch( spawnStep / runPlaywright … → endRun )
 //
@@ -23,8 +24,13 @@ import { ApiError } from '../errors.mjs';
 import { killGroup, quote } from '../lib/processes.mjs';
 import { RUNS_DIR } from '../paths.mjs';
 
-// { meta, child, log, logFile, stopped }: the run in progress, if any.
+// { meta, children, log, logFile, stopped }: the run in progress, if any.
+// `children` are the processes it has going (Playwright, `claude`).
 let active = null;
+
+// run.json writes, one after another: prompt cases that run at the same
+// time all save the run, and two writes at once can mix their contents.
+let saving = Promise.resolve();
 
 const stamp = (d) =>
   d.toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15);
@@ -33,11 +39,15 @@ const stamp = (d) =>
 export const newRunId = (now, ...parts) => [stamp(now), ...parts].join('-');
 
 /** Write the run's run.json. */
-export async function save(meta) {
-  await writeFile(
-    join(RUNS_DIR, meta.id, 'run.json'),
-    JSON.stringify(meta, null, 2),
-  );
+export function save(meta) {
+  const write = () =>
+    writeFile(
+      join(RUNS_DIR, meta.id, 'run.json'),
+      JSON.stringify(meta, null, 2),
+    );
+  const next = saving.then(write, write);
+  saving = next.catch(() => {});
+  return next;
 }
 
 /** Take the one-run lock, create the run's folder and save its run.json. */
@@ -51,7 +61,13 @@ export async function beginRun(meta) {
   const dir = join(RUNS_DIR, meta.id);
   // Claim the lock before the first await, so two quick clicks can't both
   // start.
-  active = { meta, child: null, log: '', logFile: null, stopped: false };
+  active = {
+    meta,
+    children: new Set(),
+    log: '',
+    logFile: null,
+    stopped: false,
+  };
   try {
     await mkdir(dir, { recursive: true });
     await save(meta);
@@ -98,30 +114,38 @@ export async function endRun(meta) {
 
 /**
  * Run a command as part of the active run. Its output goes to the run's log
- * unless `onStdout` takes stdout. Resolves with { code, error }.
+ * (through `logTo` when given) unless `onStdout` takes stdout. `onChild`
+ * gets the process once it has started, e.g. to kill just this one.
+ * Resolves with { code, error }.
  */
-export function spawnStep(command, args, { env = {}, onStdout } = {}) {
+export function spawnStep(
+  command,
+  args,
+  { env = {}, onStdout, onChild, logTo = log } = {},
+) {
   return new Promise((done) => {
     if (!active || active.stopped) return done({ code: null, error: null });
-    log(`\n$ ${[command, ...args].map(quote).join(' ')}\n`);
+    logTo(`\n$ ${[command, ...args].map(quote).join(' ')}\n`);
     const child = spawn(command, args, {
       // Own process group, so Stop can end it and the browsers it starts.
       detached: true,
       env: { ...process.env, FORCE_COLOR: '0', ...env },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
-    active.child = child;
+    const run = active;
+    run.children.add(child);
+    onChild?.(child);
     child.stdout.on('data', (chunk) =>
-      onStdout ? onStdout(chunk.toString()) : log(chunk.toString()),
+      onStdout ? onStdout(chunk.toString()) : logTo(chunk.toString()),
     );
-    child.stderr.on('data', (chunk) => log(chunk.toString()));
+    child.stderr.on('data', (chunk) => logTo(chunk.toString()));
     let settled = false;
     const finish = (code, error) => {
       if (settled) return;
       settled = true;
-      if (active?.child === child) active.child = null;
+      run.children.delete(child);
       if (error)
-        log(`\n[dashboard] Couldn't start ${command}: ${error.message}\n`);
+        logTo(`\n[dashboard] Couldn't start ${command}: ${error.message}\n`);
       done({ code, error });
     };
     child.on('error', (err) => finish(null, err));
@@ -129,16 +153,16 @@ export function spawnStep(command, args, { env = {}, onStdout } = {}) {
   });
 }
 
-/** Kill the step that is running, if any. */
-export function killChild() {
-  if (active?.child) killGroup(active.child);
+/** Kill every process the run has going. */
+function killChildren() {
+  for (const child of active?.children ?? []) killGroup(child);
 }
 
 /** Stop the run `id` if it's the one in progress; false if it isn't. */
 export function stopRun(id) {
   if (!active || active.meta.id !== id) return false;
   active.stopped = true;
-  killChild();
+  killChildren();
   return true;
 }
 

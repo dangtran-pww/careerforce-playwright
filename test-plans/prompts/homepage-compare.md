@@ -4,6 +4,7 @@
 **Compare with:** default
 **Viewports:** desktop 1280x800, phone 390x844
 **Screenshots:** 16
+**Parallel:** yes
 
 HP-5 in test-plans/smoke-public-site.md. From the DEED smoke checklist:
 "Review the Homepage for layout/styling issues. Comparison to be done with the

@@ -209,12 +209,6 @@ h1 {
   color: var(--muted);
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
-  gap: 16px;
-}
-
 .card {
   padding: 20px;
   background: var(--surface);
@@ -586,7 +580,7 @@ a.button:focus-visible,
   white-space: pre-wrap;
 }
 
-/* The summary and facts at the top of a suite or plan page, on white so
+/* The summary and facts at the top of a suite page, on white so
    they are easy to read. */
 .intro-card {
   margin: 0 0 24px;
@@ -677,19 +671,6 @@ legend {
 
 .card .note {
   margin: 12px 0;
-}
-
-/* A labelled control on its own line, e.g. "Compare with" on the plan page. */
-.field {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 8px;
-  margin: 10px 0;
-}
-
-.field select {
-  max-width: 100%;
 }
 
 .card .command {
@@ -1900,4 +1881,49 @@ dialog.modal::backdrop {
   margin: 12px 0 0;
   padding-top: 6px;
   border-top: 1px solid var(--border);
+}
+
+/* A running plan's progress: a bold count, a bar and the percentage. */
+.test-progress {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  background: var(--neutral-bg);
+}
+
+.test-progress p {
+  margin: 0;
+}
+
+.test-progress-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 1.0625rem;
+}
+
+.test-progress progress {
+  width: 100%;
+  height: 10px;
+  appearance: none;
+  border: none;
+  border-radius: 5px;
+  background: var(--surface);
+  overflow: hidden;
+  accent-color: var(--accent);
+}
+
+.test-progress progress::-webkit-progress-bar {
+  background: var(--surface);
+}
+
+.test-progress progress::-webkit-progress-value {
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+
+.test-progress progress::-moz-progress-bar {
+  background: var(--accent);
 }

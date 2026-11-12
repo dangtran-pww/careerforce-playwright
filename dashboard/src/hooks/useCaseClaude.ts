@@ -18,8 +18,8 @@ import { useApi } from './useApi';
 //     server restart; every request asks Claude again. Explaining the code
 //     again resets it (here and on the server), along with one running.
 //
-// Each takes about a minute. Used by the plan page's "What the code does"
-// panel (CaseExplain) and the run page's side-by-side card (CaseCompare).
+// Each takes about a minute. Used by the "What the code does" panel
+// (CaseExplain) in a case's details and the run page's side-by-side card (CaseCompare).
 export function useCaseClaude(planSlug: string, caseId: string) {
   const path = `/api/plans/${planSlug}/cases/${caseId}/explanation`;
   const saved = useApi<ExplanationResponse>(path);

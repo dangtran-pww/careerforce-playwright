@@ -462,7 +462,7 @@ export interface Run extends TestReport {
   id: string;
   kind?: 'plan' | 'suite';
   plan?: string; // plan slug
-  suite?: string; // suite slug
+  suite?: string | null; // suite slug; for a plan run, the suite it was started from
   planName: string;
   status: RunStatus;
   startedAt: string;

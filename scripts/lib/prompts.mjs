@@ -12,6 +12,7 @@
 //   **Compare with:** none | default | baseline | <environment id>   (optional)
 //   **Viewports:** desktop 1280x800, phone 390x844                   (optional)
 //   **Screenshots:** 16                                              (optional)
+//   **Parallel:** yes | no                                           (optional)
 //   (notes for people, ignored)
 //   ## Prompt
 //   <the prompt, sent to Claude as written>
@@ -31,6 +32,15 @@ export const DEFAULT_VIEWPORTS = [
   { name: 'desktop', width: 1280, height: 800 },
 ];
 const MAX_SCREENSHOTS = 30;
+
+/**
+ * A "**Parallel:**" value (Rule 3 in test-plans/README.md): true for yes,
+ * false for no or no line, null when it is something else.
+ */
+export function parallelValue(text) {
+  const word = (text ?? 'no').trim().toLowerCase();
+  return word === 'yes' ? true : word === 'no' || word === '' ? false : null;
+}
 
 const plain = (text) =>
   text
@@ -102,6 +112,13 @@ export function parsePrompt(slug, text) {
     else screenshots = n;
   }
 
+  // Yes: it only reads the site, so it may run while other parallel work
+  // does (Rule 3).
+  const parallelText = option(lines, 'Parallel');
+  const parallel = parallelValue(parallelText);
+  if (parallel === null)
+    problems.push(`Parallel: "${parallelText}" is not yes or no.`);
+
   // A saved login is for one environment, so the comparison site would show
   // the page logged out.
   if (compares && role && compare !== 'baseline')
@@ -128,6 +145,7 @@ export function parsePrompt(slug, text) {
     compare,
     viewports,
     screenshots,
+    parallel: Boolean(parallel),
     prompt,
     problems,
   };

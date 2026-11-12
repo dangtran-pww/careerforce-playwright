@@ -65,9 +65,10 @@ export default defineConfig({
   testDir: './tests',
   timeout: 60_000,
   expect: { timeout: 10_000 },
-  // Start serial on a shared staging database. Parallel tests that share
-  // content or users will collide and flake. Enable parallel only once every
-  // test creates its own unique content and users.
+  // Serial on a shared staging database: parallel tests that share content
+  // or users collide and flake. Plans marked `Parallel: yes` (only read the
+  // site, Rule 3 in test-plans/README.md) get `--workers` from the
+  // dashboard; from a terminal, pass `--workers 4` yourself for those.
   fullyParallel: false,
   workers: 1,
   retries: process.env.CI ? 1 : 0,

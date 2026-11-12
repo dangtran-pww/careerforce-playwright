@@ -4,6 +4,8 @@
 
 **Implemented test:** `tests/smoke/anonymous/*.spec.ts`
 
+**Parallel:** yes
+
 ## Overview
 
 This plan is a quick health check of the public side of CareerForce, as seen

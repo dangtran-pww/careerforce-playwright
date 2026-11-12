@@ -86,6 +86,11 @@ planRoutes.post(
       cases: strings.optional(),
       headed: flag,
       compare: compareField,
+      // The suite page it was started from, so the run links back there.
+      suite: z
+        .string()
+        .regex(/^[\w-]+$/)
+        .optional(),
     }),
   ),
   async (c) => {
@@ -97,6 +102,7 @@ planRoutes.post(
       cases: body.cases ?? [],
       headed: body.headed === true,
       compare: compareParam(body.compare),
+      suite: body.suite,
     });
     return c.json(run, 201);
   },

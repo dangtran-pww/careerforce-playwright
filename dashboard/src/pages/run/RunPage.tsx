@@ -6,6 +6,7 @@ import { BackLink } from '../../components/PageTitle';
 import { PromptCases } from '../../components/PromptCases';
 import { RunSummary } from '../../components/RunSummary';
 import { SuiteSteps } from '../../components/SuiteSteps';
+import { TestProgressBar } from '../../components/TestProgressBar';
 import { TestResults } from '../../components/TestResults';
 import { CasePanelContext, type ShownCase } from '../../hooks/useCasePanel';
 import { useEnv } from '../../hooks/useEnv';
@@ -35,11 +36,17 @@ export function RunPage() {
   if (!run) return <Loading />;
 
   return (
-    <RerunProvider envId={currentEnv.id} runStatus={run.status}>
+    <RerunProvider
+      envId={currentEnv.id}
+      runStatus={run.status}
+      suite={run.suite}
+    >
       <CasePanelContext.Provider value={{ shown, show: setShown }}>
         <div className="split">
           <div className="split-main">
-            <BackLink to={runOwnerPath(run)}>← {run.planName}</BackLink>
+            <BackLink to={runOwnerPath(run)}>
+              ← {run.suite ? run.planName : 'Suites'}
+            </BackLink>
             <div>
               <RunHead run={run} />
             </div>
@@ -106,6 +113,7 @@ function RunTests({ run }: { run: Run }) {
         />
       </>
     );
+  if (run.status === 'running') return <TestProgressBar tests={run.tests} />;
   if (run.status === 'error')
     return (
       <ErrorBox>

@@ -39,7 +39,12 @@ export function RerunButton({ planSlug, body, className, children }: Props) {
           : (blocked ??
             `Run on ${currentEnv.name} (${hostOf(currentEnv.baseURL)})`)
       }
-      onClick={() => start(`/api/plans/${plan.slug}/run`, body)}
+      onClick={() =>
+        start(`/api/plans/${plan.slug}/run`, {
+          ...body,
+          ...(rerun.suite ? { suite: rerun.suite } : {}),
+        })
+      }
     >
       {children} on {currentEnv.name}
     </AsyncButton>

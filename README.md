@@ -202,8 +202,12 @@ tests left behind. No heavy style preset is included.
 - **No sleeps, no `networkidle`.** Drupal's BigPipe and AJAX make both
   flaky. Wait for the specific element you need with a web-first assertion
   such as `await expect(locator).toBeVisible()`.
-- **Start serial.** `fullyParallel: false` and one worker protect a shared
-  staging database. Turn parallel on only once each test owns its own data.
+- **Serial unless marked Parallel.** `fullyParallel: false` and one worker
+  protect a shared staging database. A plan whose tests only read the site
+  can say `Parallel: yes`, and then the dashboard runs it with several
+  workers. A prompt file can say `**Parallel:** yes`, and then the check runs
+  in the background while the run goes on. See Rule 3 in
+  `test-plans/README.md`.
 
 ## Adding the next test (one per sprint feature)
 
@@ -249,21 +253,22 @@ A local page for seeing and running the tests:
   untick any plan and see the logins the chosen plans need. The run page
   shows each plan as it goes: its test results, then its prompt cases'
   verdicts, findings and screenshots.
-- **Plans:** a suite's plan panel links to the plan's page, with its status,
-  cases, the roles it logs in as, and its recent runs. The dashboard reads the status,
+- **Plans:** a suite's plan panel shows the plan's status, cases, the roles
+  it logs in as and its test files. The dashboard reads the status,
   "Implemented test" and "Pending cases" lines and the case tables from each
   plan (`dashboard/server/catalog/plans.mjs`), and asks Playwright (`--list`) which
   projects and tests each plan maps to. A case maps to the tests whose title
   or `describe` starts with its ID. The list is kept until the dashboard
   restarts, so restart it after you add or rename tests.
-- **Running a plan:** press **Run** in a suite's plan panel to run a plan with
-  its default projects, or open the plan to pick projects, tick only some cases (or run
-  one case from its row), and show the browser. The page shows the exact
-  `npx playwright test` command. Every device project that runs the plan's
-  tests is ticked by default (e.g. `smoke-desktop` and `smoke-mobile`). On
+- **Running a plan:** in a suite's plan panel, press **Run plan on
+  <environment>** under the cases to run the whole plan, or **Run** on a
+  case's row to run just that case. Both run in the projects the suite runs
+  the plan in, and show the browser when the suite's "Show the browser
+  while the tests run" is ticked. A case's details show the exact `npx playwright test` command. On
   Production, a no-prod plan is refused and any other plan runs without its
   no-prod cases; the badges "Not on prod" and "N not on prod" show which.
-- **Runs:** listed on each suite's and plan's page. One run at a time (the tests share accounts and a staging
+- **Runs:** listed on each suite's page (its own runs and the plan runs
+  started from its plan panel). One run at a time (the tests share accounts and a staging
   database). A run's page shows the output live, a **Stop run** button, then
   the passed/failed/flaky/skipped counts, each test's result and error, and
   a link to its Playwright HTML report. Each run keeps its output, JSON and

@@ -32,6 +32,7 @@ import { join } from 'node:path';
 import {
   PROMPTS_DIR,
   loadPrompts,
+  parallelValue,
   promptSlugInCell,
 } from '../../../scripts/lib/prompts.mjs';
 import { PLANS_DIR as plansDir } from '../paths.mjs';
@@ -77,6 +78,18 @@ function parsePlan(slug, text) {
     head.find((l) => /^\**Prod:/i.test(l))?.replace(/^\**Prod:\**\s*/i, '') ??
       '',
   ).match(NO_PROD);
+
+  // "Parallel: yes" in the header: the plan's tests only read the site, so
+  // they run with several workers and alongside parallel prompt cases
+  // (Rule 3 in test-plans/README.md).
+  const parallel =
+    parallelValue(
+      clean(
+        head
+          .find((l) => /^\**Parallel:/i.test(l))
+          ?.replace(/^\**Parallel:\**\s*/i, '') ?? '',
+      ),
+    ) === true;
 
   const implementedLine =
     head.find((l) => /^\**Implemented tests?:/i.test(l)) ?? '';
@@ -183,6 +196,7 @@ function parsePlan(slug, text) {
     testPaths,
     noProd: Boolean(planProd),
     noProdReason: planProd?.[1] || null,
+    parallel,
     notes,
     summary,
     overview: overviewBlocks,

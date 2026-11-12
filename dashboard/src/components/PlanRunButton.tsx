@@ -6,7 +6,12 @@ import { AsyncButton } from './AsyncButton';
 interface Props {
   plan: PlanSummary;
   // What to run; leave out for the plan's default projects and all cases.
-  body?: { projects?: string[]; cases?: string[]; headed?: boolean };
+  body?: {
+    projects?: string[];
+    cases?: string[];
+    headed?: boolean;
+    suite?: string; // the suite page it's started from
+  };
   disabled?: boolean;
   title?: string;
   className?: string;

@@ -169,6 +169,7 @@ the script if it can be checked automatically.
 |---|---|---|
 | 1 | [Steps and Expected result cells](#rule-1-steps-and-expected-result-cells) | Yes |
 | 2 | [Prompt cases](#rule-2-prompt-cases) | Yes |
+| 3 | [Parallel plans and prompts](#rule-3-parallel-plans-and-prompts) | Yes |
 
 ### Rule 1: Steps and Expected result cells
 
@@ -231,14 +232,16 @@ is an example.
     the last run of the same check there. Run the check before a deploy and
     again after it, and the second run reports what the deploy changed. You
     can also write `baseline` or an environment id (`stage`, `prod`). A run
-    can pick another site to compare with: "Compare with" on the plan page,
-    or `--compare` on the command line. A check that compares with another
+    can pick another site to compare with: `--compare` on the command
+    line. A check that compares with another
     site must be anonymous, because a saved login only works on its own
     environment.
   - `Viewports` (optional; default `desktop 1280x800`): the sizes to check,
     as `<name> <width>x<height>`.
   - `Screenshots` (optional): the most Claude may take. The default is 6, or
     16 when comparing.
+  - `Parallel` (optional; default `no`): `yes` lets the check run at the
+    same time as other work. See [Rule 3](#rule-3-parallel-plans-and-prompts).
   - Everything under `## Prompt` is sent to Claude as written. Write it the
     way you'd ask a tester: what to open, what to look at, and what counts as
     a problem. Content that differs between sites (jobs, events, dates) is
@@ -270,7 +273,46 @@ is an example.
 
 The script checks that the Steps cell starts with the link, that the prompt
 file exists and has a `## Prompt` section, and that its Role, Compare with,
-Viewports and Screenshots can be read.
+Viewports, Screenshots and Parallel can be read.
+
+### Rule 3: Parallel plans and prompts
+
+By default everything in a dashboard run happens one thing at a time: one
+plan's tests with one Playwright worker, then its prompt cases one by one,
+then the next plan. This is because the tests share accounts and a staging
+database. A plan or prompt that is safe to run alongside other work can say
+so, and then the run goes faster.
+
+- **A plan:** put `Parallel: yes` in the header, under `Implemented test:`.
+  The dashboard then runs the plan's tests with several workers
+  (`PARALLEL_WORKERS`, default 4), so its spec files, and its desktop and
+  mobile projects, run at the same time. The plan's own Parallel prompt
+  cases start at the same time as its tests, and Parallel prompt cases
+  from earlier plans can still be running too.
+- **A prompt file:** put `**Parallel:** yes` with its other fields. The
+  check then runs in the background, up to `PROMPT_CONCURRENCY` (default 3)
+  at a time, and the run goes on to the next plan while it runs.
+- **Anything not marked Parallel runs on its own.** Before it starts, the
+  run waits for every background prompt to finish. This means a plan that
+  rebuilds permissions, reindexes search or places a block never overlaps a
+  check that might see the effect.
+
+Mark a plan or prompt `yes` only when **all** of these are true:
+
+1. It only reads the site. It doesn't create, change or delete anything,
+   not even test data that it cleans up afterwards.
+2. Nothing it checks would change if another plan's tests ran at the same
+   time. For example, a check that counts a job seeker's saved searches
+   doesn't qualify, because a test on another device may be saving one.
+3. Its spec files don't depend on running in order. Files that are
+   numbered to run in plan order need one worker.
+
+A plan without the line, or with `Parallel: no`, runs as before. A prompt
+written to add or remove data stays `no`.
+
+The script reports a `Parallel` value that isn't `yes` or `no`, and a
+Parallel plan that is `Prod: No` or has a case marked `No` in its Prod
+column, because those change data.
 
 ### Checking a plan
 

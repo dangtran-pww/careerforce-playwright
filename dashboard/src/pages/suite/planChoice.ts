@@ -1,8 +1,7 @@
 import type { Env, Plan, PlanCase } from '../../api/types';
 import { noProdGrep } from '../../lib/prod';
 
-// What the user has picked on the plan page. The run panel and the cases
-// table both read and change it.
+// What to run of one plan, for the commands the plan panel's cases show.
 export interface PlanChoice {
   projects: Set<string>;
   cases: Set<string>;
@@ -19,24 +18,11 @@ export const isPromptCase = (c: PlanCase) =>
 /** Whether the case can run: it has tests or is a usable prompt case. */
 export const canRun = (c: PlanCase) => c.testCount > 0 || isPromptCase(c);
 
-/** Whether any of the plan's prompt cases compares with another site. */
-export const comparesSites = (plan: Plan) =>
-  plan.cases.some((c) => isPromptCase(c) && c.prompt!.compare !== 'none');
-
 export const defaultChoice = (plan: Plan): PlanChoice => ({
   projects: new Set(plan.projects.filter((p) => p.selected).map((p) => p.name)),
   cases: new Set(),
   headed: false,
   compare: 'default',
-});
-
-// The body of POST /api/plans/:slug/run for this choice. `cases` overrides
-// the ticked cases (to run one case on its own).
-export const runBody = (choice: PlanChoice, cases = [...choice.cases]) => ({
-  projects: [...choice.projects],
-  cases,
-  headed: choice.headed,
-  ...(choice.compare !== 'default' ? { compare: choice.compare } : {}),
 });
 
 // The chosen projects that run at least one of the chosen cases (all of the

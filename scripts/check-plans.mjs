@@ -10,7 +10,7 @@
 // { line, caseId?, message }.
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { PROMPTS_DIR, parsePrompt, promptSlugInCell } from './lib/prompts.mjs';
+import { PROMPTS_DIR, parallelValue, parsePrompt, promptSlugInCell } from './lib/prompts.mjs';
 
 // ---- Reading a plan --------------------------------------------------------
 
@@ -129,6 +129,36 @@ const RULES = [
         for (const problem of parsePrompt(slug, readFileSync(file, 'utf8')).problems)
           add(`${file}: ${problem}`);
       }
+      return problems;
+    },
+  },
+  {
+    id: 3,
+    name: 'Parallel plans and prompts',
+    // A prompt file's own Parallel line is checked with the rest of the file
+    // under rule 2 (parsePrompt).
+    check(plan) {
+      const head = plan.lines.slice(0, 25);
+      const at = head.findIndex((l) => /^\**Parallel:/i.test(l));
+      if (at < 0) return [];
+      const line = at + 1;
+      const text = head[at].replace(/^\**Parallel:\**\s*/i, '').replace(/\*\*/g, '').trim();
+      const value = parallelValue(text);
+      if (value === null) return [{ line, message: `"Parallel: ${text}" is not yes or no.` }];
+      if (!value) return [];
+      const problems = [];
+      if (head.some((l) => /^\**Prod:\**\s*No\b/i.test(l)))
+        problems.push({
+          line,
+          message: 'The plan is Parallel but also "Prod: No". A plan that changes data or runs a site-wide job can\'t be Parallel.',
+        });
+      for (const c of plan.cases)
+        if (/^No\b/i.test(c.cells['Prod'] ?? ''))
+          problems.push({
+            line: c.line,
+            caseId: c.id,
+            message: 'The plan is Parallel but this case is "Prod: No". A case that changes data can\'t be in a Parallel plan.',
+          });
       return problems;
     },
   },

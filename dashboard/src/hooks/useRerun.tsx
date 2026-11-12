@@ -20,6 +20,7 @@ import { useApi } from './useApi';
 interface RerunState {
   planBySlug: (slug: string | undefined) => PlanSummary | undefined;
   activeRun: string | null;
+  suite: string | null; // the shown run's suite, recorded on reruns
 }
 
 const RerunContext = createContext<RerunState | null>(null);
@@ -30,9 +31,11 @@ export const useRerun = () => useContext(RerunContext);
 export function RerunProvider({
   envId,
   runStatus,
+  suite,
   children,
 }: {
   envId: string;
+  suite: string | null | undefined;
   runStatus: string; // reloads when the shown run starts or stops
   children: ReactNode;
 }) {
@@ -54,6 +57,7 @@ export function RerunProvider({
       value={{
         planBySlug: (slug) => plans.find((p) => p.slug === slug),
         activeRun: data?.activeRun ?? null,
+        suite: suite ?? null,
       }}
     >
       {children}

@@ -19,6 +19,13 @@ export const stripAnsi = (text) => text.replace(ansi, '');
 
 // ---- what to run -----------------------------------------------------------
 
+// Workers for a plan marked Parallel (test-plans/README.md, Rule 3). Other
+// plans keep the config's one worker.
+const PARALLEL_WORKERS = Math.max(
+  1,
+  Number.parseInt(process.env.PARALLEL_WORKERS ?? '', 10) || 4,
+);
+
 /** Refuse plans that have nothing to run. */
 export function checkPlanRunnable(plan) {
   if (!plan.runnable)
@@ -128,6 +135,7 @@ export function planArgs(
       ...projectsForCases.flatMap((p) => ['--project', p]),
       ...(chosenCases.length ? ['-g', caseGrep(chosenCases)] : []),
       ...(noProd.length ? ['--grep-invert', caseGrep(noProd)] : []),
+      ...(plan.parallel ? ['--workers', String(PARALLEL_WORKERS)] : []),
       ...(headed ? ['--headed'] : []),
     ],
   };

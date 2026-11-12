@@ -38,8 +38,8 @@ Text between a heading and its table is for people and is ignored.
 ### Plans
 
 `Plan` is the plan's file name in `test-plans/` without `.md`. `Projects` is
-a comma-separated list of Playwright projects, or `(default)` for the ones
-the plan page ticks by default. A plan with no tests yet is listed as "No
+a comma-separated list of Playwright projects, or `(default)` for the plan's
+default ones (every device project that runs its tests). A plan with no tests yet is listed as "No
 tests yet" and skipped.
 
 On Production, a suite run skips its no-prod plans (`Prod: No` in the

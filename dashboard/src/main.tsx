@@ -8,7 +8,7 @@
 //   main.tsx          start-up: router, environment and logins providers
 //   App.tsx           header and routes (URL → page)
 //   pages/            one component per page; a page with several parts has
-//                     its own folder (plan/, suite/, run/)
+//                     its own folder (suite/, run/)
 //   components/       pieces the pages share (Table, Facts, Badge,
 //                     SessionCard, RunsTable, TestResults, SuiteSteps…)
 //   hooks/            useApi (load data), useEnv (current environment),
@@ -20,7 +20,7 @@
 // To add a page: write pages/<Name>Page.tsx, add a <Route> in App.tsx, and a
 // <NavLink> in components/Header.tsx if it belongs in the top bar.
 //
-// Routes are hash routes (#/plans/<slug>), because the server answers
+// Routes are hash routes (#/suites/<slug>), because the server answers
 // /runs/<id>/... itself with each run's report files.
 
 import { StrictMode } from 'react';

@@ -29,13 +29,9 @@ const marked = new Marked({
       // URL hash belongs to the router).
       if (href.startsWith('#'))
         return `<a href="${href}" data-heading="${ID_PREFIX}${href.slice(1)}"${t}>${label}</a>`;
-      // Another plan: its page in the dashboard.
-      const plan = /^(?:\.\/)?([\w-]+)\.md(?:#.*)?$/.exec(href);
-      if (plan && plan[1] !== 'README')
-        return `<a href="#/plans/${plan[1]}"${t}>${label}</a>`;
       if (/^https?:/.test(href))
         return `<a href="${href}"${t} target="_blank" rel="noreferrer">${label}</a>`;
-      // Other repo files (README.md, specs) aren't served: keep the text.
+      // Repo files (other plans, README.md, specs) aren't served: keep the text.
       return `<span${t}>${label}</span>`;
     },
   },
