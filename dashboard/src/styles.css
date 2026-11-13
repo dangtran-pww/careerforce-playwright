@@ -989,9 +989,8 @@ body.env-production .topbar {
   min-width: 0;
 }
 
+/* The prompt in a run's result, as its paragraphs and lists. */
 .prompt-text {
-  white-space: pre-wrap;
-  font: inherit;
   margin: 0 0 0.75rem;
 }
 

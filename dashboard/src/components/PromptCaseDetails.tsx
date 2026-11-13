@@ -5,12 +5,13 @@ import { inline } from '../lib/inline';
 import { splitNumbered } from '../lib/numbered';
 import { comparedWith, screenshotLimit } from '../pages/suite/planChoice';
 import { Command } from './Command';
+import { PromptBody } from './PromptBody';
 import { StepList } from './StepList';
 
 // A prompt case opened in a cases table or the case panel. It has no test
 // code, so instead of the plan row's Steps and Expected result as they are
-// written, it shows what Claude does and how it's set up, what passes, and
-// the prompt itself (test-suites/README.md, Rule 2).
+// written, it shows what Claude does and how it's set up, the prompt itself,
+// and what passes (test-suites/README.md, Rule 2).
 export function PromptCaseDetails({
   testCase,
   command,
@@ -44,6 +45,14 @@ export function PromptCaseDetails({
             <PromptFacts testCase={testCase} page={detail('page')} />
           </dd>
         </div>
+        {p && (
+          <div>
+            <dt>Prompt sent to Claude</dt>
+            <dd>
+              <PromptBody text={p.prompt} />
+            </dd>
+          </div>
+        )}
         {passes && (
           <div>
             <dt>Passes when</dt>
@@ -56,14 +65,6 @@ export function PromptCaseDetails({
             <dd>{numberedOrText(d.text)}</dd>
           </div>
         ))}
-        {p && (
-          <div>
-            <dt>Prompt sent to Claude</dt>
-            <dd>
-              <PromptBody text={p.prompt} />
-            </dd>
-          </div>
-        )}
         {command && (
           <div>
             <dt>Command</dt>
@@ -120,35 +121,6 @@ function PromptFacts({
         </div>
       ))}
     </dl>
-  );
-}
-
-// The prompt's Markdown, simply: paragraphs and "- " lists, with inline
-// `code` and **bold**.
-function PromptBody({ text }: { text: string }) {
-  const blocks = text.split(/\n\s*\n/).filter((b) => b.trim());
-  return (
-    <div className="prompt-body">
-      {blocks.map((block, i) => {
-        const lines = block.split('\n');
-        if (!lines[0].trimStart().startsWith('- '))
-          return <p key={i}>{inline(lines.join(' ').trim())}</p>;
-        // A list item runs on until the next "- ".
-        const items: string[] = [];
-        for (const line of lines) {
-          if (line.trimStart().startsWith('- '))
-            items.push(line.trimStart().slice(2));
-          else items[items.length - 1] += ` ${line.trim()}`;
-        }
-        return (
-          <ul key={i}>
-            {items.map((item, j) => (
-              <li key={j}>{inline(item.trim())}</li>
-            ))}
-          </ul>
-        );
-      })}
-    </div>
   );
 }
 

@@ -6,11 +6,13 @@ import { Badge } from './Badge';
 import { ErrorBox } from './Callouts';
 import { PromptResult } from './PromptResult';
 
-// Results in these states start open.
+// Results in these states start open, as does a case while it runs.
 const NEEDS_A_LOOK = ['failed', 'error', 'unsure'];
 
 // A plan's prompt cases in a run, each a collapsible section with its status
-// and Claude's result. They run after the plan's tests.
+// and Claude's result. They run after the plan's tests. A case the user opened
+// or closed stays that way while the run updates; the others open by
+// themselves while they run, or once they need a look.
 export function PromptCases({ prompts }: { prompts: Result[] }) {
   const [toggled, setToggled] = useState<Record<string, boolean>>({});
   if (!prompts.length) return null;
@@ -27,7 +29,10 @@ export function PromptCases({ prompts }: { prompts: Result[] }) {
             <details
               key={key}
               className="step"
-              open={toggled[key] ?? NEEDS_A_LOOK.includes(p.status)}
+              open={
+                toggled[key] ??
+                (p.status === 'running' || NEEDS_A_LOOK.includes(p.status))
+              }
               onToggle={(e) => {
                 const open = e.currentTarget.open;
                 setToggled((t) =>

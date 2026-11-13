@@ -1,6 +1,7 @@
 import type { Finding, PromptResult as Result } from '../api/types';
 import { duration, modelName, plural } from '../lib/format';
 import { runFile } from '../lib/runs';
+import { PromptBody } from './PromptBody';
 
 // One Claude check's result: who it ran as, what it compared with, the
 // prompt, then Claude's summary, findings and screenshots. Used for a
@@ -31,11 +32,15 @@ export function PromptResult({
       <CompareNote result={r} />
       {r.prompt &&
         (promptOpen ? (
-          <pre className="prompt-text">{r.prompt}</pre>
+          <div className="prompt-text">
+            <PromptBody text={r.prompt} />
+          </div>
         ) : (
           <details>
             <summary className="note">The prompt</summary>
-            <pre className="prompt-text">{r.prompt}</pre>
+            <div className="prompt-text">
+              <PromptBody text={r.prompt} />
+            </div>
           </details>
         ))}
       {r.status === 'running' && (
