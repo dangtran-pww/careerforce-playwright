@@ -106,22 +106,24 @@ export async function startRun(
 }
 
 // The roles the run logs in as: those of the test cases it runs, and the
-// prompt cases' Role. A whole-plan run also counts every role its spec files
-// use, as a suite run does, in case a test isn't matched to a case.
+// prompt cases' Role. A run of every test case (the whole plan, or the plan
+// panel's "Run test cases") also counts every role its spec files use, as a
+// suite run does, in case a test isn't matched to a case.
 function neededRoles(plan, env, chosen, prompts) {
   const roles = new Set(prompts.map((p) => p.role).filter(Boolean));
   if (chosen) {
+    const testCases = plan.cases
+      .filter((c) => c.kind !== 'prompt')
+      .filter((c) => !(env.production && c.noProd));
     const ids = new Set(
-      chosen.cases.length
-        ? chosen.cases
-        : plan.cases
-            .filter((c) => c.kind !== 'prompt')
-            .filter((c) => !(env.production && c.noProd))
-            .map((c) => c.id),
+      chosen.cases.length ? chosen.cases : testCases.map((c) => c.id),
     );
     for (const c of plan.cases)
       if (ids.has(c.id)) for (const r of c.roles ?? []) roles.add(r);
-    if (!chosen.cases.length) for (const r of plan.roles ?? []) roles.add(r);
+    const everyTest = testCases
+      .filter((c) => c.testCount > 0)
+      .every((c) => ids.has(c.id));
+    if (everyTest) for (const r of plan.roles ?? []) roles.add(r);
   }
   return roles;
 }

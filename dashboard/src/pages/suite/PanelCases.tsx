@@ -7,10 +7,13 @@ import { PlanRunButton } from '../../components/PlanRunButton';
 import { Table, VisuallyHidden } from '../../components/Table';
 import { TestCountNote } from '../../components/TestCountNote';
 import { useEnv } from '../../hooks/useEnv';
+import { useLoginsPanel } from '../../hooks/useLogins';
+import { offProdReason } from '../../lib/prod';
 import {
   canRun,
   comparedWith,
   defaultChoice,
+  isPromptCase,
   planCommand,
   promptCommand,
 } from './planChoice';
@@ -28,11 +31,15 @@ interface Props {
 // The suite page's plan panel: the plan's test cases, then its prompt cases
 // in a table of their own. Each opens to show its steps and expected result,
 // and can be run on its own (a test case in the projects the suite runs the
-// plan in).
+// plan in). When the plan has both kinds of case, a button under each table
+// runs just the cases of that table.
 export function PanelCases(props: Props) {
   const { plan } = props;
   const testCases = plan.cases.filter((c) => c.kind !== 'prompt');
   const promptCases = plan.cases.filter((c) => c.kind === 'prompt');
+  const testIds = testCases.filter((c) => c.testCount > 0).map((c) => c.id);
+  const promptIds = promptCases.filter(isPromptCase).map((c) => c.id);
+  const bothKinds = plan.runnable && testIds.length > 0 && promptIds.length > 0;
   return (
     <>
       <h3 className="side-panel-title">Cases ({testCases.length})</h3>
@@ -40,6 +47,14 @@ export function PanelCases(props: Props) {
         <TestCountNote caseCount={testCases.length} projects={plan.projects} />
       )}
       <TestCases {...props} cases={testCases} />
+      {bothKinds && (
+        <RunKindButton
+          {...props}
+          label="test cases"
+          caseIds={testIds}
+          specRoles={plan.roles}
+        />
+      )}
       {promptCases.length > 0 && (
         <>
           <h3 className="side-panel-title">
@@ -49,6 +64,13 @@ export function PanelCases(props: Props) {
             Checked by Claude in a browser, after the tests.
           </p>
           <PromptCases {...props} cases={promptCases} />
+          {bothKinds && (
+            <RunKindButton
+              {...props}
+              label="prompt cases"
+              caseIds={promptIds}
+            />
+          )}
         </>
       )}
     </>
@@ -260,5 +282,82 @@ function RunCase({
     >
       Run
     </PlanRunButton>
+  );
+}
+
+// Runs one table's cases (`caseIds`) of the plan. On production it leaves
+// out the no-prod cases, and is disabled when that leaves none. The server
+// checks every login those cases need before it starts and refuses the run
+// when one isn't ready (onRunError shows why); the note says which logins.
+function RunKindButton({
+  plan,
+  suite,
+  projects,
+  headed,
+  activeRun,
+  onRunError,
+  label,
+  caseIds,
+  specRoles = [],
+}: Props & {
+  label: string;
+  caseIds: string[];
+  // Every login the plan's spec files use; the server checks these too
+  // when a run covers every test case.
+  specRoles?: string[];
+}) {
+  const { currentEnv } = useEnv();
+  const { openPanel } = useLoginsPanel();
+  const ids = currentEnv.production
+    ? caseIds.filter((id) => !plan.cases.find((c) => c.id === id)?.noProd)
+    : caseIds;
+  const reason = activeRun
+    ? 'Another run is in progress'
+    : currentEnv.production && offProdReason(plan)
+      ? offProdReason(plan)
+      : ids.length
+        ? null
+        : `Every one of the ${label} is no-prod, so none run on ${currentEnv.name}`;
+  const roles = [
+    ...new Set(
+      plan.cases
+        .filter((c) => ids.includes(c.id))
+        .flatMap((c) => c.roles ?? [])
+        .concat(specRoles),
+    ),
+  ];
+  return (
+    <>
+      <p className="note small">
+        {roles.length
+          ? `Logs in as ${roles.join(', ')}. The logins are checked before the run starts. `
+          : 'Needs no login.'}
+        {roles.length > 0 && (
+          <button type="button" className="link" onClick={openPanel}>
+            Check the login sessions
+          </button>
+        )}
+      </p>
+      <p className="actions">
+        <PlanRunButton
+          plan={plan}
+          body={{
+            projects: projects.length ? projects : undefined,
+            cases: ids,
+            headed,
+            suite,
+          }}
+          onError={onRunError}
+          busyLabel={roles.length ? 'Checking logins…' : undefined}
+          disabled={Boolean(reason)}
+          title={
+            reason ??
+            `Run the ${ids.length} ${label} of ${plan.name} on ${currentEnv.name}`
+          }
+        >
+          Run {label} on {currentEnv.name}
+        </PlanRunButton>
+      </p>
+    </>
   );
 }

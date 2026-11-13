@@ -14,7 +14,7 @@ session from `npm run login:manual -- jobseeker`.
 
 This plan is the smoke check for Job Search (`/job-search`): the search
 itself, its filters, saving searches, and managing them from the job
-seeker's dashboard. It has three parts:
+seeker's dashboard. It has four parts:
 
 - **Search and results (JS):** Job Search opens with no search and lists
   jobs, without JavaScript errors, and its Keyword, Location, Distance and
@@ -24,12 +24,15 @@ seeker's dashboard. It has three parts:
 - **Filters (JF):** the Company and City filters each narrow the results to
   that company or city, the sort orders sort the jobs, the filters, sort and
   keyword keep each other, and Reset clears them all.
+- **Layout (JL-1, a prompt case):** Claude compares Job Search with the
+  comparison sites at desktop and phone sizes and reports any layout or
+  styling difference ([Prompt case JL-1](#prompt-case-jl-1)).
 - **Saved searches and My Job Search (SS, MD):** a logged-in job seeker
   saves a search, runs it again from "Jobs for me", and sees it on their
   dashboard (My Account). From the dashboard they open and remove saved
   searches and bookmarked jobs.
 
-The JS and JF cases run as a visitor who isn't logged in and don't change
+The JS, JF and JL cases run as a visitor who isn't logged in and don't change
 anything, so they are part of the post-deploy smoke run and are safe on QA,
 Stage, and **Production**. They live in `tests/smoke/job-search/`.
 
@@ -54,7 +57,7 @@ FL-6); there, JS-2 to JS-5 were JS-1 to JS-4. The old JS-5 (no JavaScript errors
 
 | | |
 |---|---|
-| **JS and JF cases** | None. A visitor who isn't logged in. |
+| **JS, JF and JL cases** | None. A visitor who isn't logged in. |
 | **SS and MD cases** | The `jobseeker` role: `playwright/.auth/<env>/jobseeker.json`, from `npm run login:manual -- jobseeker`. Job seekers log in with LoginMN. Use a test account, not a person's own account (see [Open questions](#open-questions)). |
 | **Site password gate** | QA and Stage ask for the `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` from `.env` ([one-time setup](../README.md#one-time-setup)). Production has no gate. |
 | **Accounts touched** | SS and MD add saved searches and bookmarks to the job seeker account and remove them again. They never remove anything they didn't add. |
@@ -82,6 +85,34 @@ BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/job-search 
 Add `--ui` to [watch it run](../README.md#watching-a-run), or put
 `SCREENSHOT=on` in front to
 [save a screenshot of every test](../README.md#screenshots-of-every-test).
+
+### Prompt case JL-1
+
+JL-1 has no test code. It is a [prompt case](../README.md#rule-2-prompt-cases):
+Claude opens the site in a browser, follows
+[prompts/job-search-compare.md](prompts/job-search-compare.md) and gives a
+verdict (pass, fail or unsure) with findings and screenshots. The
+`npx playwright test` commands above don't run it. Run it from the dashboard
+(it runs with the rest of the plan), or on its own:
+
+```bash
+npm run prompt -- JL-1 --env qa
+```
+
+It compares Job Search with the environment's comparison sites, at desktop
+and phone sizes:
+
+| Site under test | Compared with |
+|---|---|
+| Local, QA, Sandbox | Stage and Production |
+| Stage | Production |
+| Production | The screenshots of the last JL-1 run on Production (the baseline) |
+
+On Production, run JL-1 before a deploy and again after it: the second run
+reports what the deploy changed. With no earlier run, it reviews the page on
+its own. Add `--compare <env>` (for example `--compare prod`) to compare with
+other sites. Each run costs Claude usage (several minutes with two
+comparison sites, shown at the end).
 
 ## Test cases
 
@@ -112,6 +143,14 @@ Not logged in. `tests/smoke/job-search/filters.spec.ts`.
 | JF-3 | Sort orders | `/job-search?title=nurse` | 1. Search "nurse". 2. Sort by "Job title". 3. Sort by "Company". 4. Sort by "Date posted". | Each sort shows the same number of jobs as the unsorted search, and the Sort dropdown shows the chosen order. Letter case is ignored when comparing. **1.** At least 1 job is listed. **2.** The job titles on the first page are A–Z. **3.** The companies on the first page are A–Z. **4.** The "Posted … ago" labels on the first page go from newest to oldest. |  | Yes |
 | JF-4 | Filters, sort and keyword keep each other | `/job-search?title=nurse` | Use the page's own controls, not the address. 1. Search "nurse". 2. Pick the city with the most jobs in the City dropdown (on a phone, open "Filters" first). 3. Change Sort to "Date posted". 4. Type "nursing assistant" in Keyword and click "Search". | After each step, the address and the form show everything chosen so far, and from step 2 on every job listed is in the chosen city. **1.** `title=nurse`. **2.** Also `loc=<city>`. **3.** Also `sort=date-posted-desc`. **4.** `title=nursing assistant`, with the same city and sort. |  | Yes |
 | JF-5 | Reset clears the search | `/job-search?title=nurse&loc=<city>&sort=date-posted-desc` | Open JF-4's last search and click "Reset". | **1.** The Keyword box is empty. **2.** The City dropdown shows its placeholder ("List of cities"). **3.** Sort shows "Relevance". **4.** At least 1 job is listed. **5.** The address has no `title`, `loc` or `sort` value. |  | Yes |
+
+### Layout
+
+Not logged in. A [prompt case](#prompt-case-jl-1), with no test code.
+
+| ID | Test | Page | Steps | Expected result | Required login | Prod |
+|---|---|---|---|---|---|---|
+| JL-1 | Job Search layout matches the comparison sites | `/job-search` | **Prompt:** [job-search-compare](prompts/job-search-compare.md): Claude compares Job Search with the [comparison sites](#prompt-case-jl-1) at desktop and phone sizes, part by part (on the phone, with the menu and the Filters drawer open). | **1.** No layout or styling difference from any comparison site that looks unintended: no missing, extra or reordered parts, no broken spacing, fonts, colours, icons or images, and nothing cut off, overlapping or scrolling sideways. **2.** Differences that are only content (other jobs, companies, cities, dates or counts) are listed as notes and don't fail the case. **3.** Matching screenshots of each part on each site at each size are saved with the result. |  | Yes |
 
 ### Saved searches
 
@@ -215,6 +254,9 @@ Every case is generated:
 | `smoke-desktop` on Production, or with `--grep-invert @no-prod` | 10 | JS-1 to JS-5, JF-1 to JF-5 (SS and MD are left out) |
 | `smoke-mobile` on QA or Stage | 16 | JS-1 to JS-5, JF-4, JF-5, SS-1 to SS-3, MD-1 to MD-6 |
 | `smoke-mobile` on Production, or with `--grep-invert @no-prod` | 7 | JS-1 to JS-5, JF-4, JF-5 (SS and MD are left out) |
+
+JL-1 is a prompt case, so it isn't in these totals: the dashboard runs it
+after the tests, and `npm run prompt -- JL-1` runs it on its own.
 
 If the total is different, or anything fails, see
 [When something fails](../README.md#when-something-fails).

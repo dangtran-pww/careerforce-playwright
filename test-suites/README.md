@@ -308,19 +308,30 @@ is an example.
 
   - `Role`: `anonymous`, or a role with a saved login.
   - `Compare with` (optional; default `none`): `default` compares with the
-    environment's own comparison site (QA → Stage, Stage → Production). On
-    Production, `default` compares with the **baseline**: the screenshots of
-    the last run of the same check there. Run the check before a deploy and
-    again after it, and the second run reports what the deploy changed. You
-    can also write `baseline` or an environment id (`stage`, `prod`). A run
-    can pick another site to compare with: `--compare` on the command
-    line. A check that compares with another
+    environment's own comparison sites, all in one check:
+
+    | Site under test | `default` compares with |
+    |---|---|
+    | Local, QA, Sandbox | Stage and Production |
+    | Stage | Production |
+    | Production | the **baseline** |
+
+    The baseline is the screenshots of the last run of the same check
+    there. Run the check before a deploy and again after it, and the second
+    run reports what the deploy changed. A prompt that needs other sites
+    overrides the default: write `baseline`, or one or more environment ids
+    (`prod`, or `stage, prod`). The site under test is left out of the list,
+    so `stage, prod` on Stage compares with Production only, and on
+    Production (nothing left) with the baseline. A run can pick other sites
+    too: `--compare` on the command line. A check that compares with another
     site must be anonymous, because a saved login only works on its own
     environment.
   - `Viewports` (optional; default `desktop 1280x800`): the sizes to check,
     as `<name> <width>x<height>`.
   - `Screenshots` (optional): the most Claude may take. The default is 6, or
-    16 when comparing.
+    16 when comparing. When comparing, the number is for one comparison
+    site; with more sites the limit (and the time and turn limits) grow to
+    match: half as much again for each extra site (16 → 24 for two).
   - `Parallel` (optional; default `no`): `yes` lets the check run at the
     same time as other work. See [Rule 3](#rule-3-parallel-plans-and-prompts).
   - Everything under `## Prompt` is sent to Claude as written. Write it the
@@ -333,8 +344,8 @@ is an example.
   one on its own with its Run button. From a terminal:
 
   ```bash
-  npm run prompt -- HP-5 --env qa                 # compares QA with Stage
-  npm run prompt -- HP-5 --env qa --compare prod  # compares QA with Production
+  npm run prompt -- HP-5 --env qa                 # compares QA with Stage and Production
+  npm run prompt -- HP-5 --env qa --compare prod  # compares QA with Production only
   npm run prompt -- HP-5 --env prod               # compares with its last run there
   ```
 
@@ -343,10 +354,12 @@ is an example.
   browser tools, so it can't run commands or edit files. It is told to stay
   read-only (no forms that change data, no logout), but a browser that can
   click can submit a form, so word admin prompts carefully. Each run costs
-  Claude usage. Set `PROMPT_MODEL=sonnet` in `.env` for a cheaper model. A
+  Claude usage. Checks run on Sonnet; set `PROMPT_MODEL` in `.env` (e.g.
+  `opus`, `haiku`) for another model. A
   check that compares is stopped after 15 minutes
   (`PROMPT_COMPARE_TIMEOUT_MS`) or 100 turns, and other checks after 6
-  minutes (`PROMPT_TIMEOUT_MS`) or 40 turns.
+  minutes (`PROMPT_TIMEOUT_MS`) or 40 turns. Comparing with two sites gets
+  half as long again (22.5 minutes, 150 turns).
 - **Basic Auth:** the browser sends one set of credentials. Comparing QA with
   Stage works when both use `BASIC_AUTH_USER`. If you set different
   credentials per environment (`BASIC_AUTH_USER_STAGE`), the comparison site

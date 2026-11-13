@@ -9,9 +9,9 @@ export interface Env {
   name: string;
   baseURL: string;
   production: boolean;
-  // What prompt cases that compare sites compare it with: an environment id
-  // or "baseline" (its last run's screenshots).
-  compareWith?: string;
+  // What prompt cases that compare sites compare it with: environment ids,
+  // or ["baseline"] (its last run's screenshots). A plain string in old runs.
+  compareWith?: string[] | string;
 }
 
 export interface EnvironmentsResponse {
@@ -107,10 +107,11 @@ export interface PromptCheck {
   file: string;
   name: string;
   role: string | null;
-  // none | default | baseline | an environment id
+  // none | default | baseline | environment ids ("stage, prod")
   compare: string;
   viewports: Viewport[];
-  screenshots: number; // at most
+  screenshots: number; // at most, when comparing with one site
+  parallel?: boolean; // may run alongside other work (Rule 3)
   prompt: string;
 }
 
@@ -404,7 +405,8 @@ export interface Finding {
 // What a prompt check compared with (dashboard/server/runs/prompt.mjs).
 export interface PromptCompare {
   mode: 'none' | 'site' | 'baseline';
-  envId?: string; // site
+  sites?: { envId: string; envName: string; baseURL: string }[]; // site
+  envId?: string; // site, in runs from before `sites`
   envName?: string;
   baseURL?: string;
   baselineFrom?: string | null; // baseline: the run it came from; null if none

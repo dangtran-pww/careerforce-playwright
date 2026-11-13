@@ -3,13 +3,15 @@
 // browser and gives a verdict (see dashboard/server/runs/prompt.mjs).
 //
 // Usage:
-//   npm run prompt -- <case-id> [--env qa] [--compare stage|prod|baseline|default|none] [--out <dir>]
+//   npm run prompt -- <case-id> [--env qa] [--compare stage,prod|baseline|default|none] [--out <dir>]
 //   npm run prompt -- --prompt <slug> [same options]
 //
 //   --env       qa (default), stage, prod, ... or a BASE_URL
-//   --compare   what a check that compares sites compares with; default is
-//               the environment's own (QA → Stage, Stage → Production,
-//               Production → baseline: its last run's screenshots)
+//   --compare   what a check that compares sites compares with: one or more
+//               environment ids (stage,prod), baseline, default or none.
+//               default is the environment's own (Local, QA, Sandbox → Stage
+//               and Production, Stage → Production, Production → baseline:
+//               its last run's screenshots)
 //   --out       the folder to write to (default reports/prompt-runs/<stamp>-<env>-<slug>)
 //
 // Writes <out>/result.json, <out>/screenshots/ and Claude's log
@@ -118,10 +120,15 @@ if (check.role && !existsSync(authFile(check.role, env)))
     `This check runs as ${check.role}, and there's no saved login on ${env.name}. Run:\n  ${loginCommand(check.role, env)}`,
   );
 
-const compare =
-  values.compare === 'none'
-    ? { mode: 'none' }
-    : resolveCompare(check, env, values.compare);
+let compare;
+try {
+  compare =
+    values.compare === 'none'
+      ? { mode: 'none' }
+      : resolveCompare(check, env, values.compare);
+} catch (err) {
+  fail(err.message);
+}
 const baseline =
   compare.mode === 'baseline'
     ? await findBaseline(slug, env.id, BASELINE_SOURCES)
@@ -141,7 +148,8 @@ const title = caseInfo
   : `${check.name} (${slug})`;
 console.log(`${title}\nOn ${env.name} (${env.baseURL})`);
 if (compare.mode === 'site')
-  console.log(`Comparing with ${compare.env.name} (${compare.env.baseURL})`);
+  for (const other of compare.envs)
+    console.log(`Comparing with ${other.name} (${other.baseURL})`);
 else if (compare.mode === 'baseline')
   console.log(
     baseline

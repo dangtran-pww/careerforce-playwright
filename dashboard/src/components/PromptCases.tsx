@@ -16,7 +16,7 @@ export function PromptCases({ prompts }: { prompts: Result[] }) {
   if (!prompts.length) return null;
 
   return (
-    <section aria-labelledby="prompt-cases-heading">
+    <section className="prompt-cases" aria-labelledby="prompt-cases-heading">
       <h3 id="prompt-cases-heading" className="section-title">
         Prompt cases (checked by Claude)
       </h3>

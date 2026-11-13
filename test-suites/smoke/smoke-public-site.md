@@ -148,18 +148,19 @@ verdict (pass, fail or unsure) with findings and screenshots. The
 npm run prompt -- HP-5 --env qa
 ```
 
-It compares the homepage with a second site, at desktop and phone sizes:
+It compares the homepage with the environment's comparison sites (see
+[Rule 2](../README.md#rule-2-prompt-cases)), at desktop and phone sizes:
 
 | Site under test | Compared with |
 |---|---|
-| QA | Stage |
+| Local, QA, Sandbox | Stage and Production |
 | Stage | Production |
 | Production | The screenshots of the last HP-5 run on Production (the baseline) |
 
 On Production, run HP-5 before a deploy and again after it: the second run
 reports what the deploy changed. With no earlier run, it reviews the page on
-its own. Add `--compare <env>` (for example `--compare prod`) to compare with
-another site, or pick it under "Compare with" in the dashboard. Each run
+its own. Add `--compare <env>` (for example `--compare prod`, or
+`--compare stage,prod`) to compare with other sites. Each run
 costs Claude usage (a few minutes, shown at the end).
 
 ## Test cases

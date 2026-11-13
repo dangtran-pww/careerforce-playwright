@@ -898,6 +898,12 @@ body.env-production .topbar {
   margin-bottom: 16px;
 }
 
+/* A run's prompt cases: 15px, like the run facts and results around them
+   (body text is 16px). Small notes and badges keep their own sizes. */
+.prompt-cases .steps {
+  font-size: var(--fs-md);
+}
+
 .findings {
   margin: 8px 0 16px;
   padding-left: 20px;
@@ -905,6 +911,11 @@ body.env-production .topbar {
 
 .findings li {
   margin: 4px 0;
+}
+
+/* A finding's own screenshots, right under its text. */
+.findings .shots {
+  margin: 8px 0 12px;
 }
 
 .shots {
@@ -1273,6 +1284,72 @@ tr.row-below td {
 .case-details dd {
   margin: 6px 0 0;
   line-height: 1.5;
+}
+
+/* ---- a prompt case opened (PromptCaseDetails) ------------------------- */
+
+.prompt-case-lead {
+  margin: 0 0 10px;
+}
+
+/* The prompt file's settings: label / value rows, not section cards. */
+.case-details .prompt-facts {
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
+}
+
+.case-details .prompt-facts > div {
+  display: contents;
+}
+
+.case-details .prompt-facts dt {
+  display: block;
+  padding: 0;
+  border: 0;
+  color: var(--muted);
+  font-size: inherit;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.case-details .prompt-facts dt::before {
+  content: none;
+}
+
+.case-details .prompt-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* The prompt as it's sent: a quote of the prompt file. */
+.prompt-body {
+  padding: 2px 0 2px 12px;
+  border-left: 3px solid var(--track-bg);
+}
+
+.prompt-body p,
+.prompt-body ul {
+  margin: 0 0 8px;
+}
+
+.prompt-body ul {
+  padding-left: 1.25em;
+}
+
+.prompt-body > :last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 480px) {
+  .case-details .prompt-facts {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .case-details .prompt-facts dd {
+    margin-bottom: 6px;
+  }
 }
 
 /* Numbered steps, split out of the plan's one-line table cell. */

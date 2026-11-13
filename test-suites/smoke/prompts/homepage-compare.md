@@ -11,7 +11,8 @@ HP-5 in test-suites/smoke/smoke-public-site.md. From the DEED smoke checklist:
 Live (qa based on new changes) site/side-by-side. Review both desktop and
 responsive. Note any discrepancies."
 
-"default" compares QA with Stage and Stage with Production. On Production it
+"default" compares Local, QA and Sandbox with Stage and Production, and Stage
+with Production. On Production it
 compares with the screenshots of the last run on Production (run it before a
 deploy, then again after). A run can pick another site to compare with.
 

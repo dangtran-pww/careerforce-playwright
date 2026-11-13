@@ -11,8 +11,8 @@
 //
 // A check can compare (`compare` from resolveCompare() in
 // scripts/lib/prompts.mjs):
-//   site      the same pages on another environment, in a second tab, e.g.
-//             QA against Stage;
+//   site      the same pages on other environments, one tab each, e.g.
+//             QA against Stage and Production;
 //   baseline  the screenshots of the last run of the same prompt on this
 //             environment, e.g. Production before and after a deploy. They
 //             are copied into the check's baseline/ folder, and Claude may
@@ -44,15 +44,16 @@ import {
 } from '../claude/run.mjs';
 
 // A check that takes longer than this is stopped and marked as an error.
-// Comparing takes longer: two sites, every viewport.
+// Comparing takes longer: two sites, every viewport. Each further site adds
+// half as much again (siteFactor).
 const TIMEOUT_MS = Number(process.env.PROMPT_TIMEOUT_MS ?? 6 * 60_000);
 const COMPARE_TIMEOUT_MS = Number(
   process.env.PROMPT_COMPARE_TIMEOUT_MS ?? 15 * 60_000,
 );
 const MAX_TURNS = process.env.PROMPT_MAX_TURNS ?? '40';
 const COMPARE_MAX_TURNS = process.env.PROMPT_COMPARE_MAX_TURNS ?? '100';
-// PROMPT_MODEL (e.g. sonnet, haiku) picks a cheaper model than your default.
-const MODEL = process.env.PROMPT_MODEL;
+// Sonnet unless PROMPT_MODEL (e.g. opus, haiku) picks another.
+const MODEL = process.env.PROMPT_MODEL || 'sonnet';
 
 const MCP = 'mcp__playwright-test__';
 // Looking and clicking only: no file writes, no test generation, no
@@ -116,19 +117,47 @@ const SCHEMA = {
 
 // ---- the prompt -----------------------------------------------------------
 
+// How much more a comparison takes than one with a single other site: 1 for
+// one, 1.5 for two (three sites open instead of two), and so on. Scales the
+// screenshot limit, the time limit and the turn limit.
+const siteFactor = (compare) =>
+  compare.mode === 'site' ? (compare.envs.length + 1) / 2 : 1;
+
+/** The most screenshots Claude may take in this run of `check`. */
+const screenshotLimit = (check, compare) =>
+  Math.ceil(check.screenshots * siteFactor(compare));
+
+// "Stage", "Stage and Production", "QA, Stage and Production".
+const andList = (words, and = 'and') =>
+  words.length < 2
+    ? words.join('')
+    : `${words.slice(0, -1).join(', ')} ${and} ${words.at(-1)}`;
+
 const viewportList = (viewports) =>
   viewports.map((v) => `${v.name} (${v.width}x${v.height})`).join(', ');
 
 function compareRules(check, env, compare, baseline) {
   const baselineFiles = baseline?.files ?? [];
   const views = viewportList(check.viewports);
-  if (compare.mode === 'site')
+  if (compare.mode === 'site') {
+    const others = compare.envs;
+    const one = others.length === 1;
+    const ids = [env.id, ...others.map((o) => o.id)];
     return `
-This is a side-by-side comparison. The site under test is ${env.baseURL} (${env.name}). The site to compare with is ${compare.env.baseURL} (${compare.env.name}); open it in a second tab with browser_tabs and visit the same paths there.
+This is a side-by-side comparison. The site under test is ${env.baseURL} (${env.name}). ${
+      one
+        ? `The site to compare with is ${others[0].baseURL} (${others[0].name}); open it in a second tab with browser_tabs and visit the same paths there.`
+        : `The sites to compare with are ${andList(others.map((o) => `${o.baseURL} (${o.name})`))}; open each in a tab of its own with browser_tabs and visit the same paths there. Compare ${env.name} with each of them.`
+    }
 - Do it at each of these viewports, one at a time, setting the size with browser_resize: ${views}.
-- At each viewport, look at each page top to bottom on both sites, and take paired screenshots named "<two-digit number>-<page>-<viewport>-<site>.png", where <site> is ${env.id} or ${compare.env.id}, e.g. "01-home-desktop-${env.id}.png" and "02-home-desktop-${compare.env.id}.png".
+- At each viewport, look at each page top to bottom on every site, and take matching screenshots named "<two-digit number>-<page>-<viewport>-<site>.png", where <site> is ${andList(ids, 'or')}, e.g. ${ids.map((id, i) => `"0${i + 1}-home-desktop-${id}.png"`).join(', ')}.
 - The sites have different content: different jobs, events, dates, blog posts, counts and images are expected and are not differences. Compare layout and styling only: missing, extra or reordered blocks; spacing and alignment; fonts, sizes and colours; buttons and links that look different; images that are broken, stretched or cropped differently; text cut off or overlapping; sideways scrolling; the header and menu at each viewport.
-- Verdict "fail" when ${env.name} has a layout or styling difference that looks unintended or broken. "pass" when the only differences are content (list them as "note" findings). Say in each finding which site and viewport it is on, and fill in its viewport.`;
+- Verdict "fail" when ${env.name} has a layout or styling difference ${one ? '' : 'from any of them '}that looks unintended or broken. "pass" when the only differences are content (list them as "note" findings).${
+      one
+        ? ''
+        : ` When ${env.name} matches one site but not another (say, a change not yet on ${others.at(-1).name}), say so in the finding.`
+    } Say in each finding which sites and viewport it is on, and fill in its viewport.`;
+  }
   if (compare.mode === 'baseline' && baselineFiles.length)
     return `
 This compares ${env.name} with how the same pages looked in an earlier run of this check on ${env.name} (the baseline, from ${baseline?.from}). Its screenshots are these files; view them with Read (read no other files):
@@ -155,7 +184,7 @@ Setup: first call planner_setup_page with project "seed" and seedFile "tests/see
 
 Rules:
 - Read-only. Do not submit forms that create, change or delete anything, do not log out, and do not change any setting. Searching and opening pages is fine.
-- Take a screenshot of what you check with browser_take_screenshot (scale "css"), saving it in "${shotsDir}/". Take at least 1 and at most ${check.screenshots}.
+- Take a screenshot of what you check with browser_take_screenshot (scale "css"), saving it in "${shotsDir}/". Take at least 1 and at most ${screenshotLimit(check, compare)}.
 - Judge only what the check asks. Verdict "fail" when something it asks about is missing, broken or shows an error; "unsure" when you couldn't tell (the page didn't load, you were blocked). Name the screenshot that shows each finding.
 ${compareRules(check, env, compare, baseline)}
 
@@ -279,9 +308,11 @@ export async function runPromptCheck({
     mode: compare.mode,
     ...(compare.mode === 'site'
       ? {
-          envId: compare.env.id,
-          envName: compare.env.name,
-          baseURL: compare.env.baseURL,
+          sites: compare.envs.map((o) => ({
+            envId: o.id,
+            envName: o.name,
+            baseURL: o.baseURL,
+          })),
         }
       : {}),
     ...(compare.mode === 'baseline'
@@ -336,7 +367,9 @@ export async function runPromptCheck({
   };
 
   const compares = compare.mode !== 'none';
-  const timeoutMs = compares ? COMPARE_TIMEOUT_MS : TIMEOUT_MS;
+  const timeoutMs = compares
+    ? Math.round(COMPARE_TIMEOUT_MS * siteFactor(compare))
+    : TIMEOUT_MS;
   let timedOut = false;
   const timer = setTimeout(() => {
     io.log(
@@ -354,7 +387,9 @@ export async function runPromptCheck({
     {
       tools: baselineFiles.length ? [...BROWSER_TOOLS, 'Read'] : BROWSER_TOOLS,
       deny: baselineFiles.length ? SECRET_FILES : [],
-      maxTurns: compares ? COMPARE_MAX_TURNS : MAX_TURNS,
+      maxTurns: compares
+        ? String(Math.ceil(Number(COMPARE_MAX_TURNS) * siteFactor(compare)))
+        : MAX_TURNS,
       model: MODEL,
       stream: true,
       mcpConfig,
@@ -374,7 +409,7 @@ export async function runPromptCheck({
     costUsd: result?.total_cost_usd ?? null,
     // Tokens and model even when Claude stopped without a verdict: a
     // timed-out or stopped check still cost something.
-    ...(result ? usageOf(result, MODEL ?? null) : { model: null }),
+    ...(result ? usageOf(result, MODEL) : { model: null }),
     durationMs,
     screenshots: (await listImages(shotsDir)).map((f) =>
       rel(join(shotsDir, f)),

@@ -9,7 +9,7 @@
 //
 //   # <Name>
 //   **Role:** anonymous | admin | jobseeker | ...
-//   **Compare with:** none | default | baseline | <environment id>   (optional)
+//   **Compare with:** none | default | baseline | <environment id>[, <id>...]  (optional)
 //   **Viewports:** desktop 1280x800, phone 390x844                   (optional)
 //   **Screenshots:** 16                                              (optional)
 //   **Parallel:** yes | no                                           (optional)
@@ -22,10 +22,36 @@ import { environmentById } from '../../tests/helpers/environments.mts';
 import { promptFiles } from './layout.mjs';
 
 const ANONYMOUS = ['', '-', '—', 'anonymous', 'none'];
-// "default" is the environment's own comparison site (compareWith in
+// "default" is the environment's own comparison sites (compareWith in
 // tests/helpers/environments.mts); "baseline" the screenshots of the last run
-// of the same check on the same environment.
+// of the same check on the same environment. Or a list of environment ids.
 const COMPARE_WORDS = ['none', 'default', 'baseline'];
+
+/**
+ * A "Compare with" value ("stage, prod", "default", ...) as a list of its
+ * words, lower case: ["stage", "prod"].
+ */
+export const compareList = (text) =>
+  (text ?? '')
+    .toLowerCase()
+    .split(/\s*(?:,|\band\b)\s*/)
+    .map((w) => w.trim())
+    .filter(Boolean);
+
+/**
+ * What's wrong with a "Compare with" value, or null: one of none, default
+ * or baseline on its own, or one or more environment ids.
+ */
+export function compareProblem(text) {
+  const words = compareList(text);
+  if (!words.length) return 'It is empty.';
+  if (words.length === 1 && COMPARE_WORDS.includes(words[0])) return null;
+  const bad = words.filter((w) => !environmentById(w));
+  if (bad.length)
+    return `"${bad.join('", "')}" is not an environment id (none, default and baseline go on their own).`;
+  if (new Set(words).size < words.length) return 'It names a site twice.';
+  return null;
+}
 export const DEFAULT_VIEWPORTS = [
   { name: 'desktop', width: 1280, height: 800 },
 ];
@@ -83,11 +109,12 @@ export function parsePrompt(slug, text, where = {}) {
   const roleText = (option(lines, 'Role') ?? '').toLowerCase();
   const role = ANONYMOUS.includes(roleText) ? null : roleText;
 
-  const compareText = (option(lines, 'Compare with') ?? 'none').toLowerCase();
-  const compare = compareText || 'none';
-  if (!COMPARE_WORDS.includes(compare) && !environmentById(compare))
+  const compareText = option(lines, 'Compare with') || 'none';
+  const compare = compareList(compareText).join(', ') || 'none';
+  const compareBad = compareProblem(compareText);
+  if (compareBad)
     problems.push(
-      `"Compare with: ${compare}" is not none, default, baseline or an environment id.`,
+      `"Compare with: ${compareText}": ${compareBad} Write none, default, baseline, or environment ids such as "stage, prod".`,
     );
 
   const viewportText = option(lines, 'Viewports');
@@ -195,25 +222,34 @@ export function promptSlugInCell(cell) {
     .trim();
 }
 
-// ---- which site a run compares with -----------------------------------------
+// ---- which sites a run compares with ----------------------------------------
 
 /**
  * What a run of `prompt` on `env` compares with:
  *   { mode: 'none' }
- *   { mode: 'site', env }      the same pages on another environment
+ *   { mode: 'site', envs }     the same pages on other environments
  *   { mode: 'baseline' }       the last run's screenshots on this environment
- * `override` (a run's "Compare with" choice: an environment id, "baseline" or
+ * `override` (a run's "Compare with" choice: environment ids, "baseline" or
  * "default") replaces the prompt's own choice, except that a prompt saying
- * "none" never compares. Comparing with the environment under test means
- * comparing with its baseline.
+ * "none" never compares. "default" is the environment's own compareWith.
+ * The environment under test is left out of the list; when nothing is left,
+ * the run compares with its baseline.
  */
 export function resolveCompare(prompt, env, override) {
   if (prompt.compare === 'none') return { mode: 'none' };
-  let choice = override && override !== 'default' ? override : prompt.compare;
-  if (choice === 'default') choice = env.compareWith ?? 'baseline';
-  if (choice === 'baseline' || choice === env.id) return { mode: 'baseline' };
-  const other = environmentById(choice);
-  if (!other)
-    throw new Error(`Unknown environment "${choice}" to compare with.`);
-  return { mode: 'site', env: other };
+  const overrideWords = compareList(override);
+  let choice =
+    overrideWords.length && overrideWords.join() !== 'default'
+      ? overrideWords
+      : compareList(prompt.compare);
+  if (choice.join() === 'default') choice = [env.compareWith ?? 'baseline'].flat();
+  if (choice.join() === 'none') return { mode: 'none' };
+  const ids = choice.filter((id) => id !== 'baseline' && id !== env.id);
+  if (!ids.length) return { mode: 'baseline' };
+  const envs = ids.map((id) => {
+    const other = environmentById(id);
+    if (!other) throw new Error(`Unknown environment "${id}" to compare with.`);
+    return other;
+  });
+  return { mode: 'site', envs };
 }

@@ -118,7 +118,7 @@ export async function runCheckInRun(
       : null;
   if (compare.mode === 'site')
     io.log(
-      `  Comparing ${env.name} with ${compare.env.name} (${compare.env.baseURL}).\n`,
+      `  Comparing ${env.name} with ${compare.envs.map((o) => `${o.name} (${o.baseURL})`).join(', ')}.\n`,
     );
   else if (compare.mode === 'baseline')
     io.log(

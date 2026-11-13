@@ -7,7 +7,7 @@ export interface PlanChoice {
   cases: Set<string>;
   headed: boolean;
   // What prompt cases that compare sites compare with: "default" (each
-  // environment's own), "baseline" or an environment id.
+  // environment's own), "baseline" or environment ids ("stage,prod").
   compare: string;
 }
 
@@ -74,20 +74,52 @@ export const promptCommand = (id: string, choice: PlanChoice, env: Env) =>
     .join(' ');
 
 /**
- * What prompt case `c` compares `env` with on a run, by name: the run's
- * "Compare with" choice (`compare`), else the prompt's own. Mirrors
+ * The environment ids prompt case `c` compares `env` with on a run: the
+ * run's "Compare with" choice (`compare`), else the prompt's own. [] means
+ * its baseline (its last run here), null no comparison. Mirrors
  * resolveCompare in scripts/lib/prompts.mjs.
  */
+export function comparedSites(
+  c: PlanCase,
+  compare: string,
+  env: Env,
+): string[] | null {
+  const own = c.prompt?.compare ?? 'none';
+  if (own === 'none') return null;
+  const words = (text: string) =>
+    text
+      .split(/\s*,\s*/)
+      .map((w) => w.trim())
+      .filter(Boolean);
+  let targets = words(compare !== 'default' ? compare : own);
+  if (targets.join() === 'default')
+    targets = [env.compareWith ?? 'baseline'].flat();
+  if (targets.join() === 'none') return null;
+  return targets.filter((id) => id !== 'baseline' && id !== env.id);
+}
+
+/** comparedSites() by name: "Stage and Production". */
 export function comparedWith(
   c: PlanCase,
   compare: string,
   env: Env,
   envById: (id: string) => Env | undefined,
 ): string {
-  const own = c.prompt?.compare ?? 'none';
-  if (own === 'none') return '—';
-  let target = compare !== 'default' ? compare : own;
-  if (target === 'default') target = env.compareWith ?? 'baseline';
-  if (target === 'baseline' || target === env.id) return 'Its last run here';
-  return envById(target)?.name ?? target;
+  const ids = comparedSites(c, compare, env);
+  if (!ids) return '—';
+  if (!ids.length) return 'Its last run here';
+  const names = ids.map((id) => envById(id)?.name ?? id);
+  return names.length < 2
+    ? names[0]
+    : `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`;
+}
+
+/**
+ * The most screenshots a run of prompt case `c` on `env` may take: the
+ * prompt's Screenshots, half as much again for each comparison site after
+ * the first. Mirrors screenshotLimit in dashboard/server/runs/prompt.mjs.
+ */
+export function screenshotLimit(c: PlanCase, compare: string, env: Env) {
+  const sites = comparedSites(c, compare, env)?.length ?? 0;
+  return Math.ceil((c.prompt?.screenshots ?? 0) * Math.max(1, (sites + 1) / 2));
 }

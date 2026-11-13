@@ -23,7 +23,7 @@ export const PLAN_PANEL_ID = 'plan-panel';
 
 // The right-hand panel on the suite page: one plan's details. Each case
 // opens to show its steps and expected result, and can be run on its own;
-// the button under the cases runs the whole plan. Both run in the projects
+// the button above the cases runs the whole plan. Both run in the projects
 // the suite runs the plan in. Above that button the panel says which logins
 // the plan needs; the server checks them before it starts any run, and when
 // one isn't ready the panel says why and opens the Login sessions panel. Escape or the close button
@@ -168,15 +168,6 @@ export function PlanPanel({
                 : `Show test files (${plan.files.length})`}
             </ToggleButton>
           )}
-          <PanelCases
-            plan={plan}
-            suite={suite}
-            projects={projects}
-            headed={headed}
-            activeRun={activeRun}
-            openCase={openCase}
-            onRunError={onRunError}
-          />
           {plan.runnable && <PlanLoginsNote plan={plan} />}
           {refusal && <RunRefused refusal={refusal} />}
           {plan.runnable && (
@@ -191,6 +182,15 @@ export function PlanPanel({
               />
             </p>
           )}
+          <PanelCases
+            plan={plan}
+            suite={suite}
+            projects={projects}
+            headed={headed}
+            activeRun={activeRun}
+            openCase={openCase}
+            onRunError={onRunError}
+          />
         </>
       )}
     </aside>

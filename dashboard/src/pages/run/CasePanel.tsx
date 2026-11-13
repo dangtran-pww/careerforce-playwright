@@ -44,12 +44,10 @@ export function CasePanel({
     >
       <div className="card-head">
         <h2 id="case-panel-heading">
-          <span className="mono">{shown.caseId}</span>
-          {testCase && ` ${testCase.title}`}
+          {testCase ? `${shown.caseId} : ${testCase.title}` : shown.caseId}
         </h2>
         <CloseButton label="Close case details" onClick={onClose} />
       </div>
-      {plan && <p className="note">{plan.name}</p>}
       {testCase ? (
         <CaseDetails planSlug={shown.planSlug} testCase={testCase} />
       ) : (

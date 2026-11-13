@@ -13,12 +13,17 @@ export function envParam(id) {
 }
 
 /**
- * A run's "Compare with" choice for prompt checks that compare sites: an
- * environment id, "baseline" or "default" (undefined means default).
+ * A run's "Compare with" choice for prompt checks that compare sites: one or
+ * more environment ids ("stage,prod"), "baseline", "none" or "default"
+ * (undefined means default).
  */
 export function compareParam(choice) {
-  if (!choice || choice === 'default' || choice === 'baseline') return choice;
-  return envParam(choice).id;
+  if (!choice || ['default', 'baseline', 'none'].includes(choice))
+    return choice;
+  return choice
+    .split(',')
+    .map((id) => envParam(id.trim()).id)
+    .join(',');
 }
 
 /**
@@ -30,5 +35,5 @@ export const publicEnv = (env) => ({
   name: env.name,
   baseURL: env.baseURL,
   production: env.production,
-  compareWith: env.compareWith ?? 'baseline',
+  compareWith: env.compareWith ?? ['baseline'],
 });

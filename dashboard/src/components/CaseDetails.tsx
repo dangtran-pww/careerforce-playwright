@@ -1,7 +1,7 @@
 import type { CaseDetail, PlanCase } from '../api/types';
 import { CaseExplain } from './CaseExplain';
 import { Command } from './Command';
-import { PromptCaseInfo } from './PromptCaseInfo';
+import { PromptCaseDetails } from './PromptCaseDetails';
 import { inline } from '../lib/inline';
 import { splitNumbered } from '../lib/numbered';
 import { StepList } from './StepList';
@@ -21,15 +21,12 @@ export function CaseDetails({
   testCase: PlanCase;
   command?: string; // runs only this case; left out when it has no tests
 }) {
+  // A prompt case has no code: it's shown its own way.
+  if (testCase.kind === 'prompt')
+    return <PromptCaseDetails testCase={testCase} command={command} />;
   const locations = testCase.locations ?? [];
   const details = withSteps(testCase.details ?? []);
-  if (
-    !details.length &&
-    !locations.length &&
-    !command &&
-    testCase.kind !== 'prompt'
-  )
-    return null;
+  if (!details.length && !locations.length && !command) return null;
   return (
     <div className="case-details">
       <dl>
@@ -54,7 +51,6 @@ export function CaseDetails({
             </dd>
           </div>
         )}
-        {testCase.kind === 'prompt' && <PromptCaseInfo testCase={testCase} />}
         {command && (
           <div>
             <dt>Command</dt>
