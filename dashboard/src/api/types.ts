@@ -396,7 +396,7 @@ export interface RunSummaryResponse {
 }
 
 export interface Finding {
-  severity: 'problem' | 'note';
+  severity: 'problem' | 'warning' | 'note';
   text: string;
   screenshot?: string;
   viewport?: string;

@@ -1,6 +1,7 @@
 import type { Finding, PromptResult as Result } from '../api/types';
 import { duration, modelName, plural } from '../lib/format';
 import { runFile } from '../lib/runs';
+import { FINDING_SEVERITY } from '../lib/status';
 import { PromptBody } from './PromptBody';
 
 // One Claude check's result: who it ran as, what it compared with, the
@@ -208,13 +209,12 @@ function FindingItem({
   finding: Finding;
   shots: string[];
 }) {
+  const severity = FINDING_SEVERITY[f.severity] ?? FINDING_SEVERITY.note;
   return (
     <li>
-      {f.severity === 'problem' ? (
-        <span className="badge badge-bad small">Problem</span>
-      ) : (
-        <span className="badge badge-neutral small">Note</span>
-      )}{' '}
+      <span className={`badge badge-${severity.tone} small`}>
+        {severity.label}
+      </span>{' '}
       {f.viewport && <span className="note small">[{f.viewport}] </span>}
       {f.text}
       {f.screenshot && !shots.length && (

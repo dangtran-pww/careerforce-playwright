@@ -97,7 +97,12 @@ const SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          severity: { type: 'string', enum: ['problem', 'note'] },
+          severity: {
+            type: 'string',
+            enum: ['problem', 'warning', 'note'],
+            description:
+              'problem: makes the check fail. warning: worth a look but does not fail it. note: for information.',
+          },
           text: { type: 'string' },
           screenshot: {
             type: 'string',
@@ -152,10 +157,10 @@ This is a side-by-side comparison. The site under test is ${env.baseURL} (${env.
 - Do it at each of these viewports, one at a time, setting the size with browser_resize: ${views}.
 - At each viewport, look at each page top to bottom on every site, and take matching screenshots named "<two-digit number>-<page>-<viewport>-<site>.png", where <site> is ${andList(ids, 'or')}, e.g. ${ids.map((id, i) => `"0${i + 1}-home-desktop-${id}.png"`).join(', ')}.
 - The sites have different content: different jobs, events, dates, blog posts, counts and images are expected and are not differences. Compare layout and styling only: missing, extra or reordered blocks; spacing and alignment; fonts, sizes and colours; buttons and links that look different; images that are broken, stretched or cropped differently; text cut off or overlapping; sideways scrolling; the header and menu at each viewport.
-- Verdict "fail" when ${env.name} has a layout or styling difference ${one ? '' : 'from any of them '}that looks unintended or broken. "pass" when the only differences are content (list them as "note" findings).${
+- Verdict "fail" when ${env.name} has a layout or styling difference ${one ? '' : 'from any of them '}that looks unintended or broken (a "problem" finding). "pass" when there is none. A layout or styling difference that looks deliberate, or a block that is missing or different only because of content (an event list, a CMS box), is a "warning"; list what you compared and found the same as "note" findings.${
       one
         ? ''
-        : ` When ${env.name} matches one site but not another (say, a change not yet on ${others.at(-1).name}), say so in the finding.`
+        : ` When ${env.name} matches one site but not another (say, a change not yet on ${others.at(-1).name}), say so in the finding, and make it a "warning".`
     } Say in each finding which sites and viewport it is on, and fill in its viewport.`;
   }
   if (compare.mode === 'baseline' && baselineFiles.length)
@@ -164,7 +169,7 @@ This compares ${env.name} with how the same pages looked in an earlier run of th
 ${baselineFiles.map((f) => `  - ${f}`).join('\n')}
 - Look at the same pages at the same viewports (${views}, set with browser_resize), and take screenshots named "<two-digit number>-<page>-<viewport>.png".
 - Content changes (different jobs, events, dates, posts, counts, images) are expected. Compare layout and styling only: missing, extra or reordered blocks; spacing and alignment; fonts, sizes and colours; broken or differently cropped images; text cut off or overlapping; sideways scrolling; the header and menu.
-- Verdict "fail" when the layout or styling changed in a way that looks unintended or broken. "pass" when only content changed (list notable changes as "note" findings).`;
+- Verdict "fail" when the layout or styling changed in a way that looks unintended or broken (a "problem" finding). A change that looks deliberate, or a block that is missing or different only because of content, is a "warning"; other notable content changes are "note" findings.`;
   if (compare.mode === 'baseline')
     return `
 There is no earlier run of this check on ${env.name} to compare with (no baseline), so review the pages on their own at each viewport (${views}, set with browser_resize): fail when something looks broken, overlapping, cut off or unstyled. Start the summary with "No baseline, review only." Take screenshots named "<two-digit number>-<page>-<viewport>.png"; the next run compares with them.`;
@@ -186,6 +191,10 @@ Rules:
 - Read-only. Do not submit forms that create, change or delete anything, do not log out, and do not change any setting. Searching and opening pages is fine.
 - Take a screenshot of what you check with browser_take_screenshot (scale "css"), saving it in "${shotsDir}/". Take at least 1 and at most ${screenshotLimit(check, compare)}.
 - Judge only what the check asks. Verdict "fail" when something it asks about is missing, broken or shows an error; "unsure" when you couldn't tell (the page didn't load, you were blocked). Name the screenshot that shows each finding.
+- Give each finding a severity:
+  - "problem": what makes the verdict "fail". A "fail" has at least one problem, and a "pass" has none.
+  - "warning": something someone should look at that doesn't fail the check, e.g. a difference that looks deliberate, or a block that is missing or different because of the site's content.
+  - "note": for information only, e.g. what you checked and found as expected.
 ${compareRules(check, env, compare, baseline)}
 
 The check:

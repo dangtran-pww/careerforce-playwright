@@ -34,6 +34,14 @@ export const RUN_STATUS: StatusMap = {
   error: { label: "Didn't run", tone: 'bad' },
 };
 
+// A finding in a prompt check's result: a problem fails the check, a warning
+// is worth a look, a note is for information.
+export const FINDING_SEVERITY: StatusMap = {
+  problem: { label: 'Problem', tone: 'bad' },
+  warning: { label: 'Warning', tone: 'warn' },
+  note: { label: 'Note', tone: 'neutral' },
+};
+
 // One step of a suite run.
 export const STEP_STATUS: StatusMap = {
   pending: { label: 'Waiting', tone: 'neutral' },
