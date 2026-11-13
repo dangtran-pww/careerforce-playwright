@@ -2,7 +2,7 @@
 
 **Role:** anonymous
 **Compare with:** default
-**Viewports:** desktop 1280x800, phone 390x844
+**Viewports:** desktop 1366x768, phone 390x844
 **Screenshots:** 16
 **Parallel:** yes
 

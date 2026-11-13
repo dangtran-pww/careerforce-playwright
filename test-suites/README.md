@@ -296,7 +296,7 @@ is an example.
 
   **Role:** anonymous
   **Compare with:** default
-  **Viewports:** desktop 1280x800, phone 390x844
+  **Viewports:** desktop 1366x768, phone 390x844
   **Screenshots:** 16
 
   Notes for people (where the check comes from). Ignored.
@@ -326,7 +326,7 @@ is an example.
     too: `--compare` on the command line. A check that compares with another
     site must be anonymous, because a saved login only works on its own
     environment.
-  - `Viewports` (optional; default `desktop 1280x800`): the sizes to check,
+  - `Viewports` (optional; default `desktop 1366x768`): the sizes to check,
     as `<name> <width>x<height>`.
   - `Screenshots` (optional): the most Claude may take. The default is 6, or
     16 when comparing. When comparing, the number is for one comparison
@@ -354,8 +354,8 @@ is an example.
   browser tools, so it can't run commands or edit files. It is told to stay
   read-only (no forms that change data, no logout), but a browser that can
   click can submit a form, so word admin prompts carefully. Each run costs
-  Claude usage. Checks run on Sonnet; set `PROMPT_MODEL` in `.env` (e.g.
-  `opus`, `haiku`) for another model. A
+  Claude usage. Checks run on Opus; set `PROMPT_MODEL` in `.env` (e.g.
+  `sonnet`, `haiku`) for a cheaper model. A
   check that compares is stopped after 15 minutes
   (`PROMPT_COMPARE_TIMEOUT_MS`) or 100 turns, and other checks after 6
   minutes (`PROMPT_TIMEOUT_MS`) or 40 turns. Comparing with two sites gets

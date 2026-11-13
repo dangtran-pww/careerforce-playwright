@@ -64,7 +64,7 @@ what you saw, not what you expect.
 4. **Back to a visitor:** `browser_cookie_clear`. Load the role file again
    to log back in.
 5. **Phone width:** `browser_resize` to 390x844 when the plan runs on
-   phones, and back to 1280x800 afterwards.
+   phones, and back to 1366x768 afterwards.
 
 Rules while browsing:
 

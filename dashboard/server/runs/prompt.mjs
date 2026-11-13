@@ -52,8 +52,8 @@ const COMPARE_TIMEOUT_MS = Number(
 );
 const MAX_TURNS = process.env.PROMPT_MAX_TURNS ?? '40';
 const COMPARE_MAX_TURNS = process.env.PROMPT_COMPARE_MAX_TURNS ?? '100';
-// Sonnet unless PROMPT_MODEL (e.g. opus, haiku) picks another.
-const MODEL = process.env.PROMPT_MODEL || 'sonnet';
+// Opus unless PROMPT_MODEL (e.g. sonnet, haiku) picks another.
+const MODEL = process.env.PROMPT_MODEL || 'opus';
 
 const MCP = 'mcp__playwright-test__';
 // Looking and clicking only: no file writes, no test generation, no

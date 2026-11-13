@@ -10,7 +10,7 @@
 //   # <Name>
 //   **Role:** anonymous | admin | jobseeker | ...
 //   **Compare with:** none | default | baseline | <environment id>[, <id>...]  (optional)
-//   **Viewports:** desktop 1280x800, phone 390x844                   (optional)
+//   **Viewports:** desktop 1366x768, phone 390x844                   (optional)
 //   **Screenshots:** 16                                              (optional)
 //   **Parallel:** yes | no                                           (optional)
 //   (notes for people, ignored)
@@ -53,7 +53,7 @@ export function compareProblem(text) {
   return null;
 }
 export const DEFAULT_VIEWPORTS = [
-  { name: 'desktop', width: 1280, height: 800 },
+  { name: 'desktop', width: 1366, height: 768 },
 ];
 const MAX_SCREENSHOTS = 30;
 
@@ -79,7 +79,7 @@ function option(lines, label) {
   return line ? plain(line.trim().replace(re, '')) : null;
 }
 
-// "desktop 1280x800, phone 390x844" → [{ name, width, height }], or the
+// "desktop 1366x768, phone 390x844" → [{ name, width, height }], or the
 // text that couldn't be read in `bad`.
 export function parseViewports(text) {
   const viewports = [];
