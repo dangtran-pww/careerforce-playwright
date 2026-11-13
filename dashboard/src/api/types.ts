@@ -85,6 +85,14 @@ export interface PlanCase {
   details: CaseDetail[];
   // Where its tests are, one per test (not per project).
   locations: CaseLocation[];
+  // Roles it logs in as: from its tests' spec files, or its prompt's Role.
+  roles?: string[];
+}
+
+// The cases of a plan that log in as one role.
+export interface RoleCases {
+  role: string;
+  cases: string[]; // case IDs
 }
 
 // A prompt file in test-suites/<suite>/prompts/ (scripts/lib/prompts.mjs).
@@ -190,6 +198,7 @@ export interface PlanSummary {
   noProdUntagged?: boolean; // some of its tests aren't tagged @no-prod
   noProdCases: string[]; // left out of runs on production
   roles: string[];
+  roleCases?: RoleCases[];
   cases: PlanCase[];
   runnable: boolean; // has tests or a usable prompt case
   hasTests?: boolean; // has Playwright tests
@@ -247,6 +256,8 @@ export interface SuitePlan {
   projects: string[];
   projectTests?: ProjectTests[];
   roles?: string[];
+  roleCases?: RoleCases[]; // which cases need each login
+  caseIds?: string[];
   noProd?: boolean; // the whole plan is no-prod
   noProdCases?: string[]; // left out of runs on production
   allNoProd?: boolean; // so the plan is skipped on production

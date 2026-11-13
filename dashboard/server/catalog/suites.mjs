@@ -118,6 +118,8 @@ function resolve(suite, allPlans) {
       noProdCases: plan.noProdCases,
       allNoProd: allNoProd(plan),
       roles: plan.roles,
+      roleCases: plan.roleCases,
+      caseIds: plan.cases.map((c) => c.id),
       projects,
       projectTests,
     };

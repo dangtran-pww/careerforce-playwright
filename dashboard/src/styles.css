@@ -30,6 +30,9 @@
   --warn-bg: #fbf0d9;
   --warn-fg: #734c00;
   --neutral-bg: #eef3fb;
+  /* The empty part of a progress bar: visible on --neutral-bg, and at least
+     3:1 against --accent so the filled part stands out. */
+  --track-bg: #c5d9ef;
   --neutral-fg: #424242;
   --code-bg: #f1f1f1;
   --on-accent: #ffffff;
@@ -1024,6 +1027,12 @@ body:has(.split, .page-wide) {
   font-size: var(--fs-md);
 }
 
+/* The case's details and Claude's answers about it: 15px, like the
+   failure explanations and the run summary in the column beside it. */
+.side-panel .case-details {
+  font-size: var(--fs-md);
+}
+
 .check-row {
   display: flex;
   align-items: flex-start;
@@ -1165,6 +1174,8 @@ button.small {
   font-size: var(--fs-md);
   line-height: 1.4;
   cursor: pointer;
+  /* The ▸/▾ glyph sits low against the row text; nudge it up. */
+  transform: translateY(-2px);
 }
 
 .row-toggle:hover {
@@ -1353,8 +1364,19 @@ tr.row-below td {
   color: var(--muted);
 }
 
+/* A hanging ✓: wrapped lines line up with the text, not the mark, and
+   each check is set apart from the next. */
+.case-explain-steps ul li {
+  margin: 2px 0;
+  padding-left: 1.1em;
+  text-indent: -1.1em;
+}
+
 .case-explain-steps ul li::before {
-  content: '✓ ';
+  content: '✓';
+  display: inline-block;
+  width: 1.1em;
+  text-indent: 0;
   color: var(--good-fg);
 }
 
@@ -1520,6 +1542,11 @@ tr.row-below td {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+/* The fold toggle (FailureExplain.tsx), styled like "What the code does". */
+.failure-explanation-head .case-explain-toggle {
+  font-weight: 600;
 }
 
 .failure-explanation h6 {
@@ -1829,13 +1856,23 @@ dialog.modal::backdrop {
 
 /* "Summarize the failures" on a plan run's page, above its results
    (RunSummary.tsx). */
+/* Same text size as the failure explanations below it (15px). */
 .run-summary {
   margin: 24px 0 0;
+  font-size: var(--fs-md);
   line-height: 1.5;
 }
 
 .run-summary p {
-  margin: 6px 0;
+  margin: 8px 0;
+}
+
+.run-summary ul {
+  margin: 0;
+}
+
+.run-summary li:not(.run-issue) {
+  margin: 3px 0;
 }
 
 .run-summary .callout {
@@ -1843,7 +1880,7 @@ dialog.modal::backdrop {
 }
 
 .run-summary h6 {
-  margin: 14px 0 4px;
+  margin: 10px 0 2px;
   font-size: var(--fs-xs);
   font-weight: 600;
   text-transform: uppercase;
@@ -1871,10 +1908,17 @@ dialog.modal::backdrop {
   gap: 4px 8px;
 }
 
+/* The test count is a .note; drop the card's note margin, which would
+   make this flex row taller than its title. */
+.run-issue-head .note {
+  margin: 0;
+}
+
 .run-issue-tests {
   margin: 4px 0;
   padding-left: 20px;
   font-size: var(--fs-sm);
+  line-height: 1.4;
 }
 
 .run-summary .claude-usage {
@@ -1887,45 +1931,99 @@ dialog.modal::backdrop {
 .test-progress {
   display: grid;
   gap: 6px;
+  margin-top: 24px;
   padding: 12px 14px;
   border: 1px solid var(--accent);
   border-radius: 2px;
   background: var(--neutral-bg);
 }
 
+/* In a suite run's step it sits under the step's command: a smaller gap. */
+.command + .test-progress {
+  margin-top: 12px;
+}
+
 .test-progress p {
   margin: 0;
 }
 
+/* Fixed-width digits, so the count and the percentage don't shift as
+   they go up. */
 .test-progress-head {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  font-size: 1.0625rem;
+  font-size: var(--fs-base);
+  font-variant-numeric: tabular-nums;
 }
 
+/* The native bar, restyled; the browsers each need their own pseudo
+   elements for the track and the fill. */
 .test-progress progress {
+  display: block;
   width: 100%;
   height: 10px;
   appearance: none;
   border: none;
   border-radius: 5px;
-  background: var(--surface);
+  background: var(--track-bg);
   overflow: hidden;
-  accent-color: var(--accent);
 }
 
 .test-progress progress::-webkit-progress-bar {
-  background: var(--surface);
+  background: var(--track-bg);
+  border-radius: 5px;
 }
 
 .test-progress progress::-webkit-progress-value {
   background: var(--accent);
-  transition: width 0.3s ease;
+  border-radius: 5px;
 }
 
 .test-progress progress::-moz-progress-bar {
   background: var(--accent);
+  border-radius: 5px;
+}
+
+/* Before Playwright gives the test count there is no value: a short
+   segment slides along the track. Without these rules Chromium shows an
+   empty bar and Firefox a full one, which reads as "done". */
+.test-progress progress:indeterminate {
+  background: linear-gradient(var(--accent), var(--accent)) no-repeat
+    var(--track-bg);
+  background-size: 30% 100%;
+  animation: progress-slide 1.4s ease-in-out infinite;
+}
+
+.test-progress progress:indeterminate::-webkit-progress-bar {
+  background: transparent;
+}
+
+.test-progress progress:indeterminate::-moz-progress-bar {
+  background: transparent;
+}
+
+/* With a 30% wide segment, -43% starts it just off the left end and
+   143% ends it just off the right. */
+@keyframes progress-slide {
+  from {
+    background-position: -43% 0;
+  }
+  to {
+    background-position: 143% 0;
+  }
+}
+
+/* No sliding: still stripes say "waiting" without moving. */
+@media (prefers-reduced-motion: reduce) {
+  .test-progress progress:indeterminate {
+    animation: none;
+    background: repeating-linear-gradient(
+      -45deg,
+      var(--accent) 0 6px,
+      var(--track-bg) 6px 12px
+    );
+  }
 }
 
 /* ---- case search (top bar) --------------------------------------------- */
@@ -1937,6 +2035,8 @@ dialog.modal::backdrop {
   flex: 0 1 240px;
   min-width: 0;
   margin-left: auto;
+  /* Room between the box and the Login Sessions button. */
+  margin-right: 12px;
 }
 
 .case-search + .logins-menu {
@@ -2002,6 +2102,7 @@ dialog.modal::backdrop {
     flex: 1 1 100%;
     order: 1;
     margin-left: 0;
+    margin-right: 0;
   }
 
   .case-search + .logins-menu {

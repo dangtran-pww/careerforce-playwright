@@ -129,7 +129,7 @@ In depth, in the functional Events plans ([test-suites/events/](../events/suite.
 Also not covered here:
 
 - **Emails.** The checklist expects an email for a registration and a cancellation. The Registration API sends them and the tests have no mailbox to read, so they stay a manual check after ER-1 and ER-2 until there is one (see Open questions).
-- Appointments: [smoke-appointments](smoke-appointments.md) (to be written).
+- Appointments: [smoke-appointments](smoke-appointments.md).
 
 ## Open questions
 

@@ -1,7 +1,6 @@
 import { useCallback, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router';
-import { ApiError } from '../../api/client';
-import type { Session, SuiteResponse } from '../../api/types';
+import type { SuiteResponse } from '../../api/types';
 import { AsyncButton } from '../../components/AsyncButton';
 import { ActiveRunBanner, ErrorBox, Loading } from '../../components/Callouts';
 import { EnvTag } from '../../components/EnvTag';
@@ -16,7 +15,7 @@ import { plural } from '../../lib/format';
 import { toggled } from '../../lib/sets';
 import { defaultChoice, neededLogins, type SuiteChoice } from './choice';
 import { PlanPanel } from './PlanPanel';
-import { RunRefused, type Refusal } from './RunRefused';
+import { RunRefused, useRunRefusal } from './RunRefused';
 import { PlanChecklist } from './StepChecklists';
 
 // #/suites/<slug> — one suite: pick its plans and run it. The logins the
@@ -40,20 +39,9 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
   const { currentEnv: env } = useEnv();
   const [choice, setChoice] = useState(() => defaultChoice(suite));
   // Why the last Run press didn't start a run; cleared on the next press.
-  const [refusal, setRefusal] = useState<Refusal | null>(null);
-  const { openPanel, recheck } = useLoginsPanel();
-  const start = useStartRun((err) => {
-    const logins =
-      err instanceof ApiError && Array.isArray(err.data.logins)
-        ? (err.data.logins as Session[])
-        : [];
-    setRefusal({ message: err.message, logins });
-    // Show the logins that stopped it, checked again.
-    if (logins.length) {
-      recheck();
-      openPanel();
-    }
-  });
+  const { refusal, onError, clear: clearRefusal } = useRunRefusal();
+  const { openPanel } = useLoginsPanel();
+  const start = useStartRun(onError);
   // The plan whose details show in the right-hand column; none leaves it
   // empty (the column is always there, so the page never changes width).
   // ?plan=<slug> opens it (a plan run's page links back that way), and
@@ -177,7 +165,7 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
               disabled={Boolean(activeRun) || blocked || total === 0}
               busyLabel={logins.length ? 'Checking logins…' : 'Starting…'}
               onClick={() => {
-                setRefusal(null);
+                clearRefusal();
                 return start(`/api/suites/${suite.slug}/run`, {
                   plans: [...choice.plans],
                   headed: choice.headed,

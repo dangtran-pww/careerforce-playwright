@@ -21,7 +21,8 @@ import {
 
 /**
  * Start a run of `plan` on `env`, with the chosen projects (default: the
- * plan's selected ones) and cases (default: all). Playwright runs the cases
+ * plan's selected ones) and cases (default: all). Every login those cases
+ * need is checked first with `checkLogin(role, env)` (see requireLogins). Playwright runs the cases
  * with tests; the prompt cases run after them (prompt-step.mjs: the Parallel
  * ones a few at a time, and alongside the tests when the plan is Parallel
  * too; the others one by one),
@@ -31,7 +32,15 @@ import {
  */
 export async function startRun(
   plan,
-  { env, projects, cases = [], headed = false, compare, suite } = {},
+  {
+    env,
+    projects,
+    cases = [],
+    headed = false,
+    compare,
+    suite,
+    checkLogin,
+  } = {},
 ) {
   checkPlanRunnable(plan);
   checkPromptCases(plan, env, cases);
@@ -39,6 +48,7 @@ export async function startRun(
   const prompts = promptCaseEntries(plan, env, cases);
   if (!chosen && !prompts.length)
     throw new ApiError(400, `Nothing of ${plan.name} to run on ${env.name}.`);
+  await requireLogins(neededRoles(plan, env, chosen, prompts), env, checkLogin);
 
   const now = new Date();
   const meta = {
@@ -72,7 +82,12 @@ export async function startRun(
     const runTests =
       chosen &&
       (async () => {
-        const result = await runPlaywright({ dir, env, args: chosen.args });
+        const result = await runPlaywright({
+          dir,
+          env,
+          args: chosen.args,
+          progress: meta,
+        });
         meta.exitCode = result.code;
         Object.assign(meta, result.summary ?? {});
         return playwrightStatus(result);
@@ -88,6 +103,48 @@ export async function startRun(
     await endRun(meta);
   });
   return meta;
+}
+
+// The roles the run logs in as: those of the test cases it runs, and the
+// prompt cases' Role. A whole-plan run also counts every role its spec files
+// use, as a suite run does, in case a test isn't matched to a case.
+function neededRoles(plan, env, chosen, prompts) {
+  const roles = new Set(prompts.map((p) => p.role).filter(Boolean));
+  if (chosen) {
+    const ids = new Set(
+      chosen.cases.length
+        ? chosen.cases
+        : plan.cases
+            .filter((c) => c.kind !== 'prompt')
+            .filter((c) => !(env.production && c.noProd))
+            .map((c) => c.id),
+    );
+    for (const c of plan.cases)
+      if (ids.has(c.id)) for (const r of c.roles ?? []) roles.add(r);
+    if (!chosen.cases.length) for (const r of plan.roles ?? []) roles.add(r);
+  }
+  return roles;
+}
+
+/**
+ * Every login a run needs must work on this environment right now:
+ * `checkLogin(role, env)` asks the site (GET /api/sessions/:role does the
+ * same). A missing, expired or non-admin session stops the run before
+ * anything starts: a 409 with { logins } listing what's wrong with each one.
+ */
+export async function requireLogins(roles, env, checkLogin) {
+  const logins = await Promise.all(
+    [...roles].map((role) => checkLogin(role, env)),
+  );
+  const notReady = logins.filter((s) => s.status !== 'valid');
+  if (notReady.length)
+    throw new ApiError(
+      409,
+      notReady.length === 1
+        ? `The ${notReady[0].role} login isn't ready on ${env.name}, so the run didn't start.`
+        : `${notReady.length} logins aren't ready on ${env.name}, so the run didn't start.`,
+      { logins: notReady },
+    );
 }
 
 // Refuse picked prompt cases that can't run: a broken prompt file, or a

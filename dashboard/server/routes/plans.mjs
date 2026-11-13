@@ -13,6 +13,7 @@ import { ApiError } from '../errors.mjs';
 import { listRuns } from '../runs/history.mjs';
 import { activeRunId } from '../runs/lifecycle.mjs';
 import { startRun } from '../runs/plan-run.mjs';
+import { checkSessionOnce } from '../sessions.mjs';
 import { openUiMode } from '../ui-mode.mjs';
 import {
   CASE_ID,
@@ -76,7 +77,8 @@ planRoutes.get(`${PLAN}/markdown`, async (c) => {
   });
 });
 
-// POST /api/plans/:slug/run — run it.
+// POST /api/plans/:slug/run — run it, once every login it needs is checked
+// (409 with { logins } when one isn't ready).
 planRoutes.post(
   `${PLAN}/run`,
   jsonBody(
@@ -103,6 +105,7 @@ planRoutes.post(
       headed: body.headed === true,
       compare: compareParam(body.compare),
       suite: body.suite,
+      checkLogin: checkSessionOnce,
     });
     return c.json(run, 201);
   },

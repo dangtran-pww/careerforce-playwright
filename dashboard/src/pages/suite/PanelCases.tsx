@@ -1,6 +1,7 @@
 import type { Plan, PlanCase } from '../../api/types';
 import { CaseDetails } from '../../components/CaseDetails';
 import { CaseProjects } from '../../components/CaseProjects';
+import { CaseLogins } from '../../components/LoginBadges';
 import { NoProdBadge } from '../../components/NoProdBadge';
 import { PlanRunButton } from '../../components/PlanRunButton';
 import { Table, VisuallyHidden } from '../../components/Table';
@@ -21,6 +22,7 @@ interface Props {
   headed: boolean;
   activeRun: string | null;
   openCase?: string | null; // a case whose row starts opened and highlighted
+  onRunError?: (err: Error) => void; // a Run press the server refused
 }
 
 // The suite page's plan panel: the plan's test cases, then its prompt cases
@@ -61,6 +63,7 @@ function TestCases({
   headed,
   activeRun,
   openCase,
+  onRunError,
 }: Props & { cases: PlanCase[] }) {
   const { currentEnv } = useEnv();
   const hasTests = plan.hasTests ?? plan.runnable;
@@ -104,6 +107,7 @@ function TestCases({
             <>
               {c.title}
               {!plan.noProd && <NoProdBadge testCase={c} />}
+              <CaseLogins testCase={c} />
             </>
           ),
         },
@@ -116,7 +120,8 @@ function TestCases({
           className: (c) => (c.testCount ? undefined : 'note'),
           cell: (c) => c.testCount || 'none',
         },
-        hasTests && runColumn(plan, { suite, projects, headed, activeRun }),
+        hasTests &&
+          runColumn(plan, { suite, projects, headed, activeRun, onRunError }),
       ]}
     />
   );
@@ -130,6 +135,7 @@ function PromptCases({
   headed,
   activeRun,
   openCase,
+  onRunError,
 }: Props & { cases: PlanCase[] }) {
   const { currentEnv, envById } = useEnv();
   return (
@@ -158,6 +164,7 @@ function PromptCases({
             <>
               {c.title}
               {!plan.noProd && <NoProdBadge testCase={c} />}
+              <CaseLogins testCase={c} />
             </>
           ),
         },
@@ -174,7 +181,7 @@ function PromptCases({
               ? comparedWith(c, 'default', currentEnv, envById)
               : 'Broken prompt file',
         },
-        runColumn(plan, { suite, projects, headed, activeRun }),
+        runColumn(plan, { suite, projects, headed, activeRun, onRunError }),
       ]}
     />
   );
@@ -188,11 +195,13 @@ function runColumn(
     projects,
     headed,
     activeRun,
+    onRunError,
   }: {
     suite: string;
     projects: string[];
     headed: boolean;
     activeRun: string | null;
+    onRunError?: (err: Error) => void;
   },
 ) {
   return {
@@ -202,7 +211,7 @@ function runColumn(
       <RunCase
         plan={plan}
         testCase={c}
-        {...{ suite, projects, headed, activeRun }}
+        {...{ suite, projects, headed, activeRun, onRunError }}
       />
     ),
   };
@@ -215,6 +224,7 @@ function RunCase({
   projects,
   headed,
   activeRun,
+  onRunError,
 }: {
   plan: Plan;
   testCase: PlanCase;
@@ -222,6 +232,7 @@ function RunCase({
   projects: string[];
   headed: boolean;
   activeRun: string | null;
+  onRunError?: (err: Error) => void;
 }) {
   const { currentEnv } = useEnv();
   if (!canRun(c)) return null;
@@ -236,6 +247,8 @@ function RunCase({
         suite,
       }}
       className="small"
+      onError={onRunError}
+      busyLabel={c.roles?.length ? 'Checking…' : undefined}
       disabled={Boolean(activeRun) || Boolean(offProd)}
       title={
         activeRun

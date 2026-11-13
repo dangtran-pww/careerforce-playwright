@@ -451,6 +451,27 @@ export async function loadPlans({ refresh = false } = {}) {
         prompts,
       );
       plan.roles = await rolesFor(plan.files);
+      // Each case's logins: the roles in the spec files its tests are in, or
+      // its prompt file's Role. Per file, so a file that mixes visitor and
+      // logged-in tests marks all of its cases.
+      for (const c of plan.cases)
+        c.roles =
+          c.kind === 'prompt'
+            ? c.prompt?.role
+              ? [c.prompt.role]
+              : []
+            : await rolesFor([
+                ...new Set((c.locations ?? []).map((l) => l.file)),
+              ]);
+      // role → the cases that log in as it, for the plan's "Login" label.
+      plan.roleCases = [...new Set(plan.cases.flatMap((c) => c.roles))].map(
+        (role) => ({
+          role,
+          cases: plan.cases
+            .filter((c) => c.roles.includes(role))
+            .map((c) => c.id),
+        }),
+      );
       return plan;
     }),
   );

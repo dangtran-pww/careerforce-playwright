@@ -12,16 +12,21 @@ import { PlanRunButton } from '../../components/PlanRunButton';
 import { ToggleButton } from '../../components/ToggleButton';
 import { useApi } from '../../hooks/useApi';
 import { useEnv } from '../../hooks/useEnv';
+import { useLoginsPanel } from '../../hooks/useLogins';
+import { loginsFact } from '../../components/LoginBadges';
 import { offProdReason } from '../../lib/prod';
 import { PLAN_STATUS } from '../../lib/status';
 import { PanelCases } from './PanelCases';
+import { RunRefused, useRunRefusal } from './RunRefused';
 
 export const PLAN_PANEL_ID = 'plan-panel';
 
 // The right-hand panel on the suite page: one plan's details. Each case
 // opens to show its steps and expected result, and can be run on its own;
 // the button under the cases runs the whole plan. Both run in the projects
-// the suite runs the plan in. Escape or the close button
+// the suite runs the plan in. Above that button the panel says which logins
+// the plan needs; the server checks them before it starts any run, and when
+// one isn't ready the panel says why and opens the Login sessions panel. Escape or the close button
 // hides the panel. Give it key={slug} so a new plan starts fresh instead of
 // showing the last one while it loads.
 export function PlanPanel({
@@ -51,6 +56,8 @@ export function PlanPanel({
   // The whole plan file, read in a modal.
   const [showPlan, setShowPlan] = useState(false);
   const factsId = useId();
+  // Why the last Run press (the plan's or a case's) didn't start a run.
+  const { refusal, onError: onRunError } = useRunRefusal();
 
   // Move focus into the panel when it opens, so keyboard and screen reader
   // users land on what they asked for.
@@ -128,7 +135,17 @@ export function PlanPanel({
             <Facts
               items={[
                 ['Plan', <code>{plan.file}</code>],
-                ['Logins', plan.roles.length ? plan.roles.join(', ') : 'none'],
+                [
+                  'Logins',
+                  plan.roleCases
+                    ? loginsFact(
+                        plan.roleCases,
+                        plan.cases.map((c) => c.id),
+                      )
+                    : plan.roles.length
+                      ? plan.roles.join(', ')
+                      : 'none',
+                ],
                 showTests && [
                   'Test files',
                   plan.files.map((f) => (
@@ -158,7 +175,10 @@ export function PlanPanel({
             headed={headed}
             activeRun={activeRun}
             openCase={openCase}
+            onRunError={onRunError}
           />
+          {plan.runnable && <PlanLoginsNote plan={plan} />}
+          {refusal && <RunRefused refusal={refusal} />}
           {plan.runnable && (
             <p className="actions">
               <RunPlanButton
@@ -167,12 +187,32 @@ export function PlanPanel({
                 projects={projects}
                 headed={headed}
                 activeRun={activeRun}
+                onError={onRunError}
               />
             </p>
           )}
         </>
       )}
     </aside>
+  );
+}
+
+// The logins a run of the plan needs, with a link to check them now. The
+// server checks them again when Run is pressed.
+function PlanLoginsNote({ plan }: { plan: Plan }) {
+  const { openPanel } = useLoginsPanel();
+  const roles = plan.roleCases?.map((rc) => rc.role) ?? plan.roles;
+  return (
+    <p className="note small">
+      {roles.length
+        ? `Logs in as ${roles.join(', ')}. The logins are checked before the run starts. `
+        : 'Needs no login.'}
+      {roles.length > 0 && (
+        <button type="button" className="link" onClick={openPanel}>
+          Check the login sessions
+        </button>
+      )}
+    </p>
   );
 }
 
@@ -185,14 +225,17 @@ function RunPlanButton({
   projects,
   headed,
   activeRun,
+  onError,
 }: {
   plan: Plan;
   suite: string;
   projects: string[];
   headed: boolean;
   activeRun: string | null;
+  onError: (err: Error) => void;
 }) {
   const { currentEnv } = useEnv();
+  const roles = plan.roleCases?.map((rc) => rc.role) ?? plan.roles;
   const blocked = currentEnv.production ? offProdReason(plan) : null;
   return (
     <PlanRunButton
@@ -202,6 +245,8 @@ function RunPlanButton({
         headed,
         suite,
       }}
+      onError={onError}
+      busyLabel={roles.length ? 'Checking logins…' : undefined}
       disabled={Boolean(activeRun) || Boolean(blocked)}
       title={
         activeRun

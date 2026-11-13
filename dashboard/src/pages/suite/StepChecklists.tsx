@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 import type { Suite, SuitePlan } from '../../api/types';
+import { PlanLogins } from '../../components/LoginBadges';
 import { plural, testsSummary } from '../../lib/format';
 import { PLAN_PANEL_ID } from './PlanPanel';
 
@@ -107,9 +108,11 @@ function PlanRow({
           }`}
       </span>
       {p.found && (
-        <span className="note small">
-          {p.roles?.length ? `Login: ${p.roles.join(', ')}` : 'No login'}
-        </span>
+        <PlanLogins
+          roleCases={p.roleCases}
+          caseIds={p.caseIds}
+          roles={p.roles}
+        />
       )}
       {!p.found ? (
         <span className="badge badge-bad small">Not found</span>

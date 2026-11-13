@@ -30,7 +30,7 @@ import {
   newRunId,
   save,
 } from './lifecycle.mjs';
-import { combinedStatus } from './plan-run.mjs';
+import { combinedStatus, requireLogins } from './plan-run.mjs';
 import {
   checkPlanRunnable,
   planArgs,
@@ -87,28 +87,16 @@ export async function startSuiteRun(suite, choice) {
     planSteps.push({ entry, plan });
   }
 
-  // Every login the run needs must work on this environment right now:
-  // `checkLogin(role, env)` asks the site (GET /api/sessions/:role does the
-  // same). A missing, expired or non-admin session stops the run before
-  // anything starts, with what to do for each one.
+  // Every login the run needs must work on this environment right now; a
+  // missing, expired or non-admin session stops the run before anything
+  // starts (requireLogins).
   const needed = new Set();
   for (const { plan } of planSteps) {
     for (const role of plan?.roles ?? []) needed.add(role);
     for (const c of plan ? promptCaseEntries(plan, env) : [])
       if (c.role) needed.add(c.role);
   }
-  const logins = await Promise.all(
-    [...needed].map((role) => checkLogin(role, env)),
-  );
-  const notReady = logins.filter((s) => s.status !== 'valid');
-  if (notReady.length)
-    throw new ApiError(
-      409,
-      notReady.length === 1
-        ? `The ${notReady[0].role} login isn't ready on ${env.name}, so the run didn't start.`
-        : `${notReady.length} logins aren't ready on ${env.name}, so the run didn't start.`,
-      { logins: notReady },
-    );
+  await requireLogins(needed, env, checkLogin);
 
   // ---- the run's steps ----
   const steps = [];

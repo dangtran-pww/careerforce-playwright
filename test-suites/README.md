@@ -32,8 +32,9 @@ test-suites/
 - A prompt lives in `prompts/` next to the plans that use it.
 - `smoke/` is every smoke plan, QA and Stage only. `job-search/` holds the
   four functional Job Search plans. `events/` holds the
-  functional Events plans. `jobseeker-registration/`, `resume-builder/` and
-  `appointments/` are placeholders with no plans yet.
+  functional Events plans, and `appointments/` the functional Appointments
+  plans. `jobseeker-registration/` and `resume-builder/` are placeholders
+  with no plans yet.
 
 ## Suites
 
@@ -620,6 +621,12 @@ Every plan, by suite folder.
   admin schedules a short session, a job seeker registers and cancels, and
   attendance creates a service record (no-prod cases, `admin` and
   `jobseeker` logins).
+- `smoke/smoke-appointments.md` — Status: ready to generate. Appointments,
+  one pass each: the search lists times and nothing past 8 days as a visitor
+  (prod-safe); an admin creates a short session at Aitkin, a job seeker books
+  and cancels, an admin adds and cancels an attendee, marks one attended
+  (service record) and cancels a slot (no-prod cases, `admin` and
+  `jobseeker` logins).
 - `smoke/smoke-auto-logout.md` — Status: ready to generate. The
   inactivity logout (MNDEED-8448): the 11-minute warning and 15-minute
   logout settings as `admin` and `jobseeker`, the warning via the page
@@ -659,3 +666,10 @@ Every plan, by suite folder.
   private events, deleting and cancelling, and who can schedule. No-prod
   plan, desktop only, `admin` and `jobseeker` logins (other roles' cases
   wait for their logins).
+- `appointments/functional-appointments-search.md` — Status: ready to
+  generate. Appointments part 1 of 4: the public appointment search (first
+  load, the week strip and the 8-day window, weekend dates, the formats,
+  location, distance and suggestions, the filters and the day kept
+  together, Reset, empty days), what the search hides, bad values in the
+  address, where a time leads for a visitor, the links to the search, phone
+  width and accessibility. Prod-safe, visitor only.
