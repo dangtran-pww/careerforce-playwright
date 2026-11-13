@@ -155,6 +155,12 @@ export class JobSearchPage {
     return card.locator('span').filter({ hasText: /^\s*Posted\b/ });
   }
 
+  // The short description a list card shows (the single-job view shows
+  // `fullDescription` instead).
+  cardSummary(card: Locator): Locator {
+    return card.locator('.job-description__summary');
+  }
+
   // Only the single-job view shows the full description; list cards show
   // a short .job-description__summary instead.
   fullDescription(card: Locator): Locator {

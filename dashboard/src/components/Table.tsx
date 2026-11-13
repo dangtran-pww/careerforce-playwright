@@ -34,6 +34,8 @@ export interface Column<T> {
 // shown, in a row underneath. It starts at column `belowFrom` (0 = the first
 // column) and spans the rest, so it can line up under, e.g., the Test column.
 //
+// `rowId` gives a row an id, so a link elsewhere on the page can find it.
+//
 // `initialOpen` lists the keys of rows that start opened. `highlight` is the
 // key of a row to scroll into view and mark briefly when the table mounts
 // (e.g. a case found by the header's case search).
@@ -41,6 +43,7 @@ export function Table<T>({
   columns,
   rows,
   rowKey,
+  rowId,
   expand,
   expandLabel = () => 'Details',
   below,
@@ -51,6 +54,7 @@ export function Table<T>({
   columns: (Column<T> | false | null | undefined)[];
   rows: T[];
   rowKey: (row: T) => string;
+  rowId?: (row: T) => string;
   expand?: (row: T) => ReactNode;
   expandLabel?: (row: T) => string;
   below?: (row: T) => ReactNode;
@@ -136,6 +140,7 @@ export function Table<T>({
             return (
               <Fragment key={key}>
                 <tr
+                  id={rowId?.(row)}
                   ref={key === highlight ? highlightRef : undefined}
                   className={rowClass || undefined}
                   onClick={

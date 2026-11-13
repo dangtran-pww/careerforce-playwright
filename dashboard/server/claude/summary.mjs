@@ -142,13 +142,14 @@ async function generate(runId, refresh) {
         result,
         'Claude answered without a summary. Try again.',
       );
-    // Labels ("#3") back to test titles, for the page.
-    const titleOf = (label) =>
-      failures.find((f) => f.label === label.trim())?.name ?? label;
+    // Labels ("#3") back to the tests, so the page can name them and link
+    // to their rows and plan cases.
+    const testOf = (label) =>
+      failures.find((f) => f.label === label.trim())?.test ?? label;
     answer.issues = answer.issues.map((issue) => ({
       title: issue.title,
       cause: CAUSES.includes(issue.cause) ? issue.cause : 'unclear',
-      tests: (issue.tests ?? []).map(titleOf),
+      tests: (issue.tests ?? []).map(testOf),
       detail: issue.detail ?? '',
       nextStep: issue.nextStep ?? '',
     }));
@@ -249,7 +250,16 @@ async function failureOf(
   // In a suite, the page names the step too.
   return {
     label,
-    name: step != null ? `${name} — step ${step}` : name,
+    test: {
+      name: step != null ? `${name} — step ${step}` : name,
+      step,
+      plan: plan ?? null,
+      project: test.projectName,
+      file: spec.file,
+      line: spec.line,
+      title,
+      caseId: testCase?.id ?? null,
+    },
     text,
   };
 }

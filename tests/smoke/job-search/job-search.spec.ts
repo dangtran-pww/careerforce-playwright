@@ -158,6 +158,10 @@ test.describe('Search and results', () => {
           'href',
           new RegExp(`[?&]jvid=${jobId}`),
         );
+        // A short description of the job, not empty.
+        const summary = jobs.cardSummary(card);
+        await expect(summary).toBeVisible();
+        await expect(summary).toHaveText(/\S/);
       });
     }
   });

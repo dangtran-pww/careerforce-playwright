@@ -1997,6 +1997,15 @@ dialog.modal::backdrop {
   line-height: 1.4;
 }
 
+.run-issue-tests button.link {
+  font: inherit;
+  text-align: left;
+}
+
+.run-issue-tests li + li {
+  margin-top: 3px;
+}
+
 .run-summary .claude-usage {
   margin: 12px 0 0;
   padding-top: 6px;

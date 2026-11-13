@@ -7,6 +7,32 @@ import { elapsed, plural } from './format';
 // reports/dashboard-runs/.
 export const runFile = (path: string) => `/runs/${encodeURI(path)}`;
 
+// The id of a test's row in a run's results (TestResults), for links to it
+// from the run's summary. `step` is the suite step, null in a plan run.
+export const testRowId = (
+  step: number | null,
+  t: { project: string; file: string; line: number; title: string },
+) =>
+  `test-${step ?? 0}-${t.project}-${t.file}-${t.line}-${t.title}`.replace(
+    /[^\w-]+/g,
+    '_',
+  );
+
+// Scrolls to a test's row in the run's results and marks it briefly,
+// opening its suite step first if that is closed. False when the row isn't
+// on the page.
+export function showTestRow(id: string): boolean {
+  const row = document.getElementById(id);
+  if (!row) return false;
+  const step = row.closest('details');
+  if (step && !step.open) step.open = true;
+  row.classList.remove('row-highlight');
+  void row.offsetWidth; // restart the animation on a second click
+  row.classList.add('row-highlight');
+  row.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  return true;
+}
+
 // The page a run was started from: its suite's page (for a plan run, with
 // that plan's panel open), or the suite list for an older plan run that
 // didn't record its suite.

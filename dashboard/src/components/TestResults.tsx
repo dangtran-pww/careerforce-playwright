@@ -9,6 +9,7 @@ import { useApi } from '../hooks/useApi';
 import { CASE_PANEL_ID, sameCase, useCasePanel } from '../hooks/useCasePanel';
 import { caseOfTest, useRerun } from '../hooks/useRerun';
 import { duration } from '../lib/format';
+import { testRowId } from '../lib/runs';
 import { TEST_OUTCOME, type Tone } from '../lib/status';
 import { Badge } from './Badge';
 import { ErrorBox } from './Callouts';
@@ -85,6 +86,7 @@ export function TestResults({
       <Table
         rows={rows}
         rowKey={(r) => `${r.project}:${r.file}:${r.line}:${r.title}`}
+        rowId={(r) => testRowId(step, r)}
         columns={[
           {
             head: 'Result',

@@ -375,10 +375,24 @@ export interface FailureExplanationResponse {
 // GET/POST /api/runs/:id/summary: Claude's quick summary of a run's
 // failures, grouped into the issues behind them
 // (dashboard/server/claude/summary.mjs), saved in the run's folder.
+// A test an issue hits: its name for the page, and where to find its row
+// in the run's results (`step` in a suite run) and its plan case.
+export interface RunIssueTest {
+  name: string; // "<title> (<project>)", plus " — step N" in a suite
+  step: number | null;
+  plan: string | null;
+  project: string;
+  file: string;
+  line: number;
+  title: string;
+  caseId: string | null;
+}
+
 export interface RunIssue {
   title: string;
   cause: FailureCause;
-  tests: string[]; // "<title> (<project>)", plus " — step N" in a suite
+  // Just the name in summaries saved before tests were recorded in full.
+  tests: (RunIssueTest | string)[];
   detail: string;
   nextStep: string;
 }
