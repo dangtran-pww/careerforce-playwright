@@ -35,19 +35,6 @@ RS-3 are E1, AX-1 to AX-4 are E2, and AX-5 and AX-6 are E3. PO-9 is added.
 | **Role** | None. A visitor who isn't logged in. No saved session is loaded. |
 | **Accounts touched** | None. |
 
-## Running it
-
-First time? Do the [one-time setup](../README.md#one-time-setup).
-
-```bash
-BASE_URL=https://qa.careerforce.link npx playwright test tests/functional/job-search/posting.spec.ts tests/functional/job-search/responsive.spec.ts tests/functional/job-search/accessibility.spec.ts --project=functional-desktop
-BASE_URL=https://qa.careerforce.link npx playwright test tests/functional/job-search/posting.spec.ts tests/functional/job-search/accessibility.spec.ts --project=functional-mobile
-```
-
-Add `--ui` to [watch it run](../README.md#watching-a-run), or put
-`SCREENSHOT=on` in front to
-[save a screenshot of every test](../README.md#screenshots-of-every-test).
-
 ## Checked in every case
 
 - **No JavaScript error** in the browser console.
@@ -118,13 +105,6 @@ emulated phone (`functional-mobile`, Pixel 7); on the phone, PO-7 opens
 "Filters" first. RS-1 to RS-3 set their own 390 × 844 size, so they run on
 desktop only (`@desktop-only`). AX-1 to AX-4 are keyboard cases, so they are
 desktop only too.
-
-## Expected result
-
-| Project | Runs | Cases |
-|---|---|---|
-| `functional-desktop` | 18 | PO-1 to PO-9, RS-1 to RS-3, AX-1 to AX-6 |
-| `functional-mobile` | 11 | PO-1 to PO-9, AX-5, AX-6 |
 
 ## Not covered
 

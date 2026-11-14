@@ -14,7 +14,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { PROMPTS_FOLDER, duplicateSlugs, planFiles, promptFiles } from './lib/layout.mjs';
-import { parallelValue, parsePrompt, promptSlugInCell } from './lib/prompts.mjs';
+import { PROMPT_COLUMN, parallelValue, parsePrompt, promptSlugInCell } from './lib/prompts.mjs';
 
 // ---- Reading a plan --------------------------------------------------------
 
@@ -26,24 +26,35 @@ function cells(line) {
 }
 
 // The plan's text and lines, and every row of its case tables (tables with
-// an ID column) as { line, id, table, cells: { <column header>: text } },
-// where table is the line of that table's header.
+// an ID column) as { line, id, table, section, prompt, cells: { <column
+// header>: text } }, where table is the line of that table's header, section
+// the "## " heading it is under, and prompt whether the table has a Prompt
+// column (a prompt case table, Rule 2).
 function readPlan(file) {
   const text = readFileSync(file, 'utf8');
   const lines = text.split('\n');
   const cases = [];
   let header = null;
   let table = null;
+  let section = '';
   lines.forEach((l, i) => {
+    if (/^## /.test(l)) section = l.slice(3).trim();
     if (!l.startsWith('|')) return void (header = null);
     const row = cells(l);
     if (!header) return void ((header = row[0] === 'ID' ? row : []), (table = i + 1));
     if (!header.length || /^\|[\s:|-]+$/.test(l)) return; // the |---|---| row
     const byColumn = Object.fromEntries(header.map((h, c) => [h, row[c] ?? '']));
-    cases.push({ line: i + 1, id: row[0], table, cells: byColumn });
+    const prompt = header.includes(PROMPT_COLUMN);
+    cases.push({ line: i + 1, id: row[0], table, section, prompt, cells: byColumn });
   });
   return { file, text, lines, cases };
 }
+
+const TEST_CASES = 'Test cases';
+const PROMPT_CASES = 'Prompt cases';
+// A prompt case row is only its ID, title and prompt file (and Prod when the
+// plan needs it); the rest is in the prompt file.
+const PROMPT_CASE_COLUMNS = ['ID', 'Test', PROMPT_COLUMN, 'Prod'];
 
 // ---- Helpers for the rules -------------------------------------------------
 
@@ -90,9 +101,10 @@ const RULES = [
     check(plan) {
       const problems = [];
       for (const c of plan.cases) {
-        if (!('Steps' in c.cells) || !('Expected result' in c.cells)) continue;
+        // A prompt case has no Steps; its Expected result is checked alone.
+        if (!('Expected result' in c.cells)) continue;
         const add = (message) => problems.push({ line: c.line, caseId: c.id, message });
-        const steps = c.cells['Steps'];
+        const steps = c.cells['Steps'] ?? '';
         const expected = c.cells['Expected result'];
         const s = numbered(steps);
         const e = numbered(expected);
@@ -118,17 +130,28 @@ const RULES = [
     check(plan) {
       const problems = [];
       for (const c of plan.cases) {
-        const steps = c.cells['Steps'];
-        if (steps === undefined) continue;
         const add = (message) => problems.push({ line: c.line, caseId: c.id, message });
-        const slug = promptSlugInCell(steps);
-        if (slug === null) {
-          if (/\*\*Prompt:\*\*/i.test(steps))
-            add('Steps: put "**Prompt:** [<name>](prompts/<name>.md)" at the start of the cell.');
+        if (!c.prompt) {
+          // A prompt case written in the test case table, the old way.
+          const steps = c.cells['Steps'] ?? '';
+          if (/\*\*Prompt:\*\*|\]\(prompts\//i.test(steps))
+            add(
+              `A prompt case in the ${TEST_CASES} table. Move it to a "## ${PROMPT_CASES}" table with a ${PROMPT_COLUMN} column, which starts with "[<name>](prompts/<name>.md)".`,
+            );
           continue;
         }
-        if (!/^\s*\*\*Prompt:\*\*\s*\[[\w-]+\]\(prompts\/[\w-]+\.md\)/i.test(steps))
-          add(`Steps: link the prompt file as "**Prompt:** [${slug || '<name>'}](prompts/${slug || '<name>'}.md)".`);
+        const cell = c.cells[PROMPT_COLUMN];
+        const slug = promptSlugInCell(cell);
+        // Only the link: what Claude does and what passes are in the file.
+        if (!/^\s*\[[\w-]+\]\(prompts\/[\w-]+\.md\)\s*$/.test(cell))
+          add(
+            `${PROMPT_COLUMN}: the cell is only the prompt file's link, "[${slug || '<name>'}](prompts/${slug || '<name>'}.md)". Put what Claude does in its "## Prompt" section.`,
+          );
+        const extra = Object.keys(c.cells).filter((h) => !PROMPT_CASE_COLUMNS.includes(h));
+        if (extra.length)
+          add(
+            `The prompt case table has ${extra.map((h) => `"${h}"`).join(', ')}. Its columns are ${PROMPT_CASE_COLUMNS.join(' | ')} (Prod only when needed): put the expected result in the prompt file's "## Expected result" section.`,
+          );
         // Next to the plan, where its link points.
         const file = join(dirname(plan.file), PROMPTS_FOLDER, `${slug}.md`);
         if (!slug || !existsSync(file)) {
@@ -198,14 +221,24 @@ const RULES = [
     name: 'One test case table',
     check(plan) {
       const problems = [];
-      const tables = [...new Set(plan.cases.map((c) => c.table))];
-      for (const line of tables.slice(1))
-        problems.push({ line, message: `A second case table (the first is on line ${tables[0]}). Put every case in one table under "## Test cases".` });
+      for (const [prompt, section] of [
+        [false, TEST_CASES],
+        [true, PROMPT_CASES],
+      ]) {
+        const kind = prompt ? 'prompt case' : 'test case';
+        const ofKind = plan.cases.filter((c) => c.prompt === prompt);
+        const tables = [...new Set(ofKind.map((c) => c.table))];
+        for (const line of tables.slice(1))
+          problems.push({ line, message: `A second ${kind} table (the first is on line ${tables[0]}). Put every ${kind} in one table under "## ${section}".` });
+        const misplaced = ofKind.find((c) => c.section !== section);
+        if (misplaced)
+          problems.push({ line: misplaced.table, message: `The ${kind} table is under "## ${misplaced.section}". Put it under "## ${section}".` });
+      }
       let inCases = false;
       plan.lines.forEach((l, i) => {
-        if (/^## /.test(l)) inCases = /^## Test cases\s*$/.test(l);
+        if (/^## /.test(l)) inCases = [TEST_CASES, PROMPT_CASES].includes(l.slice(3).trim());
         else if (inCases && /^### /.test(l))
-          problems.push({ line: i + 1, message: `"${l.slice(4)}" splits the test cases into areas. Remove the heading and move its notes above the table, or to another ## section.` });
+          problems.push({ line: i + 1, message: `"${l.slice(4)}" splits the cases into areas. Remove the heading and move its notes above the table, or to another ## section.` });
       });
       return problems;
     },

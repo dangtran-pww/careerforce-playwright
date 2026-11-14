@@ -199,7 +199,10 @@ Rules:
 ${compareRules(check, env, compare, baseline)}${check.a11y ? a11yRules(check) : ''}
 
 The check:
-${check.prompt}`;
+${check.prompt}
+
+It passes when:
+${check.expected}`;
 }
 
 // For an accessibility journey (a prompt file with "Accessibility scan:

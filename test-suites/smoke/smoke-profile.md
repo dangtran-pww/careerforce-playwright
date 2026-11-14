@@ -4,14 +4,6 @@ Status: ready to generate
 Implemented test: —
 Prod: No: edits user profiles.
 
-## Running it
-
-```bash
-npm run login:manual -- jobseeker
-npm run login:manual -- admin
-BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/profile --project=smoke-desktop
-```
-
 ## Scope
 
 - Edits profile fields on the job seeker test account and

@@ -1,8 +1,9 @@
 // Prompt checks: checks Claude does by looking at the site in a browser
 // (`claude -p` with the Playwright MCP), written as a prompt instead of test
 // code. Each is a file in test-suites/<suite>/prompts/<slug>.md, used by a
-// test plan case in the same suite whose Steps cell starts with
-// **Prompt:** [<slug>](prompts/<slug>.md) (see test-suites/README.md, Rule 2).
+// prompt case in a plan of the same suite: a row of the plan's
+// "## Prompt cases" table, whose Prompt cell is the link
+// [<slug>](prompts/<slug>.md) (see test-suites/README.md, Rule 2).
 //
 // Shared by the dashboard (dashboard/server/), scripts/check-plans.mjs and
 // scripts/run-prompt.mjs. A prompt file:
@@ -17,6 +18,8 @@
 //   (notes for people, ignored)
 //   ## Prompt
 //   <the prompt, sent to Claude as written>
+//   ## Expected result
+//   <what passes and what fails, sent to Claude after the prompt>
 
 import { readFile } from 'node:fs/promises';
 import { environmentById } from '../../tests/helpers/environments.mts';
@@ -98,6 +101,19 @@ export function parseViewports(text) {
   return { viewports, bad };
 }
 
+// The text under a "## <name>" heading, up to the next "## ", or ''.
+function section(lines, name) {
+  const start = lines.findIndex(
+    (l) => l.replace(/^##\s+/, '').trim().toLowerCase() === name.toLowerCase() && /^##\s/.test(l),
+  );
+  if (start < 0) return '';
+  const end = lines.findIndex((l, i) => i > start && /^##\s/.test(l));
+  return lines
+    .slice(start + 1, end < 0 ? undefined : end)
+    .join('\n')
+    .trim();
+}
+
 /**
  * A prompt file's fields, and what's wrong with it in `problems`. `where` is
  * { file, suite } from promptFiles() in layout.mjs.
@@ -163,16 +179,10 @@ export function parsePrompt(slug, text, where = {}) {
       `A prompt that compares with another site must be anonymous (it is ${role}): a saved login only works on its own environment.`,
     );
 
-  const start = lines.findIndex((l) => /^##\s+Prompt\b/i.test(l));
-  const end = lines.findIndex((l, i) => i > start && /^##\s/.test(l));
-  const prompt =
-    start < 0
-      ? ''
-      : lines
-          .slice(start + 1, end < 0 ? undefined : end)
-          .join('\n')
-          .trim();
+  const prompt = section(lines, 'Prompt');
   if (!prompt) problems.push('It has no "## Prompt" section.');
+  const expected = section(lines, 'Expected result');
+  if (!expected) problems.push('It has no "## Expected result" section.');
 
   return {
     slug,
@@ -186,6 +196,7 @@ export function parsePrompt(slug, text, where = {}) {
     parallel: Boolean(parallel),
     a11y: Boolean(a11y),
     prompt,
+    expected,
     problems,
   };
 }
@@ -212,19 +223,19 @@ export async function loadPrompts() {
 
 // ---- prompt cases in test plans ---------------------------------------------
 
-// The start of a prompt case's Steps cell:
-// "**Prompt:** [homepage-compare](prompts/homepage-compare.md)".
-const PROMPT_CELL = /^\s*\*\*Prompt:\*\*\s*(.*)$/i;
+// A prompt case's Prompt cell is the link to its prompt file:
+// "[homepage-compare](prompts/homepage-compare.md)". What Claude does and
+// what passes are in the file itself.
+export const PROMPT_COLUMN = 'Prompt';
 
 /**
- * The prompt slug a plan's Steps cell names, or null when the cell isn't a
- * prompt case. A link, a file name or a bare slug all work.
+ * The prompt slug a plan's Prompt cell names: from the link at its start, or
+ * a file name or bare slug. '' when the cell names none.
  */
 export function promptSlugInCell(cell) {
-  const m = (cell ?? '').match(PROMPT_CELL);
-  if (!m) return null;
-  const link = m[1].match(/\]\(([^)]+)\)/);
-  const target = link ? link[1] : (m[1].match(/^\S+/)?.[0] ?? '');
+  const text = (cell ?? '').trim();
+  const link = text.match(/^\[[^\]]*\]\(([^)]+)\)/);
+  const target = link ? link[1] : (text.match(/^[^\s:]+/)?.[0] ?? '');
   return target
     .replace(/`/g, '')
     .replace(/^.*\//, '')

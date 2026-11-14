@@ -31,3 +31,12 @@ footer.
 Note every layout or styling difference between the two sites, and anything
 on the site under test that looks broken, overlapping, cut off or unstyled.
 Don't click anything that leaves the homepage.
+
+## Expected result
+
+1. No layout or styling difference that looks unintended: no missing, extra or
+   reordered sections, no broken spacing, fonts, colours or images, and
+   nothing cut off, overlapping or scrolling sideways.
+2. Differences that are only content (other jobs, events, posts or dates) are
+   listed as notes and don't fail the case.
+3. Paired screenshots of each section at each size are saved with the result.

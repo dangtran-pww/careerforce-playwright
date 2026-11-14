@@ -37,19 +37,6 @@ are B6, UR-2 is B7, and UR-3 is B8. SO-6, FI-5, FI-6 and PG-1 are added.
 | **Role** | None. A visitor who isn't logged in. No saved session is loaded. |
 | **Accounts touched** | None. |
 
-## Running it
-
-First time? Do the [one-time setup](../README.md#one-time-setup).
-
-```bash
-BASE_URL=https://qa.careerforce.link npx playwright test tests/functional/job-search/sort-filters.spec.ts tests/functional/job-search/paging-url-state.spec.ts --project=functional-desktop
-BASE_URL=https://qa.careerforce.link npx playwright test tests/functional/job-search/sort-filters.spec.ts tests/functional/job-search/paging-url-state.spec.ts --project=functional-mobile
-```
-
-Add `--ui` to [watch it run](../README.md#watching-a-run), or put
-`SCREENSHOT=on` in front to
-[save a screenshot of every test](../README.md#screenshots-of-every-test).
-
 ## Checked in every case
 
 These hold after every step of every case, and a case fails if one doesn't:
@@ -124,13 +111,6 @@ a different way run: SO-5, FI-1, FI-5, PG-2 and UR-1, through the Filters
 drawer. The others are `@desktop-only`, because sorting, filtering and paging
 happen on the server and checking them once is enough. On the phone each case
 also checks that the page doesn't scroll sideways.
-
-## Expected result
-
-| Project | Runs | Cases |
-|---|---|---|
-| `functional-desktop` | 20 | SO-1 to SO-6, FI-1 to FI-6, PG-1 to PG-5, UR-1 to UR-3 |
-| `functional-mobile` | 5 | SO-5, FI-1, FI-5, PG-2, UR-1 |
 
 ## Not covered
 

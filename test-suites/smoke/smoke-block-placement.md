@@ -11,13 +11,6 @@ The team's manual checklist on Confluence,
 asks to "review the process of placing existing block content: custom
 blocks, page restricted block". These cases do that with a throwaway block.
 
-## Running it
-
-```bash
-npm run login:manual -- admin
-BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/block-placement --project=smoke-desktop
-```
-
 ## Scope
 
 - Creates one content block, places it, restricts it to one page, then

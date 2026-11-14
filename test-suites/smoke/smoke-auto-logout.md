@@ -15,14 +15,6 @@ minutes** of inactivity, with the logout at **15 minutes** (decided
 2026-11-12). QA is configured for a warning at 10 minutes (see "What the
 site has"), so AO-1 to AO-5 fail there until the setting is changed.
 
-## Running it
-
-```bash
-npm run login:manual -- admin
-npm run login:manual -- jobseeker
-BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/auto-logout --project=smoke-desktop
-```
-
 ## Scope
 
 - **The shared saved sessions must survive every case.** `admin` and

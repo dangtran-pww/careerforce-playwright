@@ -26,7 +26,7 @@ seeker's dashboard. It has four parts:
   keyword keep each other, and Reset clears them all.
 - **Layout (JL-1, a prompt case):** Claude compares Job Search with the
   comparison sites at desktop and phone sizes and reports any layout or
-  styling difference ([Prompt case JL-1](#prompt-case-jl-1)).
+  styling difference ([prompts/job-search-compare.md](prompts/job-search-compare.md)).
 - **Saved searches and My Job Search (SS, MD):** a logged-in job seeker
   saves a search, runs it again from "Jobs for me", and sees it on their
   dashboard (My Account). From the dashboard they open and remove saved
@@ -45,9 +45,8 @@ them out elsewhere (see
 Each test removes what it added, even when it fails.
 
 The plan isn't no-prod as a whole, only SS and MD are (the Prod column), so
-on Production the dashboard runs the plan without them. By hand, the first
-command under [Running it](#running-it) leaves them out on Production too,
-because they are tagged `@no-prod`.
+on Production the dashboard runs the plan without them. By hand, they are
+left out on Production too, because they are tagged `@no-prod`.
 
 JS-2 to JS-5 and JF-1, JF-2 were moved here from
 [smoke-public-site.md](smoke-public-site.md) (where JF-1 and JF-2 were FL-5 and
@@ -61,67 +60,14 @@ FL-6); there, JS-2 to JS-5 were JS-1 to JS-4. The old JS-5 (no JavaScript errors
 | **SS and MD cases** | The `jobseeker` role: `playwright/.auth/<env>/jobseeker.json`, from `npm run login:manual -- jobseeker`. Job seekers log in with LoginMN. Use a test account, not a person's own account (see [Open questions](#open-questions)). |
 | **Accounts touched** | SS and MD add saved searches and bookmarks to the job seeker account and remove them again. They never remove anything they didn't add. |
 
-## Running it
-
-First time? Do the [one-time setup](../README.md#one-time-setup).
-
-Search and filters (no login, any environment; desktop, then phone). On QA
-and Stage these commands also run SS and MD; add `--grep-invert @no-prod` to
-leave them out:
-
-```bash
-BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/job-search --project=smoke-desktop
-BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/job-search --project=smoke-mobile
-```
-
-Saved searches and the dashboard only (QA or Stage only, desktop and phone):
-
-```bash
-npm run login:manual -- jobseeker
-BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/job-search --project=smoke-desktop --project=smoke-mobile --grep @no-prod
-```
-
-Add `--ui` to [watch it run](../README.md#watching-a-run), or put
-`SCREENSHOT=on` in front to
-[save a screenshot of every test](../README.md#screenshots-of-every-test).
-
-### Prompt case JL-1
-
-JL-1 has no test code. It is a [prompt case](../README.md#rule-2-prompt-cases):
-Claude opens the site in a browser, follows
-[prompts/job-search-compare.md](prompts/job-search-compare.md) and gives a
-verdict (pass, fail or unsure) with findings and screenshots. The
-`npx playwright test` commands above don't run it. Run it from the dashboard
-(it runs with the rest of the plan), or on its own:
-
-```bash
-npm run prompt -- JL-1 --env qa
-```
-
-It compares Job Search with the environment's comparison sites, at desktop
-and phone sizes:
-
-| Site under test | Compared with |
-|---|---|
-| Local, QA, Sandbox | Stage and Production |
-| Stage | Production |
-| Production | The screenshots of the last JL-1 run on Production (the baseline) |
-
-On Production, run JL-1 before a deploy and again after it: the second run
-reports what the deploy changed. With no earlier run, it reviews the page on
-its own. Add `--compare <env>` (for example `--compare prod`) to compare with
-other sites. Each run costs Claude usage (several minutes with two
-comparison sites, shown at the end).
-
 ## Test cases
 
 "Page" is the address after the site name, for example `/job-search` means
 `qa.careerforce.link/job-search`.
 
-All the cases are in one table. Their tests are in `tests/smoke/job-search/`:
+Their tests are in `tests/smoke/job-search/`:
 JS in `job-search.spec.ts`, JF in `filters.spec.ts`, SS in
-`saved-search.spec.ts` and MD in `dashboard.spec.ts`. JL-1 is a
-[prompt case](#prompt-case-jl-1) with no test code. JS-1 is checked first:
+`saved-search.spec.ts` and MD in `dashboard.spec.ts`. JS-1 is checked first:
 if Job Search doesn't load, the other cases can't pass. The SS and MD cases
 are tagged `@no-prod` and run on QA and Stage only. The dashboard in the MD
 cases is the job seeker's account page, `/user` (it opens
@@ -139,7 +85,6 @@ cases is the job seeker's account page, `/user` (it opens
 | JF-3 | Each sort order sorts the jobs | `/job-search?title=nurse` | 1. Search "nurse". 2. Sort by "Job title". 3. Sort by "Company". 4. Sort by "Date posted". | Each sort shows the same number of jobs as the unsorted search, and the Sort dropdown shows the chosen order. Letter case is ignored when comparing. **1.** At least 1 job is listed. **2.** The job titles on the first page are A–Z. **3.** The companies on the first page are A–Z. **4.** The "Posted … ago" labels on the first page go from newest to oldest. |  | Yes |
 | JF-4 | Filters, sort and keyword keep each other | `/job-search?title=nurse` | Use the page's own controls, not the address. 1. Search "nurse". 2. Pick the city with the most jobs in the City dropdown (on a phone, open "Filters" first). 3. Change Sort to "Date posted". 4. Type "nursing assistant" in Keyword and click "Search". | After each step, the address and the form show everything chosen so far, and from step 2 on every job listed is in the chosen city. **1.** `title=nurse`. **2.** Also `loc=<city>`. **3.** Also `sort=date-posted-desc`. **4.** `title=nursing assistant`, with the same city and sort. |  | Yes |
 | JF-5 | Reset clears the search | `/job-search?title=nurse&loc=<city>&sort=date-posted-desc` | Open JF-4's last search and click "Reset". | **1.** The Keyword box is empty. **2.** The City dropdown shows its placeholder ("List of cities"). **3.** Sort shows "Relevance". **4.** At least 1 job is listed. **5.** The address has no `title`, `loc` or `sort` value. |  | Yes |
-| JL-1 | Job Search layout matches the comparison sites | `/job-search` | **Prompt:** [job-search-compare](prompts/job-search-compare.md): Claude compares Job Search with the [comparison sites](#prompt-case-jl-1) at desktop and phone sizes, part by part (on the phone, with the menu and the Filters drawer open). | **1.** No layout or styling difference from any comparison site that looks unintended: no missing, extra or reordered parts, no broken spacing, fonts, colours, icons or images, and nothing cut off, overlapping or scrolling sideways. **2.** Differences that are only content (other jobs, companies, cities, dates or counts) are listed as notes and don't fail the case. **3.** Matching screenshots of each part on each site at each size are saved with the result. |  | Yes |
 | SS-1 | Save a search | `/job-search?title=nurse&loc=<city>` | 1. Search "nurse", filter by the city with the most jobs, and click "Save search" (on a phone, open "Filters" first). 2. Name it `Playwright test <timestamp>` and save. 3. Without reloading, open "Jobs for me" → "Saved searches". **Cleanup:** remove the saved search from the dashboard. | **1.** A dialog "Save this search to your dashboard" with a "Name job search" box opens on top of the page, not hidden behind another layer (on a phone, the Filters drawer). **2.** The dialog closes with no error. **3.** The list shows the new name. | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
 | SS-2 | Run a saved search from Jobs for me | `/job-search` | Save a search as in SS-1 first. 1. Open `/job-search` with no search. 2. In "Jobs for me", pick "Saved searches", then the saved name. **Cleanup:** as SS-1. | After step 2, Job Search opens with the saved search: **1.** The address has `title=nurse` and the same `loc`. **2.** The Keyword box shows "nurse". **3.** The City dropdown shows the city. **4.** At least 1 job is listed. | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
 | SS-3 | Limit of 5 saved searches | `/job-search?title=nurse` | 1. Note how many saved searches the account has. 2. Save `Playwright test <timestamp> 1`, `2`, … until it has 5 saved searches. 3. Click "Save search" once more. 4. Try to save a 6th anyway. **Cleanup:** remove every saved search this test added. | **1.** At step 3, the dialog warns "You have already reached the limit for saved jobs." **2.** At step 4, the 6th is refused: either Save can't be used, or an error message says the search wasn't saved. **3.** "Jobs for me" → "Saved searches" and the dashboard still list exactly the same 5, and the 6th name isn't among them. | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
@@ -149,6 +94,14 @@ cases is the job seeker's account page, `/user` (it opens
 | MD-4 | A bookmarked job shows on the dashboard | `/job-search?title=nurse` | 1. Bookmark the first job that isn't already bookmarked. 2. Reload and look in "Jobs for me" → "Bookmarked jobs". 3. Open the dashboard. 4. Click the job there. **Cleanup:** remove the bookmark. | **1.** The job's bookmark icon switches to its "remove bookmark" state. **2.** "Jobs for me" lists the job. **3.** The dashboard lists the job by its title (the dashboard shows only the title, not the company). **4.** That job opens on its own (`/job-search?jvid=<job ID>`, same title). | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
 | MD-5 | Remove a bookmark from the dashboard | `/user` | Bookmark a job as in MD-4 first. 1. On the dashboard, click its "x". 2. Reload the dashboard. 3. Search "nurse" again. | **1.** The job disappears from the dashboard. **2.** It stays gone after the reload. **3.** In the search results, its bookmark icon is back to its "add bookmark" state. | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
 | MD-6 | Remove a bookmark from the search results | `/job-search?title=nurse` | Bookmark a job as in MD-4 first. 1. Click its bookmark icon again. 2. Open the dashboard. | **1.** The icon goes back to its "add bookmark" state. **2.** The dashboard no longer lists the job. | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
+
+## Prompt cases
+
+A prompt case has no test code: Claude follows its prompt file in a browser and gives a verdict ([Rule 2](../README.md#rule-2-prompt-cases)). The prompt file says what Claude checks, as which role, and what passes. It runs after the test cases.
+
+| ID | Test | Prompt | Prod |
+|---|---|---|---|
+| JL-1 | Job Search layout matches the comparison sites | [job-search-compare](prompts/job-search-compare.md) | Yes |
 
 ## Good to know
 
@@ -209,23 +162,6 @@ one at a time (`workers: 1`), so the desktop and phone runs never change the
 job seeker account at the same time. On a phone, Save search is in the
 Filters drawer, and the "Save this search" dialog must open on top of the
 drawer, not behind it.
-
-## Expected result
-
-Every case is generated:
-
-| Project | Runs | Cases |
-|---|---|---|
-| `smoke-desktop` on QA or Stage | 19 | JS-1 to JS-5, JF-1 to JF-5, SS-1 to SS-3, MD-1 to MD-6 |
-| `smoke-desktop` on Production, or with `--grep-invert @no-prod` | 10 | JS-1 to JS-5, JF-1 to JF-5 (SS and MD are left out) |
-| `smoke-mobile` on QA or Stage | 16 | JS-1 to JS-5, JF-4, JF-5, SS-1 to SS-3, MD-1 to MD-6 |
-| `smoke-mobile` on Production, or with `--grep-invert @no-prod` | 7 | JS-1 to JS-5, JF-4, JF-5 (SS and MD are left out) |
-
-JL-1 is a prompt case, so it isn't in these totals: the dashboard runs it
-after the tests, and `npm run prompt -- JL-1` runs it on its own.
-
-If the total is different, or anything fails, see
-[When something fails](../README.md#when-something-fails).
 
 ## Not covered
 

@@ -43,3 +43,14 @@ overlapping, cut off or unstyled. The jobs come from an outside feed, so
 different jobs, companies, cities, dates and job counts are content, not
 differences. Don't type a search, change a filter, click Bookmark or Save
 search, or click anything that leaves Job Search.
+
+## Expected result
+
+1. No layout or styling difference from any comparison site that looks
+   unintended: no missing, extra or reordered parts, no broken spacing, fonts,
+   colours, icons or images, and nothing cut off, overlapping or scrolling
+   sideways.
+2. Differences that are only content (other jobs, companies, cities, dates or
+   counts) are listed as notes and don't fail the case.
+3. Matching screenshots of each part on each site at each size are saved with
+   the result.

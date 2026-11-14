@@ -65,19 +65,6 @@ showed on 2026-11-12.
 | **Role** | None. A visitor who isn't logged in. No saved session is loaded. |
 | **Accounts touched** | None. AE-1 follows a time button to the site's "Log In or Register" page and stops there. Nothing is booked. |
 
-## Running it
-
-First time? Do the [one-time setup](../README.md#one-time-setup).
-
-```bash
-BASE_URL=https://qa.careerforce.link npx playwright test tests/functional/appointments/search.spec.ts tests/functional/appointments/week-strip.spec.ts tests/functional/appointments/filters.spec.ts tests/functional/appointments/hidden-slots.spec.ts tests/functional/appointments/search-address.spec.ts tests/functional/appointments/entry-points.spec.ts tests/functional/appointments/search-responsive.spec.ts tests/functional/appointments/search-accessibility.spec.ts --project=functional-desktop
-BASE_URL=https://qa.careerforce.link npx playwright test tests/functional/appointments/search.spec.ts tests/functional/appointments/week-strip.spec.ts tests/functional/appointments/filters.spec.ts tests/functional/appointments/entry-points.spec.ts --project=functional-mobile
-```
-
-Add `--ui` to [watch it run](../README.md#watching-a-run), or put
-`SCREENSHOT=on` in front to
-[save a screenshot of every test](../README.md#screenshots-of-every-test).
-
 ## Scope
 
 - **In:** everything a visitor can see or do with appointments without
@@ -418,19 +405,6 @@ happens on the server, so once is enough. APW-1 to APW-3 set their own 390 ×
 844 size and the AK cases are keyboard cases, so both run on desktop only
 (AK-4 sets the phone width itself). On the phone each case also checks that
 the page doesn't scroll sideways.
-
-## Expected result
-
-| Project | Cases |
-|---|---|
-| `functional-desktop` | AQ-1 to AQ-5, AW-1 to AW-9, AF-1 to AF-9 (AF-1 is 3 tests), AH-1 to AH-4, AU-1 to AU-4 (AU-3 is 1 test per row), AE-1 to AE-4, APW-1 to APW-3, AK-1 to AK-5 |
-| `functional-mobile` | AQ-1, AQ-2, AW-1, AW-2, AF-1, AF-4, AF-9, AE-1, AE-4 |
-
-Cases that need data the environment doesn't have (AQ-4, AQ-5, AW-5 step 2,
-AW-7 on a weekday, AF-3, AF-6, AF-7, AH-1 to AH-4) are skipped with the
-reason, not failed. If no day of the strip has any time, the cases that
-need a reference day are skipped too; AM-3 and AP-1 are what catch "no
-appointments at all".
 
 ## Not covered
 

@@ -51,19 +51,6 @@ knowledge base `docs/kb/events/` and the app source, and what QA showed on
 | **Role** | None. A visitor who isn't logged in. No saved session is loaded. |
 | **Accounts touched** | None. ED-10 follows "Log In or Create Account" to the LoginMN page and stops there. |
 
-## Running it
-
-First time? Do the [one-time setup](../README.md#one-time-setup).
-
-```bash
-BASE_URL=https://qa.careerforce.link npx playwright test tests/functional/events/search.spec.ts tests/functional/events/search-filters.spec.ts tests/functional/events/search-address.spec.ts tests/functional/events/listing-rules.spec.ts tests/functional/events/external-events.spec.ts tests/functional/events/occurrence-page.spec.ts tests/functional/events/homepage-location-events.spec.ts tests/functional/events/search-detail-responsive.spec.ts tests/functional/events/search-detail-accessibility.spec.ts --project=functional-desktop
-BASE_URL=https://qa.careerforce.link npx playwright test tests/functional/events/search.spec.ts tests/functional/events/search-filters.spec.ts tests/functional/events/search-address.spec.ts tests/functional/events/occurrence-page.spec.ts tests/functional/events/homepage-location-events.spec.ts --project=functional-mobile
-```
-
-Add `--ui` to [watch it run](../README.md#watching-a-run), or put
-`SCREENSHOT=on` in front to
-[save a screenshot of every test](../README.md#screenshots-of-every-test).
-
 ## Scope
 
 - **In:** everything a visitor can see or do with events without logging
@@ -475,13 +462,6 @@ button), ED-1, ED-4, ED-6, EH-1, EH-5 and EH-7. Every other case is
 EM-1 to EM-4 set their own 390 × 844 size and the EK cases are keyboard
 cases, so both run on desktop only. On the phone each case also checks that
 the page doesn't scroll sideways.
-
-## Expected result
-
-| Project | Cases |
-|---|---|
-| `functional-desktop` | EV-1 to EV-8, EF-1 to EF-11 (EF-1 is 6 tests, EF-4 step 1 is 3), EO-1 to EO-5, EU-1 to EU-6 (EU-5 is 1 test per row), EI-1 to EI-6, EX-1 to EX-4, ED-1 to ED-11, EH-1 to EH-7, EM-1 to EM-4, EK-1 to EK-8 |
-| `functional-mobile` | EV-1, EV-3, EV-4, EF-3, EU-4, ED-1, ED-4, ED-6, EH-1, EH-5, EH-7 |
 
 ## Not covered
 

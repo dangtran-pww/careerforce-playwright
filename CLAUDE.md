@@ -16,13 +16,15 @@ Whenever you write or change a plan in `test-suites/`, follow every rule in
    item N is the result of step N. Preconditions and notes go before `1.`,
    `**Cleanup:** …` goes last, and numbers run 1, 2, 3 with no gaps.
 2. **Prompt cases:** a check that needs judgement (e.g. layout compared
-   with another site) is a prompt case: its Steps cell starts with
-   `**Prompt:** [<name>](prompts/<name>.md)`, and
-   `test-suites/<suite>/prompts/<name>.md` (in the plan's own suite) has
+   with another site) is a prompt case. It is not in the test case table:
+   it goes in its own table under `## Prompt cases`, columns
+   `ID | Test | Prompt` (plus `Prod` if needed), where the Prompt cell is
+   only `[<name>](prompts/<name>.md)`. Everything else is in
+   `test-suites/<suite>/prompts/<name>.md` (in the plan's own suite):
    `**Role:**`, optional `**Compare with:**`, `**Viewports:**` and
    `**Screenshots:**`, optional `**Accessibility scan:** yes` (an
-   accessibility journey: every page it reaches is scanned with axe), and
-   a `## Prompt` section. It has no test code.
+   accessibility journey: every page it reaches is scanned with axe), a
+   `## Prompt` section and a `## Expected result` section. It has no test code.
 3. **Parallel:** a plan (`Parallel: yes` in its header) or a prompt file
    (`**Parallel:** yes`) runs alongside other work only when it only reads
    the site and nothing it checks depends on other tests. Anything else
@@ -32,8 +34,9 @@ Whenever you write or change a plan in `test-suites/`, follow every rule in
    capital letters, `-`, a number from 1 (`SS-1`). A prefix belongs to one
    plan only; grep `test-suites/` before picking one, and a new case takes
    the next number.
-5. **One test case table:** all of a plan's cases are in one table under
-   `## Test cases`, with no `###` area headings. Notes that a group of
+5. **One test case table:** all of a plan's test cases are in one table
+   under `## Test cases`, and its prompt cases in one table under
+   `## Prompt cases`, with no `###` area headings. Notes that a group of
    cases share go in a paragraph above the table.
 6. **No site password gate:** plans don't mention QA and Stage's Basic Auth
    pop-up or `BASIC_AUTH_*`; the README's one-time setup covers it.

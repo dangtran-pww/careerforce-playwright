@@ -79,13 +79,13 @@ async function findCase(id) {
       }
       if (cells[0] !== id) continue;
       const at = (re) => header.findIndex((h) => re.test(h.replace(/\*/g, '')));
-      const steps = cells[at(/^steps$/i)] ?? '';
+      const promptAt = at(/^prompt$/i);
       const prod = cells[at(/^prod(uction)?$/i)] ?? '';
       const head = lines.slice(0, 25).join('\n');
       return {
         plan,
         title: cells[1],
-        slug: promptSlugInCell(steps),
+        slug: promptAt >= 2 ? promptSlugInCell(cells[promptAt]) : null,
         noProd: /^\**prod:\**\s*no\b/im.test(head) || /^no\b/i.test(prod),
       };
     }

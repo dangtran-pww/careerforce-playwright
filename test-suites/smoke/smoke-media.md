@@ -6,13 +6,6 @@ Prod: No: uploads to and deletes from the media library.
 
 Devices: desktop only. Admin and editor screens are not tested on a phone (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`).
 
-## Running it
-
-```bash
-npm run login:manual -- content-manager
-BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/media --project=smoke-desktop
-```
-
 ## Scope
 
 - Uploads small synthetic files and deletes them in

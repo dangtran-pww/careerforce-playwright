@@ -50,25 +50,6 @@ knowledge base (`docs/kb/events/event-content-model.md`,
 `docs/kb/events/occurrence-generation-and-recurrence.md`, `docs/kb/locations/`)
 and the app source, and what QA showed on 2026-11-12.
 
-## Running it
-
-First time? Do the [one-time setup](../README.md#one-time-setup).
-
-```bash
-npm run login:manual -- admin
-npm run login:manual -- jobseeker
-BASE_URL=https://qa.careerforce.link npx playwright test tests/functional/events/catalog-items.spec.ts tests/functional/events/session-form.spec.ts tests/functional/events/recurrence.spec.ts tests/functional/events/occurrence-generation.spec.ts tests/functional/events/overrides.spec.ts tests/functional/events/moderation-states.spec.ts tests/functional/events/location-scheduler.spec.ts tests/functional/events/alternate-locations.spec.ts tests/functional/events/private-events.spec.ts tests/functional/events/delete-cancel.spec.ts tests/functional/events/scheduling-permissions.spec.ts --project=functional-desktop
-```
-
-QA and Stage only; never Production. Log in as both roles just before the
-run: on QA a session ends after about 15 minutes without a request. The PM
-cases for roles that have no saved login yet are skipped with that reason
-(see [Open questions](#open-questions)).
-
-Add `--ui` to [watch it run](../README.md#watching-a-run), or put
-`SCREENSHOT=on` in front to
-[save a screenshot of every test](../README.md#screenshots-of-every-test).
-
 ## Scope
 
 - **In:** the admin side of events: catalog items, sessions, the date
@@ -565,13 +546,6 @@ The cases are in one table, one area after another. Their tests are in
 
 None. Every case changes data and uses admin screens, so all are
 `@desktop-only` and run only in `functional-desktop`.
-
-## Expected result
-
-| Project | Cases |
-|---|---|
-| `functional-desktop` | CI-1 to CI-5, SN-1 to SN-9 (SN-4 is 1 test per row), RC-1 to RC-4 (RC-3 is 1 test per row), OG-1 to OG-5, OV-1 to OV-3, MS-1 to MS-6, LS-1 to LS-3, AT-1 to AT-4, PR-1, PR-2, DL-1 to DL-3, PM-1 to PM-7 (PM-3 to PM-7 skipped until their logins exist) |
-| `functional-mobile` | None |
 
 ## Not covered
 

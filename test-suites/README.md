@@ -84,7 +84,7 @@ reads the plans. See
 
 ## Before you run any plan
 
-Every plan's "Running it" section assumes you've done the steps below. They
+Running any plan assumes you've done the steps below. They
 apply to all plans, so they live here and not in each plan.
 
 ### One-time setup
@@ -178,8 +178,9 @@ what is covered.
 The status answers one question: does the test file currently match this
 plan? If not, what kind of work is needed to make it match again?
 
-A [prompt case](#rule-2-prompt-cases) has no test code. It matches the plan
-once its prompt file exists, so adding one doesn't change the plan's status.
+A [prompt case](#rule-2-prompt-cases) has no test code, and is listed under
+`## Prompt cases`, not in the test case table. It matches the plan once its
+prompt file exists, so adding one doesn't change the plan's status.
 
 - `ready to generate` — no test script exists yet. The plan is ready for
   Claude or a developer to turn into a test script. Adding cases to a plan
@@ -285,10 +286,24 @@ browser, follows a prompt, and gives a verdict (pass, fail or unsure) with
 findings and screenshots. HP-5 in [smoke-public-site.md](smoke/smoke-public-site.md)
 is an example.
 
-- **The case row:** the Steps cell starts with
-  `**Prompt:** [<name>](prompts/<name>.md)`, followed by one sentence saying
-  what Claude does. The Expected result says what passes and fails, as for any
-  case (Rule 1 applies).
+- **Its own table:** the `## Test cases` table is for cases with test code
+  only. Prompt cases go in a table of their own under `## Prompt cases`,
+  after it. A row is only the case's ID, its title and the link to its
+  prompt file:
+
+  ```md
+  ## Prompt cases
+
+  | ID | Test | Prompt |
+  |---|---|---|
+  | HP-5 | Homepage layout matches the comparison site | [homepage-compare](prompts/homepage-compare.md) |
+  ```
+
+  Everything else is in the prompt file: what Claude opens and checks (its
+  `## Prompt`), what passes (its `## Expected result`) and the role (its
+  `Role`). Add a `Prod` column (`Yes`, or `No: <reason>`) only when the
+  plan's test cases have one. Prompt case IDs follow Rule 4 like any other
+  case.
 - **The prompt file:** `test-suites/<suite>/prompts/<name>.md`, in the
   plan's own suite, so the link `prompts/<name>.md` works from the plan.
   Prompt file names must be unique across all suites.
@@ -306,6 +321,12 @@ is an example.
   ## Prompt
 
   Review the homepage (/) for layout and styling problems, ...
+
+  ## Expected result
+
+  1. No layout or styling difference that looks unintended: ...
+  2. Differences that are only content (other jobs, events, posts or dates)
+     are listed as notes and don't fail the case.
   ```
 
   - `Role`: `anonymous`, or a role with a saved login.
@@ -348,6 +369,9 @@ is an example.
     way you'd ask a tester: what to open, what to look at, and what counts as
     a problem. Content that differs between sites (jobs, events, dates) is
     never a difference.
+  - `## Expected result` says what passes and what fails: one check as
+    plain text, several as a numbered list. Claude gets it after the
+    prompt, and the dashboard shows it as "Passes when".
 - **Status:** a prompt case counts as implemented once its prompt file
   exists. The test generator skips it.
 - **Running it:** the dashboard runs prompt cases after the plan's tests, or
@@ -375,9 +399,12 @@ is an example.
   credentials per environment (`BASIC_AUTH_USER_STAGE`), the comparison site
   asks for its own and the check comes back unsure.
 
-The script checks that the Steps cell starts with the link, that the prompt
-file exists in the plan's suite and has a `## Prompt` section, and that its Role, Compare with,
-Viewports, Screenshots and Parallel can be read.
+The script reports a prompt case written in the test case table (a Steps
+cell with `**Prompt:**` or a `prompts/` link), a Prompt cell that is more
+than the link, and a prompt case table with columns other than `ID`, `Test`,
+`Prompt` and `Prod`. It checks that the prompt file exists in the plan's
+suite, has a `## Prompt` and a `## Expected result` section, and that its
+Role, Compare with, Viewports, Screenshots and Parallel can be read.
 
 ### Rule 3: Parallel plans and prompts
 
@@ -442,9 +469,11 @@ plan, even when you name only one plan to check.
 
 ### Rule 5: One test case table
 
-A plan lists all its cases in one table, under its `## Test cases`
+A plan lists all its test cases in one table, under its `## Test cases`
 heading. The cases aren't split into areas with their own `###` headings
-and tables, so a reader finds every case in one place.
+and tables, so a reader finds every case in one place. Prompt cases are
+the one exception: they go in one table of their own under
+`## Prompt cases` ([Rule 2](#rule-2-prompt-cases)), with the same rules.
 
 - **One table:** every case is a row of the same table, whatever its
   prefix or login. Keep cases of one area next to each other (all the JS
@@ -460,8 +489,10 @@ and tables, so a reader finds every case in one place.
 - **Several prefixes are still fine** (Rule 4): `JS-1` and `SS-1` can sit
   in the same table.
 
-The script reports a plan with more than one case table (a table whose
-first column is `ID`), and a `###` heading inside `## Test cases`.
+The script reports a plan with more than one test case table (a table
+whose first column is `ID`), or more than one prompt case table (one with a
+`Prompt` column), a table under the wrong `##` heading, and a `###` heading
+inside `## Test cases` or `## Prompt cases`.
 
 ### Rule 6: No site password gate
 

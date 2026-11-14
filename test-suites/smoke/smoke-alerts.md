@@ -15,13 +15,6 @@ are working)". These cases do that with two throwaway blocks of the type
 by [MNDEED-7946](https://portland-webworks.atlassian.net/browse/MNDEED-7946)
 (notification border box shrinking, Done).
 
-## Running it
-
-```bash
-npm run login:manual -- admin
-BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/alerts --project=smoke-desktop
-```
-
 ## Scope
 
 - Creates two Alert & Notification blocks, an alert and a notification,

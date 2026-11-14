@@ -36,19 +36,6 @@ SE-12 is A8.
 | **Role** | None. A visitor who isn't logged in. No saved session is loaded. |
 | **Accounts touched** | None. |
 
-## Running it
-
-First time? Do the [one-time setup](../README.md#one-time-setup).
-
-```bash
-BASE_URL=https://qa.careerforce.link npx playwright test tests/functional/job-search/search.spec.ts --project=functional-desktop
-BASE_URL=https://qa.careerforce.link npx playwright test tests/functional/job-search/search.spec.ts --project=functional-mobile
-```
-
-Add `--ui` to [watch it run](../README.md#watching-a-run), or put
-`SCREENSHOT=on` in front to
-[save a screenshot of every test](../README.md#screenshots-of-every-test).
-
 ## Checked in every case
 
 These hold after every step of every case, and a case fails if one doesn't:
@@ -124,13 +111,6 @@ Every case runs on desktop (`functional-desktop`) and on an emulated phone
 the page doesn't scroll sideways. SE-4, SE-5 and SE-9 to SE-11 are desktop
 only (`@desktop-only`): what they check happens on the server, so once is
 enough.
-
-## Expected result
-
-| Project | Runs | Cases |
-|---|---|---|
-| `functional-desktop` | 17 | SE-1 to SE-12 (SE-3 is 6 tests, one per location) |
-| `functional-mobile` | 12 | SE-1 to SE-3, SE-6 to SE-8, SE-12 (SE-3 is 6 tests) |
 
 ## Not covered
 

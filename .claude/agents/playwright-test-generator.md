@@ -32,9 +32,9 @@ Test plans for this project live in their suite's folder,
   list. Do not edit the plan file yourself — you do not have an edit
   tool; the caller applies that status change.
 
-Skip prompt cases: cases whose Steps cell starts with
-`**Prompt:** [<name>](prompts/<name>.md)` (Rule 2 in `test-suites/README.md`).
-Claude runs them from their prompt file, so they never get test code.
+Generate only the cases in the plan's `## Test cases` table. Skip the
+`## Prompt cases` table (Rule 2 in `test-suites/README.md`): Claude runs
+those cases from their prompt files, so they never get test code.
 
 # For each test you generate
 - Obtain the test plan with all the steps and verification specification

@@ -25,21 +25,6 @@ opposed to the anonymous plan's fully-anonymous suite.
 | **When it expires** | Run the login command again. With `--project=smoke-admin-reports`, a check runs first (`tests/setup/admin-session.setup.ts`) and stops with "The saved admin session has expired…" plus the command to run. Run as part of `--project=smoke`, there is no check first, so each case fails on the login page instead. A missing file fails with a storage state / ENOENT error. |
 | **Write access** | The admin account can change the site, but every case here is read-only. Keep it that way (see open question 3). |
 
-## Running it
-
-Log in first ([Login](#login)), then run the cases:
-
-```bash
-npx playwright test tests/smoke/admin-reports
-```
-
-These cases are part of the `smoke` project, so running the smoke projects
-runs them along with every other smoke plan. The admin `storageState` is set at
-the top of the spec file, so each case is listed on its own (no
-`describe` group).
-
-To run a single case, add `-g`, e.g. `-g "AR-1"`.
-
 ## Scope
 
 - Read-only: no content created, edited, or search indexes rebuilt/reindexed.

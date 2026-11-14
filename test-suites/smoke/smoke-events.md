@@ -13,22 +13,6 @@ Already covered elsewhere, so not repeated here:
 - Location pages load: LV-1 in [smoke-public-site.md](smoke-public-site.md). "Upcoming Events" lists at least 1 item: HP-1.
 - Events search sort and filters after a reindex, and Similar Events: AM-4 (and AM-3) in [smoke-admin-maintenance.md](smoke-admin-maintenance.md).
 
-## Running it
-
-```bash
-npm run login:manual -- admin
-npm run login:manual -- jobseeker
-BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/events --project=smoke-desktop
-
-# Only the visitor checks (prod-safe), desktop and phone:
-BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/events --grep "EP-" --project=smoke-desktop --project=smoke-mobile
-
-# Production: the no-prod cases are left out
-BASE_URL=https://careerforce.mn.gov npx playwright test tests/smoke/events --project=smoke-desktop
-```
-
-Log in as both roles just before the run. The server ends a session that has made no request for 15 minutes (900 seconds since its last ordinary request; see [smoke-auto-logout.md](smoke-auto-logout.md)).
-
 ## Scope
 
 - **Visitor (EP, prod-safe):** the Events page and an event page, the Events filters, the 45-day display window, event cards on the homepage and a location page, and the online-only card location (MNDEED-9620).

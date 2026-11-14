@@ -13,13 +13,6 @@ headers, and the available formatting. The checklist edits
 `/testdiversity-manufacturing-initiative-dimi` on QA; these tests use a
 throwaway page instead so they don't change real content.
 
-## Running it
-
-```bash
-npm run login:manual -- admin
-BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/ckeditor --project=smoke-desktop
-```
-
 ## Scope
 
 - CK-2 to CK-6 each create one Page, edit its Body in CKEditor, save it as

@@ -25,7 +25,7 @@ use:
   ([Filters](#filters)).
 - **Homepage layout (HP-5, a prompt case):** Claude compares the homepage
   side by side with another site, on desktop and on a phone, and notes any
-  layout or styling difference ([Prompt case HP-5](#prompt-case-hp-5)).
+  layout or styling difference ([prompts/homepage-compare.md](prompts/homepage-compare.md)).
 - **Site-wide:** an unknown address shows the "Page Not Found" page, the
   footer has its contact details and links, the 5 main menu pages open,
   "Skip to main content" works from the keyboard, and the main pages load
@@ -65,103 +65,6 @@ The checks come from the team's manual checklist on Confluence,
 If a run fails with 401 / "Unauthorized" on QA or Stage, the gate
 password in `.env` is out of date. Ask the team for the current values.
 
-## Running it
-
-No login needed. First time? Do the [one-time setup](../README.md#one-time-setup).
-Run the command for the environment you want (about 1–2 minutes).
-
-QA:
-
-```bash
-BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/anonymous --project=smoke-desktop
-```
-
-Stage:
-
-```bash
-BASE_URL=https://stage.careerforce.link npx playwright test tests/smoke/anonymous --project=smoke-desktop
-```
-
-Production:
-
-```bash
-BASE_URL=https://careerforce.mn.gov npx playwright test tests/smoke/anonymous --project=smoke-desktop
-```
-
-Keep `--project=smoke-desktop` in the command. Without it, the same tests also run on
-the phone ([Mobile](#mobile)), 69 runs in all.
-
-Add `--ui` to [watch it run](../README.md#watching-a-run). A successful run ends
-with `37 passed` ([Expected result](#expected-result)).
-
-To save a full-page screenshot of every test, even the ones that pass, put
-`SCREENSHOT=on` in front ([more on screenshots](../README.md#screenshots-of-every-test)):
-
-```bash
-SCREENSHOT=on BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/anonymous --project=smoke-desktop
-```
-
-The screenshots open with `npx playwright show-report`, under each test's
-Attachments, and the image files are saved in `test-results/`.
-
-### Running the mobile tests
-
-The mobile tests ([Mobile](#mobile)) run on your computer, in a browser that
-emulates the phone. Run the command for the environment you want.
-
-QA:
-
-```bash
-BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/anonymous --project=smoke-mobile
-```
-
-Stage:
-
-```bash
-BASE_URL=https://stage.careerforce.link npx playwright test tests/smoke/anonymous --project=smoke-mobile
-```
-
-Production:
-
-```bash
-BASE_URL=https://careerforce.mn.gov npx playwright test tests/smoke/anonymous --project=smoke-mobile
-```
-
-The mobile tests can't tell whether a page *looks* right. To review the
-layout, save full-page screenshots and look through them:
-
-```bash
-SCREENSHOT=on BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/anonymous --project=smoke-mobile
-```
-
-### Prompt case HP-5
-
-HP-5 has no test code. It is a [prompt case](../README.md#rule-2-prompt-cases):
-Claude opens the site in a browser, follows
-[prompts/homepage-compare.md](prompts/homepage-compare.md) and gives a
-verdict (pass, fail or unsure) with findings and screenshots. The
-`npx playwright test` commands above don't run it. Run it from the dashboard
-(it runs with the rest of the plan), or on its own:
-
-```bash
-npm run prompt -- HP-5 --env qa
-```
-
-It compares the homepage with the environment's comparison sites (see
-[Rule 2](../README.md#rule-2-prompt-cases)), at desktop and phone sizes:
-
-| Site under test | Compared with |
-|---|---|
-| Local, QA, Sandbox | Stage and Production |
-| Stage | Production |
-| Production | The screenshots of the last HP-5 run on Production (the baseline) |
-
-On Production, run HP-5 before a deploy and again after it: the second run
-reports what the deploy changed. With no earlier run, it reviews the page on
-its own. Add `--compare <env>` (for example `--compare prod`, or
-`--compare stage,prod`) to compare with other sites. Each run
-costs Claude usage (a few minutes, shown at the end).
-
 ## Test cases
 
 Every test starts as a visitor who isn't logged in. "Page" is the address
@@ -174,7 +77,6 @@ after the site name, for example `/programs-services` means
 | HP-2 | Login page offers all 3 logins | `/user/login` | Don't fill in or submit anything. 1. Open the login page. 2. Click "CareerForce partner organization or a training program provider" to open it. 3. Click "DEED Staff Member" to open it. | **1.** The Job Seekers section shows the "Job Seekers" heading, a list of what registering lets them do (at least 1 item; its wording isn't checked), a "Log In or Register with LoginMN" button, and a "Data Privacy Notice" with a link to DEED's data privacy policies (`https://mn.gov/deed/about/what-guides-us/data-practices/`). The partner and DEED staff sections start closed. **2.** The partner section shows a "Log In" heading, "Email address" and "Password" boxes, a "Forgot your password?" link to `/user/password`, a "Submit" button, and a "Request one today" link to `/user/register-partner`. **3.** The DEED staff section shows 2 buttons on QA and Stage, "Log In" and "PWW Staff Log In", and only the "Log In" button on Production. |
 | HP-3 | Tracking code is present | `/`, `/job-search`, `/user/login` | 1. Open the homepage. 2. Open Job Search. 3. Open the login page. | After each step: **1.** The page loads (no error or "Page not found" page). **2.** Its Google Tag Manager tracking code loads the container for this environment, and no other container: `GTM-WL36T6M` on Production, `GTM-P8D2THV` on QA and Stage. A "GTM-…" text elsewhere on the page (in an article or a link) doesn't count. |
 | HP-4 | Decision Tree walks every path | `/` | See [Decision Tree for HP-4](#decision-tree-for-hp-4). In "What brings you here today?": 1. Note the starting cards. 2. For each option under "Choose a path", one at a time: open "Choose a path" and click the option, then open "Make a selection" and click its first answer. 3. On the first path, click each of its answers in turn. 4. With an answer chosen, pick a different option under "Choose a path". 5. Click "Reset selections". 6. Pick the first path again and click its first card. | At every step, at least 1 card shows, each with a title, a loaded image and a link. **1.** "Choose a path", at least 2 options, 3 cards, no "Tell us more." and no Reset. **2.** After an option: the dropdown closes; "Choose a path" shows the option; a "Tell us more." question appears, its toggle says "Make a selection" and it has at least 2 answers; the cards differ from the starting cards; "Reset selections" shows. After an answer: "Make a selection" shows the answer and the cards differ from the option's cards. **3.** Each answer shows a different set of cards. **4.** "Tell us more." goes back to "Make a selection", lists the new option's answers, and the cards change. **5.** Back to "Choose a path" and the starting cards, with no "Tell us more." and no Reset. **6.** The card opens its page with HTTP 200 (after any redirects). The page title isn't checked. |
-| HP-5 | Homepage layout matches the comparison site | `/` | **Prompt:** [homepage-compare](prompts/homepage-compare.md): Claude compares the homepage with the [comparison site](#prompt-case-hp-5) at desktop and phone sizes, section by section. | **1.** No layout or styling difference that looks unintended: no missing, extra or reordered sections, no broken spacing, fonts, colours or images, and nothing cut off, overlapping or scrolling sideways. **2.** Differences that are only content (other jobs, events, posts or dates) are listed as notes and don't fail the case. **3.** Paired screenshots of each section at each size are saved with the result. |
 | SR-1 | Site search returns results | `/search` | 1. Search with no words. 2. Search for "job fair", "networking", and "farmer", one at a time. 3. Search for a made-up word ("zzqxnotaword"). | **1.** At least 1 result shows. **2.** Each search shows at least 1 result and "Search results 1-N of N", and its first result is a page on this site. **3.** "No results found." shows, with no results. |
 | SR-2 | Career search returns results | `/explore/careers` | 1. Search for "Nursing", "taxi driver", and "project manager", one at a time. 2. Search for a made-up word ("zzqxnotaword"). | **1.** Each search shows at least 1 result. **2.** "No results found." shows, with no results. |
 | SR-3 | Career page opens | `/explore/careers` | 1. Search for "Nursing" and click the "Registered Nurses" result. It opens in a new tab. 2. Click "Find current job openings in this occupation". | **1.** The career page `/explore/careers/29-1141.00` shows the title "Registered Nurses" and the sections "Also known as", "Daily Work Activities", "Data By Region", and "Qualifications". **2.** Job Search opens for "Registered Nurses" with at least 1 job. |
@@ -191,6 +93,14 @@ after the site name, for example `/programs-services` means
 | GN-3 | Main menu pages open | see the list below | For each of the 5 main menu items: 1. Check the homepage header has the menu link. 2. Open its page. | **1.** The header has the link. **2.** The page opens, and its title starts with the menu item's name. |
 | GN-4 | Skip to main content | `/` | 1. Press Tab once. 2. Press Enter. 3. Press Tab again. | **1.** The "Skip to main content" link shows. **2.** The page goes to the main content (`#main-content`). **3.** Focus lands inside the main content, not in the header menu. |
 | GN-5 | No JavaScript errors | see the list below | Open each page. | No JavaScript error. |
+
+## Prompt cases
+
+A prompt case has no test code: Claude follows its prompt file in a browser and gives a verdict ([Rule 2](../README.md#rule-2-prompt-cases)). The prompt file says what Claude checks, as which role, and what passes. It runs after the test cases.
+
+| ID | Test | Prompt |
+|---|---|---|
+| HP-5 | Homepage layout matches the comparison site | [homepage-compare](prompts/homepage-compare.md) |
 
 ## Test data
 
@@ -316,31 +226,4 @@ On the phone:
   the page fits the screen width. If something sticks out past the right edge,
   the test fails and names the widest element.
 
-To run the mobile tests, see [Running the mobile tests](#running-the-mobile-tests).
 
-## Expected result
-
-The terminal ends with `37 passed`. The desktop run has 19 test cases (all
-but MB-1, which is phone only, and the HP-5 prompt case), but some are
-repeated with different inputs, so they add up to 37 runs:
-
-| Test case | Runs | Why |
-|---|---|---|
-| HP-1, HP-2, HP-4 | 3 | once each |
-| HP-3 | 3 | Homepage, Job Search, login page |
-| SR-1 | 5 | an empty search; "job fair", "networking", "farmer"; a word with no matches |
-| SR-2 | 4 | "Nursing", "taxi driver", "project manager"; a word with no matches |
-| SR-3, SR-4, SR-5 | 3 | once each |
-| LV-1 | 4 | Aitkin, Bloomington, Brooklyn Center, CareerForce from Anywhere |
-| LV-3 | 1 | once |
-| FL-4, FL-7, FL-8 | 3 | once each |
-| GN-1, GN-2, GN-4 | 3 | once each |
-| GN-3 | 5 | the 5 main menu pages |
-| GN-5 | 3 | Homepage, site search, Explore Careers |
-| **Total** | **37** | |
-
-If the total is anything other than 37, or anything fails, see
-[When something fails](../README.md#when-something-fails).
-
-The mobile run (`--project=smoke-mobile`) has 32 runs: the same 37 minus
-the 3 HP-3 runs and the 3 FL cases, plus MB-1. A successful run ends with `32 passed`.

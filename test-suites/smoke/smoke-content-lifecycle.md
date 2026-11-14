@@ -12,13 +12,6 @@ From the team's manual checklist on Confluence,
 versions with no errors", "translate a page", and "after the page is
 created and published, confirm that it can be found via a keyword search".
 
-## Running it
-
-```bash
-npm run login:manual -- admin
-BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/content-lifecycle --project=smoke-desktop
-```
-
 ## Scope
 
 - Each case creates its own Page, titled `Playwright test <timestamp>`, and

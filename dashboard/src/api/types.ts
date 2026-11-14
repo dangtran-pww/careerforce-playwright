@@ -80,7 +80,8 @@ export interface PlanCase {
   noProdReason?: string | null;
   // The plan says "No" but some of its tests aren't tagged @no-prod.
   noProdUntagged?: boolean;
-  // The rest of the case's row in the plan, e.g. Steps and Expected result.
+  // The rest of the case's row in the plan, e.g. Steps (Prompt for a prompt
+  // case) and Expected result.
   // The text may hold `code` and **bold**.
   details: CaseDetail[];
   // Where its tests are, one per test (not per project).
@@ -113,6 +114,7 @@ export interface PromptCheck {
   screenshots: number; // at most, when comparing with one site
   parallel?: boolean; // may run alongside other work (Rule 3)
   prompt: string;
+  expected?: string; // its "## Expected result": what passes and fails
 }
 
 export interface CaseDetail {

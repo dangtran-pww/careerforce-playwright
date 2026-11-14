@@ -34,28 +34,13 @@ out because they change site state.
 | **When it expires** | Run the login command again. Each spec calls `useRole('admin')`, which checks the session before the first test; if it has expired, the tests fail with the login command to fix it. Drupal can also end the session early, e.g. when the same account logs in somewhere else. |
 | **Environments** | QA and Stage only. The plan is no-prod (`Prod: No` in the header): AM-1 and AM-2 change site state, and AM-3 to AM-5 run after AM-2. |
 
-## Running it
-
-```bash
-npm run login:manual -- admin
-BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/admin-maintenance --project=smoke-desktop
-
-# Only the read-only search checks, no reindex:
-npx playwright test tests/smoke/admin-maintenance --grep "AM-3|AM-4|AM-5" --project=smoke-desktop
-```
-
-Runs in the `smoke-desktop` project (admin-maintenance is desktop only). The
-plan is no-prod and every test is tagged `@no-prod`, so it never runs on
-Production, and `--grep-invert @no-prod` leaves it out elsewhere (see
-[README → Keeping tests off Production](../README.md#keeping-tests-off-production)).
-
 ## Scope
 
 - Rebuilding tracking and reindexing temporarily empties search results
   for that index.
 - **Run off-peak.** Occupations is ~26k items; a full reindex takes minutes.
   Give these tests a much longer per-test timeout than the 60s default.
-- Run manually for now (the command under "Running it"). Scheduling it
+- Run manually for now. Scheduling it
   as part of regular runs is out of scope at this point.
 - **Appointments data:** the tests don't create appointments, so AM-3's
   appointments check and AM-5 depend on the slots QA already has

@@ -44,27 +44,6 @@ seeker login for Production; PV-5 runs as a visitor).
 | **Test account** | A job seeker account used only for testing, never a person's own (see [Open questions](#open-questions)). Before a run it needs: at most 3 saved searches, at most 10 bookmarked jobs, at most 5 career goals, and "My Region" set to a Minnesota city (the cases note it and put it back). |
 | **Accounts touched** | The job seeker account: saved searches, bookmarked jobs, career goals and My Region. Every case removes or puts back only what it added or changed, matched by name (`Playwright test <timestamp>`), job ID or occupation code. It never removes anything it didn't add. |
 
-## Running it
-
-First time? Do the [one-time setup](../README.md#one-time-setup). Then, on QA
-or Stage only:
-
-```bash
-npm run login:manual -- jobseeker
-BASE_URL=https://qa.careerforce.link npx playwright test tests/functional/job-search/logged-in --project=functional-desktop
-```
-
-`tests/functional/job-search/logged-in/` holds this plan's specs. MO-1 is the
-only case for the phone:
-
-```bash
-BASE_URL=https://qa.careerforce.link npx playwright test tests/functional/job-search/logged-in --project=functional-mobile
-```
-
-Add `--ui` to [watch it run](../README.md#watching-a-run), or put
-`SCREENSHOT=on` in front to
-[save a screenshot of every test](../README.md#screenshots-of-every-test).
-
 ## Checked in every case
 
 - **No JavaScript error** in the browser console.
@@ -160,14 +139,6 @@ The cases are in one table, one area after another. Their tests are in
 Every case except MO-1 runs on desktop only (`@desktop-only`), like every
 data-changing test. MO-1 runs on the phone only (`@mobile-only`,
 `functional-mobile`, Pixel 7).
-
-## Expected result
-
-| Project | Runs | Cases |
-|---|---|---|
-| `functional-desktop` on QA or Stage | 29 | LI-1, BK-1 to BK-5, SV-1 to SV-9, JM-1 to JM-5, HO-1 to HO-4, PV-1 to PV-5 |
-| `functional-desktop` on Production | 2 | PV-4, PV-5 |
-| `functional-mobile` on QA or Stage | 1 | MO-1 |
 
 ## Not covered
 

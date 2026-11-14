@@ -20,16 +20,18 @@
 // picked up without changing this file. Test titles start with the case ID
 // ("AR-1: status report ..."), which is how cases are matched to tests.
 //
-// A prompt case has no test code: its Steps cell starts with
-// "**Prompt:** [<slug>](prompts/<slug>.md)", and Claude runs that prompt file
-// (in the plan's suite's prompts/ folder) in a browser (scripts/lib/prompts.mjs, runs/prompt.mjs). It has
-// kind: 'prompt' and the parsed file in `prompt`.
+// A prompt case has no test code: it is a row of the plan's "## Prompt cases"
+// table, whose Prompt column starts with "[<slug>](prompts/<slug>.md)", and
+// Claude runs that prompt file (in the plan's suite's prompts/ folder) in a
+// browser (scripts/lib/prompts.mjs, runs/prompt.mjs). It has kind: 'prompt'
+// and the parsed file in `prompt`.
 
 import { readFile, stat } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { join } from 'node:path';
 import {
+  PROMPT_COLUMN,
   loadPrompts,
   parallelValue,
   promptSlugInCell,
@@ -167,8 +169,12 @@ function parsePlan({ slug, suite, file }, text) {
     const prodAt = header.findIndex((h) => /^prod(uction)?$/i.test(clean(h)));
     const prod = clean(prodAt >= 2 ? (cells[prodAt] ?? '') : '');
     const noProd = prod.match(NO_PROD);
-    const stepsAt = header.findIndex((h) => /^steps$/i.test(clean(h)));
-    const promptSlug = stepsAt >= 2 ? promptSlugInCell(cells[stepsAt]) : null;
+    // A row of a table with a Prompt column is a prompt case.
+    const promptAt = header.findIndex(
+      (h) => clean(h).toLowerCase() === PROMPT_COLUMN.toLowerCase(),
+    );
+    const promptSlug =
+      promptAt >= 2 ? promptSlugInCell(cells[promptAt]) : null;
     cases.push({
       id: cells[0],
       kind: promptSlug === null ? 'test' : 'prompt',

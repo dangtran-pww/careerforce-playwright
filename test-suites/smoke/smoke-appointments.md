@@ -12,22 +12,6 @@ Already covered elsewhere, so not repeated here:
 - The appointment search's day strip, week navigation, Next Week stopping at the booking window, an empty day beyond it, the Format and Location filters, Reset and the booking link's address: AM-5 and its "Appointments search cases" in [smoke-admin-maintenance.md](smoke-admin-maintenance.md). AM-3 also checks that some day in the strip has a slot after a reindex.
 - Location pages load: LV-1 in [smoke-public-site.md](smoke-public-site.md).
 
-## Running it
-
-```bash
-npm run login:manual -- admin
-npm run login:manual -- jobseeker
-BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/appointments --project=smoke-desktop
-
-# Only the visitor checks (prod-safe), desktop and phone:
-BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/appointments --grep "AP-" --project=smoke-desktop --project=smoke-mobile
-
-# Production: the no-prod cases are left out
-BASE_URL=https://careerforce.mn.gov npx playwright test tests/smoke/appointments --project=smoke-desktop
-```
-
-Log in as both roles just before the run. The server ends a session that has made no request for 15 minutes (900 seconds since its last ordinary request; see [smoke-auto-logout.md](smoke-auto-logout.md)).
-
 ## Scope
 
 - **Visitor (AP, prod-safe):** the appointment search lists open times, and nothing more than 8 days ahead is offered.

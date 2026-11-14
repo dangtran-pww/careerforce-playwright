@@ -15,19 +15,6 @@ JT-6 to JT-8 (the visitor checks) were CT-1 to CT-3 in
 are in one plan. They only read the site and run on Production. JT-1 to
 JT-5 log in as `jobseeker` and save to the account, so they are no-prod.
 
-## Running it
-
-```bash
-# Visitor checks only (prod-safe), desktop and phone:
-BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/jobseeker-tools/visitor.spec.ts --project=smoke-desktop --project=smoke-mobile
-
-# Everything (QA and Stage only):
-npm run login:manual -- jobseeker
-BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/jobseeker-tools --project=smoke-desktop
-```
-
-On Production the no-prod cases are left out whatever the command.
-
 ## Scope
 
 - **Visitor (JT-6 to JT-8, prod-safe):** each tool can be filled in and

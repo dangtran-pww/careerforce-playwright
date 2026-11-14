@@ -4,13 +4,6 @@ Status: ready to generate
 Implemented test: —
 Prod: No: creates, edits and uploads resumes on the job seeker account.
 
-## Running it
-
-```bash
-npm run login:manual -- jobseeker
-BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/resume-builder --project=smoke-desktop
-```
-
 ## Scope
 
 - Creates master and tailored resumes and uploads a resume

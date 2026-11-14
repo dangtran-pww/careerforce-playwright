@@ -9,8 +9,8 @@ import { PromptBody } from './PromptBody';
 import { StepList } from './StepList';
 
 // A prompt case opened in a cases table or the case panel. It has no test
-// code, so instead of the plan row's Steps and Expected result as they are
-// written, it shows what Claude does and how it's set up, the prompt itself,
+// code, and its plan row is only a link to its prompt file, so it shows what
+// the file says: what Claude checks and how it's set up, the prompt itself,
 // and what passes (test-suites/README.md, Rule 2).
 export function PromptCaseDetails({
   testCase,
@@ -21,13 +21,9 @@ export function PromptCaseDetails({
 }) {
   const p = testCase.prompt;
   const problems = testCase.promptProblems ?? [];
-  const detail = (label: string) =>
-    testCase.details.find((d) => d.label.toLowerCase() === label)?.text;
-  const lead = leadOf(detail('steps') ?? '');
-  const passes = detail('expected result');
-  // Any other column the plan has (Notes, say); Page goes in the facts, and
-  // Steps and Expected result have their own places.
-  const shown = ['page', 'steps', 'expected result', 'required login'];
+  // Any other column the plan has (Notes, say); the Prompt link is the
+  // prompt file, shown in the facts.
+  const shown = ['prompt', 'prod'];
   const others = testCase.details.filter(
     (d) => !shown.includes(d.label.toLowerCase()),
   );
@@ -41,8 +37,8 @@ export function PromptCaseDetails({
         <div>
           <dt>What Claude checks</dt>
           <dd>
-            {lead && <p className="prompt-case-lead">{inline(lead)}</p>}
-            <PromptFacts testCase={testCase} page={detail('page')} />
+            {p && <p className="prompt-case-lead">{p.name}</p>}
+            <PromptFacts testCase={testCase} />
           </dd>
         </div>
         {p && (
@@ -53,10 +49,12 @@ export function PromptCaseDetails({
             </dd>
           </div>
         )}
-        {passes && (
+        {p?.expected && (
           <div>
             <dt>Passes when</dt>
-            <dd>{numberedOrText(passes)}</dd>
+            <dd>
+              <PromptBody text={p.expected} />
+            </dd>
           </div>
         )}
         {others.map((d) => (
@@ -79,17 +77,10 @@ export function PromptCaseDetails({
 }
 
 // The prompt file's settings, as a two-column list.
-function PromptFacts({
-  testCase,
-  page,
-}: {
-  testCase: PlanCase;
-  page?: string;
-}) {
+function PromptFacts({ testCase }: { testCase: PlanCase }) {
   const { currentEnv, envById } = useEnv();
   const p = testCase.prompt;
   const facts: [string, ReactNode][] = [];
-  if (page) facts.push(['Page', inline(page)]);
   if (p) {
     facts.push(
       ['Prompt file', <code key="f">{p.file}</code>],
@@ -123,10 +114,6 @@ function PromptFacts({
     </dl>
   );
 }
-
-// "**Prompt:** homepage-compare: Claude compares …" → "Claude compares …".
-const leadOf = (steps: string) =>
-  steps.replace(/^\s*\*\*Prompt:\*\*\s*[\w.-]+\s*:?\s*/i, '').trim();
 
 function numberedOrText(text: string) {
   const n = splitNumbered(text);

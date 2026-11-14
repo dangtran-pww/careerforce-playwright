@@ -96,8 +96,9 @@ plans' sections:
   `Status: ready to generate`, `Implemented test: —`, and when they apply
   `Prod: No: <reason>`, `Parallel: yes`, `Devices: desktop only. …`.
 - Where the cases come from (checklist item, ticket) in a sentence or two.
-- **Running it** (the commands), **Scope**, **Login and test data**,
-  **What the site has**, the **case tables**, **Not covered**, **Open
+- **Scope**, **Login and test data**,
+  **What the site has**, the **case tables** (Test cases, then Prompt
+  cases if any), **Not covered**, **Open
   questions**, **Suggested files**.
 
 Case tables:
@@ -115,10 +116,15 @@ Case tables:
   item N is the result of step N, preconditions go before `1.`,
   `**Cleanup:** …` goes last, numbers run with no gaps.
 - A check that needs judgement (layout compared with another site, "does
-  anything look broken") is a **prompt case** (Rule 2). Write its prompt
-  file too, in `test-suites/<suite>/prompts/<name>.md`, with `**Role:**`,
-  optional `**Compare with:**`, `**Viewports:**`, `**Screenshots:**`,
-  optional `**Parallel:**`, and a `## Prompt` section.
+  anything look broken") is a **prompt case** (Rule 2). It doesn't go in
+  the test case table: put it in its own table under `## Prompt cases`,
+  after `## Test cases`, with columns `ID | Test | Prompt` (plus `Prod` if
+  the plan has it); the Prompt cell is only `[<name>](prompts/<name>.md)`.
+  Everything else goes in its prompt file,
+  `test-suites/<suite>/prompts/<name>.md`: `**Role:**`, optional
+  `**Compare with:**`, `**Viewports:**`, `**Screenshots:**`, optional
+  `**Parallel:**`, a `## Prompt` section (what Claude opens and checks)
+  and a `## Expected result` section (what passes and fails).
 - Production: mark a case `No: <reason>` (or the whole plan `Prod: No`)
   when it changes what visitors see, sends email or notifications to real
   people, runs a heavy site-wide job, or touches real accounts.
