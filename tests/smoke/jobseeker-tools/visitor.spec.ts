@@ -10,7 +10,7 @@ import { EmploymentReadinessPage } from '../../pages/employment-readiness.page';
 // anything server-side for an anon session. Stop short of "add to goals" /
 // saving results, which needs an account: JT-1 to JT-5, logged in.
 
-test('JT-6: Skills Matcher loads and accepts input', async ({ page }) => {
+test('JT-6: Skills Matcher gives results to a visitor', async ({ page }) => {
   const skillsMatcher = new SkillsMatcherPage(page);
   await skillsMatcher.goto();
   await skillsMatcher.answerSkills();
@@ -18,7 +18,7 @@ test('JT-6: Skills Matcher loads and accepts input', async ({ page }) => {
   await expect(skillsMatcher.resultsHeading).toBeVisible();
 });
 
-test('JT-7: Interest Profiler completes and scores', async ({ page }) => {
+test('JT-7: Interest Profiler gives results to a visitor', async ({ page }) => {
   const interestProfiler = new InterestProfilerPage(page);
   await interestProfiler.goto();
   await interestProfiler.answerAll();
@@ -26,7 +26,7 @@ test('JT-7: Interest Profiler completes and scores', async ({ page }) => {
   await expect(interestProfiler.resultsHeading).toBeVisible();
 });
 
-test('JT-8: Employment Readiness Assessment entry page loads without login', async ({
+test('JT-8: Employment Readiness Assessment opens for a visitor', async ({
   page,
 }) => {
   const employmentReadiness = new EmploymentReadinessPage(page);

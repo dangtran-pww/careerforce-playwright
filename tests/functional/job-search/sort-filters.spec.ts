@@ -17,7 +17,7 @@ import {
   submitAndWait,
 } from './helpers/sort-filters';
 
-// spec: test-suites/job-search/functional-job-search-sort-filters-paging.md ("Sort" SO-1 to SO-6, "Filters" FI-1 to FI-6)
+// spec: test-suites/job-search/functional-job-search-sort-filters-paging.md (SO-1 to SO-6, FI-1 to FI-6)
 // seed: tests/seed.spec.ts
 //
 // A visitor who isn't logged in; nothing is changed, so every case is safe on
@@ -55,8 +55,8 @@ test.describe('Sort', () => {
   // SO-2 and SO-3 share their steps: sort A–Z, then compare page 1, page 2
   // and the page break.
   const A_TO_Z = [
-    { id: 'SO-2', name: 'Job title A–Z, across the page break', sort: SORT.title, field: 'title', what: 'Job titles' },
-    { id: 'SO-3', name: 'Company A–Z, across the page break', sort: SORT.company, field: 'company', what: 'Companies' },
+    { id: 'SO-2', name: 'Sort by job title A–Z, across the page break', sort: SORT.title, field: 'title', what: 'Job titles' },
+    { id: 'SO-3', name: 'Sort by company A–Z, across the page break', sort: SORT.company, field: 'company', what: 'Companies' },
   ] as const;
 
   for (const { id, name, sort, field, what } of A_TO_Z) {
@@ -109,7 +109,7 @@ test.describe('Sort', () => {
   }
 
   test(
-    'SO-4: Date posted, newest first, across the page break',
+    'SO-4: Sort by date posted, newest first, across the page break',
     { tag: '@desktop-only' },
     async ({ page }) => {
       const jobs = new JobSearchPage(page);
@@ -194,7 +194,7 @@ test.describe('Sort', () => {
     });
   });
 
-  test('SO-6: Unknown sort value', { tag: '@desktop-only' }, async ({ page }) => {
+  test('SO-6: An unknown sort value in the address', { tag: '@desktop-only' }, async ({ page }) => {
     const jobs = new JobSearchPage(page);
 
     await jobs.search({ title: KEYWORD });

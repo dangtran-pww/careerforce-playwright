@@ -82,7 +82,7 @@ async function bookmarkFirstJob(
 test.describe('My Job Search on the dashboard', { tag: '@no-prod' }, () => {
   useRole('jobseeker');
 
-  test('MD-1: the job search section shows', async ({ page }) => {
+  test('MD-1: dashboard shows saved searches and bookmarked jobs', async ({ page }) => {
     const dashboard = new DashboardPage(page);
     await dashboard.goto();
     await expect(dashboard.jobsHeading).toBeVisible();
@@ -235,7 +235,7 @@ test.describe('My Job Search on the dashboard', { tag: '@no-prod' }, () => {
     }
   });
 
-  test('MD-6: un-bookmark from the results', async ({ page }) => {
+  test('MD-6: remove a bookmark from the search results', async ({ page }) => {
     const jobs = new JobSearchPage(page);
     const dashboard = new DashboardPage(page);
     const added: string[] = [];

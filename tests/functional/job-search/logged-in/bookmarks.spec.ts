@@ -131,7 +131,7 @@ test.describe('bookmarks', { tag: ['@no-prod', '@desktop-only'] }, () => {
     }
   });
 
-  test("BK-3: double-click doesn't leave a mess", async ({ page }) => {
+  test('BK-3: Double-clicking Bookmark leaves one bookmark', async ({ page }) => {
     const jobs = new JobSearchPage(page);
     const dashboard = new DashboardPage(page);
     const added: string[] = [];
@@ -181,7 +181,7 @@ test.describe('bookmarks', { tag: ['@no-prod', '@desktop-only'] }, () => {
     }
   });
 
-  test('BK-4: two tabs, one job', async ({ page, context }) => {
+  test('BK-4: Bookmarking one job in two tabs', async ({ page, context }) => {
     const jobs = new JobSearchPage(page);
     const dashboard = new DashboardPage(page);
     const added: string[] = [];

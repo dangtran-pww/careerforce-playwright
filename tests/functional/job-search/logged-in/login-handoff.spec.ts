@@ -45,7 +45,7 @@ test.describe(
     useRole('jobseeker');
     checkAccountUnchanged();
 
-    test('HO-1: coming back to save a search', async ({ page }) => {
+    test('HO-1: Coming back from login to save a search', async ({ page }) => {
       const jobs = new JobSearchPage(page);
       const dashboard = new DashboardPage(page);
       const name = testName();
@@ -83,7 +83,7 @@ test.describe(
       }
     });
 
-    test('HO-2: coming back to bookmark a job', async ({ page }) => {
+    test('HO-2: Coming back from login to bookmark a job', async ({ page }) => {
       const jobs = new JobSearchPage(page);
       const dashboard = new DashboardPage(page);
       const added: string[] = [];
@@ -124,7 +124,7 @@ test.describe(
       }
     });
 
-    test("HO-3: coming back to a job that's already bookmarked", async ({
+    test("HO-3: Coming back from login to a job that's already bookmarked", async ({
       page,
     }) => {
       const jobs = new JobSearchPage(page);
@@ -162,7 +162,7 @@ test.describe(
       }
     });
 
-    test("HO-4: coming back with a job ID that doesn't exist", async ({
+    test("HO-4: Coming back from login with a job ID that doesn't exist", async ({
       page,
     }) => {
       const jobs = new JobSearchPage(page);

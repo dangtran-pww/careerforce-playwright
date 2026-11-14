@@ -16,7 +16,7 @@ import {
   type FormValues,
 } from './helpers/sort-filters';
 
-// spec: test-suites/job-search/functional-job-search-sort-filters-paging.md ("Paging" PG-1 to PG-5, "The address" UR-1 to UR-3)
+// spec: test-suites/job-search/functional-job-search-sort-filters-paging.md (PG-1 to PG-5, UR-1 to UR-3)
 // seed: tests/seed.spec.ts
 //
 // A visitor who isn't logged in; nothing is changed, so every case is safe on
@@ -71,7 +71,7 @@ test.describe('Paging', () => {
     });
   });
 
-  test('PG-2: Page 2', async ({ page }) => {
+  test('PG-2: Paging to page 2', async ({ page }) => {
     const jobs = new JobSearchPage(page);
     const search = { title: KEYWORD, location: 'Saint Paul, MN', sort: SORT.title.value };
     let page1: Results;
@@ -101,7 +101,7 @@ test.describe('Paging', () => {
     await expect(pagerCurrent(jobs), 'The pager should mark page 2 as current').toContainText('2');
   });
 
-  test('PG-3: The last page', { tag: '@desktop-only' }, async ({ page }) => {
+  test('PG-3: Paging to the last page', { tag: '@desktop-only' }, async ({ page }) => {
     const jobs = new JobSearchPage(page);
 
     await jobs.search({ title: KEYWORD });
@@ -138,7 +138,7 @@ test.describe('Paging', () => {
     ).toBeLessThanOrEqual(LAST_PAGE_PARAM);
   });
 
-  test('PG-4: A page number past the end', { tag: '@desktop-only' }, async ({ page }) => {
+  test('PG-4: A page number past the end, by the address', { tag: '@desktop-only' }, async ({ page }) => {
     const jobs = new JobSearchPage(page);
 
     // 1. Open the page by the address.
@@ -233,7 +233,7 @@ test.describe('The address', () => {
     });
   });
 
-  test('UR-2: Back and Forward', { tag: '@desktop-only' }, async ({ page }) => {
+  test('UR-2: Back and Forward keep the search', { tag: '@desktop-only' }, async ({ page }) => {
     const jobs = new JobSearchPage(page);
     type Snapshot = { name: string; url: string; form: Omit<FormValues, 'company' | 'city'>; results: Results };
     const snapshots: Snapshot[] = [];

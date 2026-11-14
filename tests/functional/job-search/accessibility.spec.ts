@@ -16,7 +16,7 @@ import {
   tabTo,
 } from './helpers/posting-accessibility';
 
-// spec: test-suites/job-search/functional-job-search-posting-accessibility.md ("Keyboard and accessibility", AX-1 to AX-6)
+// spec: test-suites/job-search/functional-job-search-posting-accessibility.md (AX-1 to AX-6)
 // seed: tests/seed.spec.ts
 //
 // AX-1 to AX-4 use only the keyboard (Tab, Shift+Tab, Enter, Space, Esc and
@@ -436,7 +436,7 @@ test.describe('Accessibility tree', () => {
     });
   });
 
-  test('AX-6: Headings', async ({ page }) => {
+  test('AX-6: Job Search headings are in order', async ({ page }) => {
     const jobs = new JobSearchPage(page);
     await eachPage(page, async (where) => {
       const list = await headings(page);

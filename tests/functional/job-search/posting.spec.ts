@@ -16,7 +16,7 @@ import {
   type JobSummary,
 } from './helpers/posting-accessibility';
 
-// spec: test-suites/job-search/functional-job-search-posting-accessibility.md ("One job on its own", PO-1 to PO-9)
+// spec: test-suites/job-search/functional-job-search-posting-accessibility.md (PO-1 to PO-9)
 // seed: tests/seed.spec.ts
 //
 // A visitor who isn't logged in; nothing is changed. The jobs come from an
@@ -250,7 +250,7 @@ test.describe('One job on its own', () => {
     });
   });
 
-  test("PO-4: A job ID that doesn't exist", async ({ page, siteHealth }) => {
+  test("PO-4: Opening a job ID that doesn't exist", async ({ page, siteHealth }) => {
     const jobs = new JobSearchPage(page);
     // "Not found" may be answered with a 404, as long as it is this site's page.
     siteHealth.allowStatus('/job-search', [404]);
@@ -280,7 +280,7 @@ test.describe('One job on its own', () => {
     await expectNoBrokenCard(jobs);
   });
 
-  test("PO-5: A job ID that isn't a job ID", async ({ page, siteHealth }) => {
+  test("PO-5: Opening a job ID that isn't a job ID", async ({ page, siteHealth }) => {
     const jobs = new JobSearchPage(page);
     siteHealth.allowStatus('/job-search', [404]);
     const alerts: string[] = [];

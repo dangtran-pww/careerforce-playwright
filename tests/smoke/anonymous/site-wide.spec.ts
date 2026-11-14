@@ -9,7 +9,7 @@ import { SiteFooter } from '../../pages/site-footer.page';
 // the footer, the main menu's pages, the "Skip to main content" link, and
 // no JavaScript errors on the main public pages.
 
-test('GN-1: an unknown address shows the Page Not Found page', async ({ page }) => {
+test('GN-1: Page Not Found page answers 404 and links back', async ({ page }) => {
   const response = await page.goto('/pww-smoke-test-no-such-page');
   expect(response?.status(), 'an unknown address answers with HTTP 404').toBe(404);
   const main = page.getByRole('main');
@@ -44,7 +44,7 @@ const FOOTER_LINKS = [
   ['Site Index', '/site-index'],
 ] as const;
 
-test('GN-2: the footer shows contact details and its links', async ({ page }) => {
+test('GN-2: Footer shows its contact details and links', async ({ page }) => {
   const home = new HomePage(page);
   const footer = new SiteFooter(page);
   await home.goto();

@@ -187,7 +187,7 @@ test.describe('Search', () => {
     });
   });
 
-  test('SE-2: Keyword and city', async ({ page }) => {
+  test('SE-2: Search by keyword and city', async ({ page }) => {
     const jobs = new JobSearchPage(page);
 
     // Type "nurse" in Keyword and "Saint Paul, MN" in Location (typed, no
@@ -440,7 +440,7 @@ test.describe('Search', () => {
     });
   });
 
-  test('SE-8: Nonsense keyword', async ({ page }) => {
+  test('SE-8: A nonsense keyword shows a friendly empty state', async ({ page }) => {
     const jobs = new JobSearchPage(page);
     const nonsense = 'zzqxqzz';
 

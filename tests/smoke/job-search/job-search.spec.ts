@@ -2,7 +2,7 @@ import { test, expect } from '../../helpers/fixtures';
 import { HomePage } from '../../pages/home.page';
 import { JobSearchPage } from '../../pages/job-search.page';
 
-// spec: test-suites/smoke/smoke-job-search.md ("Search and results", JS-1 to JS-5)
+// spec: test-suites/smoke/smoke-job-search.md (JS-1 to JS-5)
 // seed: tests/seed.spec.ts
 //
 // Not logged in, and nothing is saved: Save search and Bookmark only open the
@@ -123,7 +123,7 @@ test.describe('Search and results', () => {
     await expect(jobs.keywordInput).toHaveValue(KEYWORD);
   });
 
-  test('JS-3: Jobs have their links', async ({ page }) => {
+  test('JS-3: Each job in the results has its links', async ({ page }) => {
     const jobs = new JobSearchPage(page);
     await jobs.search({ title: KEYWORD });
     const siteHost = new URL(page.url()).host;
@@ -166,7 +166,7 @@ test.describe('Search and results', () => {
     }
   });
 
-  test('JS-4: A job opens on its own', async ({ page }) => {
+  test('JS-4: Read more opens a job on its own', async ({ page }) => {
     const jobs = new JobSearchPage(page);
     await jobs.search({ title: KEYWORD });
     const first = jobs.cards.first();

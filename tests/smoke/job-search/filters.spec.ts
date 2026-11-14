@@ -6,7 +6,7 @@ import {
 } from '../../pages/job-search.page';
 import type { Locator } from '@playwright/test';
 
-// spec: test-suites/smoke/smoke-job-search.md ("Filters", JF-1 to JF-5)
+// spec: test-suites/smoke/smoke-job-search.md (JF-1 to JF-5)
 // seed: tests/seed.spec.ts
 //
 // Not logged in, and nothing is saved. The jobs come from an outside feed, so
@@ -63,7 +63,7 @@ async function texts(fields: Locator[]): Promise<string[]> {
 const TWO_FILTERS = [
   {
     id: 'JF-1',
-    name: 'Two companies',
+    name: 'Company filter narrows the results',
     label: 'company',
     param: 'company',
     select: 'companySelect',
@@ -71,7 +71,7 @@ const TWO_FILTERS = [
   },
   {
     id: 'JF-2',
-    name: 'Two cities',
+    name: 'City filter narrows the results',
     label: 'city',
     param: 'loc',
     select: 'citySelect',
@@ -139,7 +139,7 @@ test.describe('Filters', () => {
     });
   }
 
-  test('JF-3: Sort orders', { tag: '@desktop-only' }, async ({ page }) => {
+  test('JF-3: Each sort order sorts the jobs', { tag: '@desktop-only' }, async ({ page }) => {
     const jobs = new JobSearchPage(page);
     let unsorted = 0;
 

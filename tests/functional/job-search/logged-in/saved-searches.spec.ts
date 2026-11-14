@@ -89,7 +89,7 @@ test.describe('saved searches', { tag: ['@no-prod', '@desktop-only'] }, () => {
   useRole('jobseeker');
   checkAccountUnchanged();
 
-  test('SV-1: closing the dialog saves nothing', async ({ page }) => {
+  test('SV-1: Closing the Save search dialog saves nothing', async ({ page }) => {
     const jobs = new JobSearchPage(page);
     const dashboard = new DashboardPage(page);
     const name = testName();
@@ -143,7 +143,7 @@ test.describe('saved searches', { tag: ['@no-prod', '@desktop-only'] }, () => {
     }
   });
 
-  test('SV-2: a name is needed', async ({ page }) => {
+  test('SV-2: A saved search needs a name', async ({ page }) => {
     const jobs = new JobSearchPage(page);
     const dashboard = new DashboardPage(page);
     const before = await expectSearchRoom(dashboard, 1);
@@ -253,7 +253,7 @@ test.describe('saved searches', { tag: ['@no-prod', '@desktop-only'] }, () => {
     }
   });
 
-  test('SV-4: names are shown as typed', async ({ page }) => {
+  test('SV-4: Saved search names are shown as typed', async ({ page }) => {
     const jobs = new JobSearchPage(page);
     const dashboard = new DashboardPage(page);
     const dialogs = recordDialogs(page);
@@ -312,7 +312,7 @@ test.describe('saved searches', { tag: ['@no-prod', '@desktop-only'] }, () => {
     }
   });
 
-  test('SV-5: a long name', async ({ page }) => {
+  test('SV-5: A saved search with a long name', async ({ page }) => {
     const jobs = new JobSearchPage(page);
     const dashboard = new DashboardPage(page);
     const prefix = testName();
@@ -381,7 +381,7 @@ test.describe('saved searches', { tag: ['@no-prod', '@desktop-only'] }, () => {
     }
   });
 
-  test('SV-6: two searches with the same name', async ({ page }) => {
+  test('SV-6: Two saved searches with the same name', async ({ page }) => {
     const jobs = new JobSearchPage(page);
     const dashboard = new DashboardPage(page);
     const name = testName('twin');
@@ -450,7 +450,7 @@ test.describe('saved searches', { tag: ['@no-prod', '@desktop-only'] }, () => {
     }
   });
 
-  test('SV-7: removing the right search when another tab changed the list', async ({
+  test('SV-7: Removing the right saved search when another tab changed the list', async ({
     page,
     context,
   }) => {
@@ -493,7 +493,7 @@ test.describe('saved searches', { tag: ['@no-prod', '@desktop-only'] }, () => {
     }
   });
 
-  test('SV-8: room again after removing one', async ({ page }) => {
+  test('SV-8: Room for a new saved search after removing one', async ({ page }) => {
     test.setTimeout(180_000);
     const jobs = new JobSearchPage(page);
     const dashboard = new DashboardPage(page);
