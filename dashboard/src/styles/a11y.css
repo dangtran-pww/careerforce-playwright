@@ -1,0 +1,91 @@
+/* Accessibility Scan page (pages/a11y/): the journey form; and a run's
+   accessibility results (components/A11yJourney.tsx and its rows). */
+.journey-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px 16px;
+  margin-bottom: 24px;
+}
+
+.journey-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--fs-md);
+}
+
+.journey-field-wide {
+  flex: 1 1 100%;
+}
+
+.journey-field textarea {
+  min-height: 7em;
+  padding: 6px 8px;
+  border: 1px solid var(--control-border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  resize: vertical;
+}
+
+.journey-field textarea:focus-visible,
+.journey-field select:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.journey-refused {
+  flex-basis: 100%;
+}
+
+.a11y-page {
+  margin-bottom: 10px;
+}
+
+.a11y-page summary,
+.a11y-rule summary,
+.a11y-visits summary {
+  cursor: pointer;
+}
+
+.a11y-page > summary code {
+  overflow-wrap: anywhere;
+}
+
+.a11y-rule {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.a11y-visits {
+  margin-top: 12px;
+}
+
+.a11y-visits ul {
+  margin: 6px 0 0;
+  padding-left: 20px;
+  overflow-wrap: anywhere;
+}
+
+.a11y-nodes {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.a11y-nodes li {
+  margin-bottom: 10px;
+  overflow-wrap: anywhere;
+}
+
+.a11y-html {
+  margin: 4px 0;
+  padding: 6px 8px;
+  border-radius: 4px;
+  background: var(--code-bg);
+  font-size: var(--fs-xs);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

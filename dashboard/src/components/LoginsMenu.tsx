@@ -40,7 +40,7 @@ export function LoginsMenu() {
     const panel = panelRef.current;
     const button = buttonRef.current;
     if (!panel || !button) return;
-    // Matches .logins-panel's width in styles.css.
+    // Matches .logins-panel's width in styles/logins-menu.css.
     const place = () => {
       const width = Math.min(920, window.innerWidth - 32);
       const left = Math.max(

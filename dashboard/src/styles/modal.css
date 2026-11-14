@@ -1,0 +1,35 @@
+/* ---- modal ---------------------------------------------------------------- */
+
+dialog.modal {
+  width: min(100% - 32px, 1100px);
+  max-height: calc(100dvh - 48px);
+  padding: 0;
+  border: 1px solid var(--border);
+  color: var(--text);
+  overflow: hidden;
+}
+
+dialog.modal::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+
+.modal-inner {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - 48px);
+}
+
+.modal-head {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-head h2 {
+  margin: 0;
+  font-size: var(--fs-lg);
+}
+
+.modal-body {
+  padding: 16px 20px 24px;
+  overflow: auto;
+}

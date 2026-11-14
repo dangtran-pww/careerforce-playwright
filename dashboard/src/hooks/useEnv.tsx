@@ -3,9 +3,16 @@
 // <EnvProvider> loads them once and wraps the app; any component reads them
 // with useEnv(). The pick is remembered per browser in localStorage.
 
-import { createContext, useContext, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import type { Env, EnvironmentsResponse } from '../api/types';
-import { ErrorBox } from '../components/Callouts';
+import { ErrorBox, Loading } from '../components/Callouts';
 import { useApi } from './useApi';
 
 interface EnvState {
@@ -27,6 +34,22 @@ export function EnvProvider({ children }: { children: ReactNode }) {
   const { data, error } = useApi<EnvironmentsResponse>('/api/environments');
   const [pickedId, setPickedId] = useState(storedEnvId);
 
+  const setCurrentEnv = useCallback((id: string) => {
+    storeEnvId(id);
+    setPickedId(id);
+  }, []);
+
+  // Memoized, so a render here doesn't re-render every useEnv() reader.
+  const value = useMemo<EnvState | null>(() => {
+    if (!data?.environments.length) return null;
+    const { environments } = data;
+    const envById = (id: string | undefined | null) =>
+      environments.find((e) => e.id === id);
+    const currentEnv =
+      envById(pickedId) ?? envById(data.default) ?? environments[0];
+    return { environments, currentEnv, envById, setCurrentEnv };
+  }, [data, pickedId, setCurrentEnv]);
+
   if (error)
     return (
       <main>
@@ -36,26 +59,20 @@ export function EnvProvider({ children }: { children: ReactNode }) {
         </ErrorBox>
       </main>
     );
-  if (!data) return null;
+  if (!data)
+    return (
+      <main>
+        <Loading>Loading the dashboard…</Loading>
+      </main>
+    );
+  if (!value)
+    return (
+      <main>
+        <ErrorBox>The dashboard server lists no environments.</ErrorBox>
+      </main>
+    );
 
-  const { environments } = data;
-  const envById = (id: string | undefined | null) =>
-    environments.find((e) => e.id === id);
-  const currentEnv =
-    envById(pickedId) ?? envById(data.default) ?? environments[0];
-
-  const setCurrentEnv = (id: string) => {
-    storeEnvId(id);
-    setPickedId(id);
-  };
-
-  return (
-    <EnvContext.Provider
-      value={{ environments, currentEnv, envById, setCurrentEnv }}
-    >
-      {children}
-    </EnvContext.Provider>
-  );
+  return <EnvContext.Provider value={value}>{children}</EnvContext.Provider>;
 }
 
 const STORAGE_KEY = 'dashboard.env';

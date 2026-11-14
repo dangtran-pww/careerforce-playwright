@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode } from 'react';
+import { useId, useState } from 'react';
 import { post } from '../api/client';
 import type {
   FailureExplanation,
@@ -16,10 +16,13 @@ import { Spinner } from './Spinner';
 // takes about a minute. The answer is saved with the run, so `saved` shows it
 // again on coming back.
 //
-// Returns the button, to sit with the test's other buttons (null once there
-// is an answer: "Explain again" then sits under the answer), and the panel
-// (progress, error and answer) to show below them. The answer's heading row
-// folds the rest of it open and closed; asking again opens it.
+//   const explain = useFailureExplain({ runId, test, saved });
+//   <FailureExplainButton explain={explain} />  // with the test's buttons
+//   <FailureExplainPanel explain={explain} />   // below them
+//
+// The button hides once there is an answer ("Explain again" then sits under
+// the answer). The panel shows progress, error and answer; the answer's
+// heading row folds the rest of it open and closed, and asking again opens it.
 export function useFailureExplain({
   runId,
   test,
@@ -28,12 +31,11 @@ export function useFailureExplain({
   runId: string;
   test: TestRef;
   saved?: FailureExplanation;
-}): { button: ReactNode; panel: ReactNode } {
+}) {
   const [fresh, setFresh] = useState<FailureExplanation | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(true);
-  const bodyId = useId();
   const explanation = fresh ?? saved ?? null;
 
   async function explain() {
@@ -53,26 +55,55 @@ export function useFailureExplain({
     }
   }
 
-  const button = (
+  return {
+    test,
+    explanation,
+    busy,
+    error,
+    open,
+    toggleOpen: () => setOpen((o) => !o),
+    explain,
+  };
+}
+
+type ExplainState = ReturnType<typeof useFailureExplain>;
+
+// Asks Claude, or asks again. Pass `always` to show it once there is an
+// answer too (the panel does, under the answer).
+export function FailureExplainButton({
+  explain: x,
+  always = false,
+}: {
+  explain: ExplainState;
+  always?: boolean;
+}) {
+  if (x.explanation && !always) return null;
+  return (
     <button
       type="button"
-      className={explanation ? 'ghost small' : 'danger small'}
-      disabled={busy}
-      onClick={explain}
+      className={x.explanation ? 'ghost small' : 'danger small'}
+      disabled={x.busy}
+      onClick={x.explain}
     >
-      {busy ? (
+      {x.busy ? (
         <>
           <Spinner /> Looking into it…
         </>
-      ) : explanation ? (
+      ) : x.explanation ? (
         'Explain again'
       ) : (
         'Why did it fail?'
       )}
     </button>
   );
+}
 
-  const panel = (busy || error || explanation) && (
+// Progress, error and Claude's answer; nothing before the first ask.
+export function FailureExplainPanel({ explain: x }: { explain: ExplainState }) {
+  const bodyId = useId();
+  const { explanation, busy, error, test } = x;
+  if (!busy && !error && !explanation) return null;
+  return (
     <div className="failure-explain">
       {busy && (
         <p className="note small" role="status">
@@ -90,9 +121,9 @@ export function useFailureExplain({
             <button
               type="button"
               className="case-explain-toggle"
-              aria-expanded={open}
+              aria-expanded={x.open}
               aria-controls={bodyId}
-              onClick={() => setOpen((o) => !o)}
+              onClick={x.toggleOpen}
             >
               Claude's explanation
             </button>
@@ -104,7 +135,7 @@ export function useFailureExplain({
           <p>
             <strong>{explanation.headline}</strong>
           </p>
-          <div id={bodyId} hidden={!open}>
+          <div id={bodyId} hidden={!x.open}>
             <h6>What happened</h6>
             <p>{explanation.whatHappened}</p>
             <h6>Why</h6>
@@ -131,12 +162,11 @@ export function useFailureExplain({
             )}
             <div className="failure-explanation-foot">
               <ClaudeUsageNote usage={explanation} verb="Explained" />
-              {button}
+              <FailureExplainButton explain={x} always />
             </div>
           </div>
         </section>
       )}
     </div>
   );
-  return { button: !explanation && button, panel };
 }

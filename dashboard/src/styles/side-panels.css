@@ -1,0 +1,174 @@
+/* ---- suite page: plan details beside the steps ------------------------- */
+
+/* Wide pages: the two-column pages (suite, run) and any page wrapped in
+   .page-wide. The two-column pages are always this wide, so they don't
+   change width when the right column fills: it stays empty until then. */
+body:has(.split, .page-wide) {
+  --page-width: 1600px;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.split-main {
+  min-width: 0;
+}
+
+/* The panel grows with its content, so the page has one scrollbar. */
+.side-panel {
+  min-width: 0;
+}
+
+.side-panel:focus {
+  outline: none;
+}
+
+/* Room between the plan name and the details below it. */
+.side-panel > .card-head {
+  margin-bottom: 16px;
+}
+
+.side-panel-title {
+  margin: 20px 0 8px;
+  font-size: var(--fs-base);
+}
+
+.side-panel .table-wrap {
+  font-size: var(--fs-md);
+}
+
+/* The case's details and Claude's answers about it: 15px, like the
+   failure explanations and the run summary in the column beside it. */
+.side-panel .case-details {
+  font-size: var(--fs-md);
+}
+
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 -8px;
+  padding: 0 8px;
+  border-radius: 6px;
+}
+
+.check-row > .check {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.check-row > button {
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.check-row-shown {
+  background: var(--neutral-bg);
+}
+
+button.small {
+  padding: 2px 8px;
+  font-size: var(--fs-sm);
+}
+
+/* Loading ring shown in front of a busy label, sized to the text. */
+.spinner {
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  margin-right: 0.35em;
+  vertical-align: -0.1em;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spinner-turn 0.8s linear infinite;
+}
+
+@keyframes spinner-turn {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation-duration: 2.4s;
+  }
+}
+
+/* Too narrow for two columns: the panel covers the page instead. */
+/* The run page's right column: the output, with a case's details above it
+   while one is open. It stays in view while the results on the left scroll
+   and is never taller than the window; the case and the output scroll
+   together inside it. */
+.run-side {
+  position: sticky;
+  top: 16px;
+  min-width: 0;
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+}
+
+.run-side-case .output-panel .section-title {
+  margin-top: 24px;
+}
+
+/* Under a case, the log keeps a fixed height so it still follows its end. */
+.run-side-case .output-panel .log {
+  max-height: 480px;
+}
+
+.output-panel .section-title {
+  margin-top: 0;
+}
+
+.output-panel .log {
+  max-height: calc(100vh - 80px);
+  margin: 0;
+}
+
+@media (max-width: 960px) {
+  .split {
+    display: block;
+  }
+
+  .run-side {
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .run-side .side-panel {
+    position: static;
+    width: auto;
+    box-shadow: none;
+    border-radius: 10px;
+    margin-top: 24px;
+  }
+
+  .output-panel {
+    margin-top: 24px;
+  }
+
+  .output-panel .log {
+    max-height: 480px;
+  }
+
+  .split-empty {
+    display: none;
+  }
+
+  .side-panel {
+    position: fixed;
+    inset: 0 0 0 auto;
+    z-index: 30;
+    width: min(100%, 640px);
+    overflow: auto;
+    border-radius: 0;
+    box-shadow: 0 0 24px rgb(0 0 0 / 0.25);
+  }
+}

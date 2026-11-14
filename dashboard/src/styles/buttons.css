@@ -1,0 +1,128 @@
+/* Site buttons: square-ish corners, bold label, darker blue on hover. */
+button {
+  padding: 7px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font: inherit;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* :where() keeps these at plain element weight, so the special buttons
+   below (segmented, row toggles, nav) keep their own look on hover. */
+button:where(:not(:disabled, .ghost, .link, .danger, .row-toggle)):hover,
+a.button:where(:not(.ghost)):hover {
+  border-color: var(--accent-hover);
+  background: var(--accent-hover);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+button.ghost {
+  padding: 4px 10px;
+  background: var(--surface);
+  border-color: var(--control-border);
+  color: var(--text);
+}
+
+/* Icon-only close button (CloseButton): a square around the X. */
+button.close-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  padding: 5px;
+  line-height: 0;
+}
+
+button.close-button svg {
+  display: block;
+}
+
+a {
+  color: var(--accent);
+}
+
+a:hover {
+  color: var(--accent-hover);
+}
+
+a.button {
+  display: inline-block;
+  padding: 7px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  font-weight: 600;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: var(--fs-md);
+  text-decoration: none;
+}
+
+a.button.ghost {
+  background: var(--surface);
+  border-color: var(--control-border);
+  color: var(--text);
+}
+
+button.danger {
+  background: var(--bad-fg);
+  border-color: var(--bad-fg);
+  color: var(--surface);
+}
+
+button.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+/* Hover rules sit after the base rules above: they have the same
+   specificity, so they only win by coming later in the file. */
+button:where(.ghost:not(:disabled)):hover,
+a.button:where(.ghost):hover {
+  border-color: var(--accent);
+  background: var(--neutral-bg);
+  color: var(--accent);
+}
+
+button:where(.danger:not(:disabled)):hover {
+  border-color: var(--bad-hover);
+  background: var(--bad-hover);
+}
+
+button:where(.link:not(:disabled)):hover {
+  color: var(--accent-hover);
+}
+
+/* Keyboard focus on every button and button-styled link. :focus-visible
+   leaves mouse clicks without a ring. The offset keeps the ring clear of the
+   button's own border, so it shows on filled and ghost buttons alike. */
+button:focus-visible,
+a.button:focus-visible,
+.nav a:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* Why an AsyncButton's action failed, beside the button. */
+.async-error {
+  align-self: center;
+  color: var(--bad-fg);
+  font-size: var(--fs-sm);
+}

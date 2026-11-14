@@ -1,0 +1,98 @@
+/* A running plan's progress: a bold count, a bar and the percentage. */
+.test-progress {
+  display: grid;
+  gap: 6px;
+  margin-top: 24px;
+  padding: 12px 14px;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  background: var(--neutral-bg);
+}
+
+/* In a suite run's step it sits under the step's command: a smaller gap. */
+.command + .test-progress {
+  margin-top: 12px;
+}
+
+.test-progress p {
+  margin: 0;
+}
+
+/* Fixed-width digits, so the count and the percentage don't shift as
+   they go up. */
+.test-progress-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: var(--fs-base);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The native bar, restyled; the browsers each need their own pseudo
+   elements for the track and the fill. */
+.test-progress progress {
+  display: block;
+  width: 100%;
+  height: 10px;
+  appearance: none;
+  border: none;
+  border-radius: 5px;
+  background: var(--track-bg);
+  overflow: hidden;
+}
+
+.test-progress progress::-webkit-progress-bar {
+  background: var(--track-bg);
+  border-radius: 5px;
+}
+
+.test-progress progress::-webkit-progress-value {
+  background: var(--accent);
+  border-radius: 5px;
+}
+
+.test-progress progress::-moz-progress-bar {
+  background: var(--accent);
+  border-radius: 5px;
+}
+
+/* Before Playwright gives the test count there is no value: a short
+   segment slides along the track. Without these rules Chromium shows an
+   empty bar and Firefox a full one, which reads as "done". */
+.test-progress progress:indeterminate {
+  background: linear-gradient(var(--accent), var(--accent)) no-repeat
+    var(--track-bg);
+  background-size: 30% 100%;
+  animation: progress-slide 1.4s ease-in-out infinite;
+}
+
+.test-progress progress:indeterminate::-webkit-progress-bar {
+  background: transparent;
+}
+
+.test-progress progress:indeterminate::-moz-progress-bar {
+  background: transparent;
+}
+
+/* With a 30% wide segment, -43% starts it just off the left end and
+   143% ends it just off the right. */
+@keyframes progress-slide {
+  from {
+    background-position: -43% 0;
+  }
+  to {
+    background-position: 143% 0;
+  }
+}
+
+/* No sliding: still stripes say "waiting" without moving. */
+@media (prefers-reduced-motion: reduce) {
+  .test-progress progress:indeterminate {
+    animation: none;
+    background: repeating-linear-gradient(
+      -45deg,
+      var(--accent) 0 6px,
+      var(--track-bg) 6px 12px
+    );
+  }
+}

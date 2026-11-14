@@ -13,7 +13,11 @@ import { testRowId } from '../lib/runs';
 import { TEST_OUTCOME, type Tone } from '../lib/status';
 import { Badge } from './Badge';
 import { ErrorBox } from './Callouts';
-import { useFailureExplain } from './FailureExplain';
+import {
+  FailureExplainButton,
+  FailureExplainPanel,
+  useFailureExplain,
+} from './FailureExplain';
 import { RerunButton } from './RerunButton';
 import { Table, VisuallyHidden } from './Table';
 import { Tags } from './Tags';
@@ -168,7 +172,8 @@ function TestDetails({
   const failed =
     Boolean(r.error) && (r.outcome === 'unexpected' || r.outcome === 'flaky');
   const explain = useFailureExplain({ runId, test: testRef, saved });
-  const explainButton = failed && explain.button;
+  // The button sits with the others until there is an answer.
+  const showExplainButton = failed && !explain.explanation;
   return (
     <>
       <div className="note small mono test-file">
@@ -183,7 +188,7 @@ function TestDetails({
           <pre className="error">{r.error}</pre>
         </details>
       )}
-      {(caseId || explainButton) && (
+      {(caseId || showExplainButton) && (
         <div className="rerun-case">
           {caseId && (
             <>
@@ -203,10 +208,10 @@ function TestDetails({
               </UiModeButton>
             </>
           )}
-          {explainButton}
+          {showExplainButton && <FailureExplainButton explain={explain} />}
         </div>
       )}
-      {failed && explain.panel}
+      {failed && <FailureExplainPanel explain={explain} />}
     </>
   );
 }

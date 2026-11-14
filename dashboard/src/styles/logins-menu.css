@@ -1,0 +1,126 @@
+/* ---- Logins menu (header) ---------------------------------------------- */
+
+/* A native popover: it sits in the top layer, just under the top bar below
+   the Logins button (LoginsMenu.tsx sets --logins-left), and scrolls on its
+   own when the cards don't fit. The scrollbar's space is kept even when it
+   isn't needed, so the cards don't reflow when it appears as answers come in
+   (that reflow sometimes left cards drawn on top of each other). */
+.logins-panel {
+  position: fixed;
+  inset: auto;
+  top: calc(var(--topbar-height, 56px) + 8px);
+  left: var(--logins-left, 16px);
+  width: min(920px, calc(100vw - 32px));
+  max-height: calc(100vh - var(--topbar-height, 56px) - 24px);
+  margin: 0;
+  padding: 16px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--control-border);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.25);
+}
+
+.logins-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.logins-panel-head h2 {
+  margin: 0;
+  font-size: var(--fs-lg);
+}
+
+.logins-panel > .note {
+  margin: 4px 0 12px;
+}
+
+.logins-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+/* Group headings and notes run across both columns. */
+.logins-list > :not(.card) {
+  grid-column: 1 / -1;
+}
+
+/* One column once two cards would get too narrow. */
+@media (max-width: 760px) {
+  .logins-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Looks like the page links beside it in the nav. */
+.nav .logins-button {
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: inherit;
+}
+
+.nav .logins-button:hover,
+.nav .logins-button[aria-expanded='true'] {
+  color: var(--text);
+}
+
+.nav .logins-button[aria-expanded='true'] {
+  background: var(--neutral-bg);
+}
+
+.logins-button {
+  white-space: nowrap;
+}
+
+/* Phone: the nav and the picker wrap instead of widening the bar. */
+@media (max-width: 560px) {
+  .nav,
+  .env-picker {
+    flex-wrap: wrap;
+  }
+
+  .env-picker select {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+/* Phone: tighter links, so all five fit on one line at 360px and up. */
+@media (max-width: 560px) {
+  .nav {
+    gap: 2px;
+  }
+
+  .nav a,
+  .nav .logins-button {
+    padding: 6px 5px;
+  }
+}
+
+.logins-group {
+  margin: 4px 0 0;
+  font-size: var(--fs-md);
+  color: var(--muted);
+}
+
+.logins-list > .note {
+  margin: 0;
+}
+
+/* A test's buttons in the results table ("Run SR-1 again", "Open SR-1 in
+   UI mode", "Why did it fail?"), under its error (TestResults.tsx). */
+.rerun-case {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 0.35rem;
+}

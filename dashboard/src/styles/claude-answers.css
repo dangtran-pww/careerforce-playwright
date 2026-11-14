@@ -1,0 +1,129 @@
+/* Model, tokens and cost under a Claude answer (ClaudeUsageNote.tsx): a
+   caption wrapping as whole items separated by dots. */
+.claude-usage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  margin: 0;
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.claude-usage > span + span::before {
+  content: '·';
+  margin-right: 8px;
+}
+
+/* Under "What the code does", set off by a rule like the label above it. */
+.case-explain .claude-usage {
+  margin: 10px 0 0;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
+.case-review-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+/* Review against the plan: under the explanation, set off by a rule. */
+.case-review {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.case-review-verdict {
+  display: inline-block;
+  margin: 0;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.case-review-verdict.tone-good {
+  background: var(--good-bg);
+  color: var(--good-fg);
+}
+
+.case-review-verdict.tone-warn {
+  background: var(--warn-bg);
+  color: var(--warn-fg);
+}
+
+.case-review-verdict.tone-bad {
+  background: var(--bad-bg);
+  color: var(--bad-fg);
+}
+
+/* Small uppercase labels inside a Claude answer. */
+.case-review-group h6,
+.failure-explanation h6 {
+  margin: 10px 0 4px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+
+.case-review-group ul {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.case-review-group li {
+  margin: 4px 0;
+  padding-left: 1.3em;
+  text-indent: -1.3em;
+}
+
+.case-review-group li::before {
+  display: inline-block;
+  width: 1.3em;
+  text-indent: 0;
+}
+
+.kind-missing li::before {
+  content: '✗';
+  color: var(--bad-fg);
+}
+
+.kind-different li::before {
+  content: '≠';
+  color: var(--warn-fg);
+}
+
+.kind-extra li::before {
+  content: '+';
+  color: var(--muted);
+}
+
+.kind-covered li::before {
+  content: '✓';
+  color: var(--good-fg);
+}
+
+/* A plan's overview, folded to its first paragraph until expanded. */
+.plan-overview {
+  margin: 0 0 12px;
+  line-height: 1.5;
+}
+
+.plan-overview p {
+  margin: 0 0 8px;
+}
+
+.plan-overview ul {
+  margin: 0 0 8px;
+  padding-left: 20px;
+}
+
+.plan-overview li {
+  margin: 4px 0;
+}

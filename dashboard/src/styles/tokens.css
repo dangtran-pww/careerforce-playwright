@@ -1,0 +1,70 @@
+:root {
+  color-scheme: light;
+  /* Width of the page content; the top bar's contents use it too, so the
+     nav lines up with the page below. */
+  --page-width: 1100px;
+  /* Colours follow the CareerForce site theme (careerforce_skin): its
+     Tailwind palette and its Drupal status messages. */
+  --bg: #f5f5f5;
+  --surface: #ffffff;
+  --border: #e6e6e6;
+  /* Outlines of form controls and ghost buttons: at least 3:1 against every
+     background they sit on (WCAG 1.4.11). --border is for decoration only. */
+  --control-border: #767676;
+  --text: #212121;
+  --muted: #666666;
+  /* Site primary (links, buttons) and its hover. 4.5:1 on white. */
+  --accent: #0877d9;
+  --accent-hover: #4166a5;
+  /* Site footer blue and green, used for the brand mark and bar rule. */
+  --brand-blue: #005cab;
+  --brand-green: #328721;
+  --good-bg: #e6f2df;
+  --good-fg: #236216;
+  --bad-bg: #fcebe7;
+  --bad-fg: #a51b00;
+  /* Danger button hover: a darker --bad-fg. */
+  --bad-hover: #7a1400;
+  /* Keyboard focus ring on buttons: 3:1 against white and --bg. */
+  --focus-ring: #0877d9;
+  --warn-bg: #fbf0d9;
+  --warn-fg: #734c00;
+  --neutral-bg: #eef3fb;
+  /* The empty part of a progress bar: visible on --neutral-bg, and at least
+     3:1 against --accent so the filled part stands out. */
+  --track-bg: #c5d9ef;
+  --neutral-fg: #424242;
+  --code-bg: #f1f1f1;
+  --on-accent: #ffffff;
+
+  /* Type scale in rem, so it follows the browser's font size setting. */
+  --fs-xs: 0.8125rem; /* 13px: tags, captions, logs */
+  --fs-sm: 0.875rem; /* 14px: badges, table headers, code */
+  --fs-md: 0.9375rem; /* 15px: tables, buttons, facts */
+  --fs-base: 1rem; /* 16px: body text */
+  --fs-lg: 1.1875rem; /* 19px: section and card headings */
+  --fs-xl: 1.75rem; /* 28px: page title */
+  --fs-2xl: 1.875rem; /* 30px: tile numbers */
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    var(--fs-base)/1.5 'Open Sans',
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+}
+
+html {
+  /* Anchor jumps and focus scrolling land below the sticky top bar. */
+  scroll-padding-top: var(--topbar-height, 0px);
+}

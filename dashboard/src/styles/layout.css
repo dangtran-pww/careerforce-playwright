@@ -1,0 +1,171 @@
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 32px 0 12px;
+}
+
+.section-head:first-child {
+  margin-top: 0;
+}
+
+.section-head h2,
+.section-title,
+.plan-group h2 {
+  margin: 0;
+  font-size: var(--fs-lg);
+}
+
+.section-title {
+  margin: 32px 0 12px;
+}
+
+.plan-group {
+  margin-top: 24px;
+}
+
+.plan-group h2 {
+  margin-bottom: 8px;
+}
+
+.title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 8px;
+}
+
+.title-row h1 {
+  margin: 0;
+}
+
+/* What kind of page this is ("Suite", "smoke"), beside the page title.
+   Small caps-style pill so it reads as a label, not part of the title. */
+.kind-label {
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.crumbs {
+  margin: 0 0 12px;
+  font-size: var(--fs-md);
+}
+
+.small {
+  font-size: var(--fs-sm);
+}
+
+.tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.tag {
+  padding: 0 6px;
+  border: 1px solid var(--neutral-bg);
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--fs-xs);
+  color: var(--neutral-fg);
+  white-space: nowrap;
+}
+
+.badge.small {
+  margin-left: 8px;
+  padding: 1px 8px;
+  font-size: var(--fs-xs);
+}
+
+.strong {
+  font-weight: 600;
+}
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+
+/* A test's file path under its title: long paths wrap rather than widen
+   the results table past a phone screen. */
+.test-file {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* Table columns marked `wideOnly` drop out on phones; a `narrow-only`
+   element in the row shows their values instead. */
+.narrow-only {
+  display: none;
+}
+
+@media (max-width: 560px) {
+  .wide-only {
+    display: none;
+  }
+
+  .narrow-only {
+    display: block;
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.callout {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: var(--neutral-bg);
+  color: var(--neutral-fg);
+}
+
+.callout-warn {
+  background: var(--warn-bg);
+  color: var(--warn-fg);
+}
+
+.callout-bad {
+  background: var(--bad-bg);
+  color: var(--bad-fg);
+  white-space: pre-wrap;
+}
+
+/* The summary and facts at the top of a suite page, on white so
+   they are easy to read. */
+.intro-card {
+  margin: 0 0 24px;
+}
+
+.intro-card .lede {
+  margin: 0;
+  color: var(--text);
+}
+
+.intro-card + .actions {
+  margin-top: 0;
+}
+
+.intro-card .facts:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}

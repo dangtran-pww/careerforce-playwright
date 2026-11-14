@@ -1,0 +1,67 @@
+/* "Why did it fail?" under a failed test in a run's results. */
+/* In its own row under the test, spanning the Test, Project and Took
+   columns (TestResults.tsx). */
+.failure-explain {
+  margin-top: 0;
+}
+
+.failure-explain > .note {
+  margin: 6px 0 0;
+}
+
+.failure-explain > .callout {
+  margin: 6px 0 0;
+}
+
+.failure-explanation {
+  margin-top: 6px;
+  padding: 8px 12px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  line-height: 1.5;
+}
+
+.failure-explanation p {
+  margin: 6px 0;
+}
+
+.failure-explanation-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* The fold toggle (FailureExplain.tsx), styled like "What the code does". */
+.failure-explanation-head .case-explain-toggle {
+  font-weight: 600;
+}
+
+.failure-explanation h6 {
+  margin-bottom: 2px;
+}
+
+.failure-explanation ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.failure-explanation li {
+  margin: 3px 0;
+}
+
+.failure-explanation-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
+/* Beats `.failure-explanation p`; the footer sets the spacing. */
+.failure-explanation .claude-usage {
+  margin: 0;
+}

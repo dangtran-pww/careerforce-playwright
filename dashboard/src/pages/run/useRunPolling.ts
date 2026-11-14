@@ -18,6 +18,7 @@ export function useRunPolling(id: string) {
     let gone = false; // the page was left
     let logLength = 0; // characters of output received so far
     let loaded = false;
+    let lastRun = ''; // the last run, as JSON, to skip unchanged answers
 
     async function poll() {
       try {
@@ -30,7 +31,13 @@ export function useRunPolling(id: string) {
         loaded = true;
         logLength = length;
         if (chunk) setLog((l) => l + chunk);
-        setRun(next);
+        // Most polls change only the output. Keeping the same object then
+        // lets the memoized results skip re-rendering.
+        const json = JSON.stringify(next);
+        if (json !== lastRun) {
+          lastRun = json;
+          setRun(next);
+        }
         if (next.status === 'running') timer = setTimeout(poll, POLL_MS);
       } catch (err) {
         if (gone) return;

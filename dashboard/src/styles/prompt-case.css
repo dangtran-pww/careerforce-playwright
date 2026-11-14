@@ -1,0 +1,170 @@
+/* ---- a prompt case opened (PromptCaseDetails) ------------------------- */
+
+.prompt-case-lead {
+  margin: 0 0 10px;
+}
+
+/* The prompt file's settings: label / value rows, not section cards. */
+.case-details .prompt-facts {
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
+}
+
+.case-details .prompt-facts > div {
+  display: contents;
+}
+
+.case-details .prompt-facts dt {
+  display: block;
+  padding: 0;
+  border: 0;
+  color: var(--muted);
+  font-size: inherit;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.case-details .prompt-facts dt::before {
+  content: none;
+}
+
+.case-details .prompt-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* The prompt as it's sent: a quote of the prompt file. */
+.prompt-body {
+  padding: 2px 0 2px 12px;
+  border-left: 3px solid var(--track-bg);
+}
+
+.prompt-body p,
+.prompt-body ul {
+  margin: 0 0 8px;
+}
+
+.prompt-body ul {
+  padding-left: 1.25em;
+}
+
+.prompt-body > :last-child {
+  margin-bottom: 0;
+}
+
+@media (max-width: 480px) {
+  .case-details .prompt-facts {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .case-details .prompt-facts dd {
+    margin-bottom: 6px;
+  }
+}
+
+/* Numbered steps, split out of the plan's one-line table cell. */
+.step-intro {
+  margin: 0 0 6px;
+}
+
+.step-outro {
+  margin: 6px 0 0;
+}
+
+.step-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 1.5em;
+}
+
+/* The label is the fold toggle, with ▸ after it when folded and ▾ when
+   open. It keeps the label's look; only the arrow is added. */
+.case-explain-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+/* Beats the site-wide button:hover fill. */
+.case-explain-toggle.case-explain-toggle:hover {
+  border: 0;
+  background: none;
+  color: var(--accent-hover);
+}
+
+.case-explain-toggle::after {
+  content: '▸';
+  color: var(--muted);
+}
+
+.case-explain-toggle[aria-expanded='true']::after {
+  content: '▾';
+}
+
+/* Folded, the card is just its label row, so drop the rule under it. */
+.case-explain-head:has(+ [hidden]) {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+/* Same card as the Code and Command sections above it. */
+.case-explain {
+  margin-top: 8px;
+  padding: 8px 12px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  line-height: 1.5;
+}
+
+.case-explain-head {
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.case-explain p {
+  margin: 8px 0;
+}
+
+.case-explain-steps {
+  margin: 8px 0;
+  padding-left: 22px;
+}
+
+.case-explain-steps > li {
+  margin: 6px 0;
+}
+
+.case-explain-steps ul {
+  margin: 4px 0 0;
+  padding-left: 0;
+  list-style: none;
+  color: var(--muted);
+}
+
+/* A hanging ✓: wrapped lines line up with the text, not the mark, and
+   each check is set apart from the next. */
+.case-explain-steps ul li {
+  margin: 2px 0;
+  padding-left: 1.1em;
+  text-indent: -1.1em;
+}
+
+.case-explain-steps ul li::before {
+  content: '✓';
+  display: inline-block;
+  width: 1.1em;
+  text-indent: 0;
+  color: var(--good-fg);
+}

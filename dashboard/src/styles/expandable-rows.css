@@ -1,0 +1,115 @@
+/* ---- tables: rows that open to show more ------------------------------- */
+
+.cell-toggle {
+  width: 1%;
+  padding-right: 0;
+}
+
+.row-toggle {
+  padding: 0 6px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: var(--fs-md);
+  line-height: 1.4;
+  cursor: pointer;
+  /* The ▸/▾ glyph sits low against the row text; nudge it up. */
+  transform: translateY(-2px);
+}
+
+.row-toggle:hover {
+  color: var(--accent);
+}
+
+tbody tr.row-expandable {
+  cursor: pointer;
+}
+
+tbody tr.row-expandable:hover .row-toggle {
+  color: var(--accent);
+}
+
+tbody tr.row-open td {
+  border-bottom: 0;
+}
+
+tr.row-details td {
+  padding-top: 0;
+  background: var(--surface);
+}
+
+/* A `below` row: reads as part of the row above it. */
+tr.row-below td {
+  padding-top: 0;
+}
+
+/* Phone: the Project and Took columns are hidden, so drop the empty lead
+   cell too and let the row's content take the full width. */
+@media (max-width: 560px) {
+  tr.row-below .below-lead {
+    display: none;
+  }
+}
+
+.case-details {
+  padding: 10px 12px;
+  border-left: 3px solid var(--border);
+  background: var(--neutral-bg);
+  border-radius: 0 6px 6px 0;
+}
+
+.case-details dl {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+/* Each section (Persona, Steps, Assertions, Code, Command, …) is its own
+   card, so they don't run into each other on the grey panel. */
+.case-details dl > div {
+  padding: 8px 12px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.case-details dt,
+.case-explain h4 {
+  margin: 0;
+  color: var(--accent);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* The section label: accent marker and a rule between it and its text.
+   "What the code does" puts its button on the same line as the label. */
+.case-details dt,
+.case-explain-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.case-details dt::before,
+.case-explain h4::before {
+  content: '';
+  width: 3px;
+  height: 12px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+
+.case-explain h4 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.case-details dd {
+  margin: 6px 0 0;
+  line-height: 1.5;
+}

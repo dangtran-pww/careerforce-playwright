@@ -13,9 +13,11 @@
 //                     SessionCard, RunsTable, TestResults, SuiteSteps…)
 //   hooks/            useApi (load data), useEnv (current environment),
 //                     useLogins (the header's Login Sessions panel),
-//                     useStartRun
+//                     useStartRun, useRerun (run again from a run page),
+//                     useEscapeToClose (side panels), useTick
 //   api/              fetch helpers and the types of every API answer
 //   lib/              plain functions: formatting, status labels, run facts
+//   styles.css        imports styles/*.css in cascade order
 //
 // To add a page: write pages/<Name>Page.tsx, add a <Route> in App.tsx, and a
 // <NavLink> in components/Header.tsx if it belongs in the top bar.

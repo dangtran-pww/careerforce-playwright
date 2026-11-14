@@ -39,8 +39,7 @@
         "prompt": "node scripts/run-prompt.mjs",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
-        "typecheck": "tsc --noEmit && tsc --noEmit -p dashboard",
-        "test:dashboard": "node --test --import ./dashboard/test/register.mjs 'dashboard/test/*.test.mjs'"
+        "typecheck": "tsc --noEmit && tsc --noEmit -p dashboard"
     },
     "version": "0.1.0"
 }

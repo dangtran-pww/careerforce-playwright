@@ -1,0 +1,94 @@
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin: 24px 0 16px;
+}
+
+.tile {
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: var(--neutral-bg);
+  color: var(--neutral-fg);
+}
+
+.tile-good {
+  background: var(--good-bg);
+  color: var(--good-fg);
+}
+.tile-bad {
+  background: var(--bad-bg);
+  color: var(--bad-fg);
+}
+.tile-warn {
+  background: var(--warn-bg);
+  color: var(--warn-fg);
+}
+
+.tile-value {
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.tile-label {
+  font-size: var(--fs-sm);
+}
+
+td summary {
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.log,
+pre.error {
+  overflow: auto;
+  margin: 8px 0 0;
+  padding: 12px;
+  border-radius: 8px;
+  background: var(--code-bg);
+  font:
+    var(--fs-xs)/1.6 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Consolas,
+    monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* The run's output: white like the cards above it, so long logs are easier
+   to read. The border keeps its edge on the grey page. */
+.log {
+  max-height: 480px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+@media (max-width: 560px) {
+  .topbar,
+  main {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+.command code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.command .icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  line-height: 0;
+  /* Stay at the top right when a long command wraps onto more lines. */
+  align-self: flex-start;
+}
+
+.command button {
+  flex-shrink: 0;
+  white-space: nowrap;
+}

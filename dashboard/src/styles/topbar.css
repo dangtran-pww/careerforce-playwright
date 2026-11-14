@@ -1,0 +1,113 @@
+/* The bar's background and its brand and environment picker span the
+   window. When the window is wide enough, the nav links line up with the page
+   content below; narrower, they sit next to the brand. */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+  padding: 12px 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  /* The site's top bar: a blue rule across the top. */
+  border-top: 4px solid var(--brand-blue);
+}
+
+/* Wide: one grid row. The middle column is as wide as <main>, and the nav
+   takes main's side padding, so its first link starts where the page content
+   does and the Logins button ends where it ends. The brand and the picker
+   span the whole row and sit at its two ends, in the gutters beside the
+   middle column. 1920px leaves the picker (about 365px) room in the right
+   gutter at the normal page width (1100px). */
+@media (min-width: 1920px) {
+  .topbar {
+    display: grid;
+    grid-template-columns: 1fr minmax(0, var(--page-width)) 1fr;
+  }
+
+  .topbar > * {
+    grid-row: 1;
+  }
+
+  .topbar .brand {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .topbar .nav {
+    grid-column: 2;
+    padding: 0 24px;
+  }
+
+  .topbar .env-picker {
+    grid-column: 1 / -1;
+    justify-self: end;
+  }
+}
+
+/* Wide pages are 1600px wide, which leaves no gutter for the picker until
+   the window is much wider. */
+@media (min-width: 1920px) and (max-width: 2399px) {
+  body:has(.split, .page-wide) .topbar {
+    display: flex;
+  }
+
+  body:has(.split, .page-wide) .topbar .nav {
+    padding: 0;
+  }
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+/* The site logo, sized to the bar's controls. */
+.brand-logo {
+  display: block;
+  width: auto;
+  height: 36px;
+}
+
+@media (max-width: 560px) {
+  .brand-logo {
+    height: 30px;
+  }
+}
+
+.nav {
+  display: flex;
+  /* Takes the free space in the bar, so the Logins button at its end sits
+     on the right, next to the environment picker. Not `flex: 1`: a zero
+     basis squeezes the nav onto the brand's line on a phone. */
+  flex: 1 1 auto;
+  gap: 4px;
+}
+
+.logins-menu {
+  margin-left: auto;
+}
+
+.nav a {
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.nav a:hover {
+  color: var(--text);
+}
+
+.nav a[aria-current='page'] {
+  background: var(--neutral-bg);
+  color: var(--text);
+  /* The grey fill is too faint to mark the current page on its own, so
+     outline the whole link. Inset, so the link doesn't grow or shift. */
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
