@@ -10,7 +10,7 @@ import logoUrl from '../assets/careerforce-logo.svg';
 
 // The top bar: brand, page links, the case search, the environment picker, and the Login Sessions
 // menu (the saved session of every role on that environment). Picking
-// Production turns the bar red (body.env-production in styles.css).
+// Production turns the bar red (body.env-production in styles/env-picker.css).
 export function Header() {
   const { environments, currentEnv, setCurrentEnv } = useEnv();
 
@@ -46,7 +46,9 @@ export function Header() {
       </div>
       <nav className="nav" aria-label="Dashboard sections">
         <NavLink to="/suites">Suites</NavLink>
-        <CaseSearch />
+        <NavLink to="/a11y">Accessibility Scan</NavLink>
+        {/* Keyed so a new environment loads its own plans' cases. */}
+        <CaseSearch key={currentEnv.id} />
         <LoginsMenu />
       </nav>
       <div className="env-picker">

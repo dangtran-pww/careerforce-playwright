@@ -94,13 +94,14 @@ export const BASELINE_SOURCES = [
 /**
  * Run `check` (a parsed prompt file) on `env` in `dir`, and put its result
  * on `target` (a case's entry in run.json). `compareChoice`
- * is the run's "Compare with" choice, if any. `meta` is saved as it goes,
+ * is the run's "Compare with" choice, if any. `a11y` ({ seenDir }) scans
+ * the pages it reaches for accessibility (runs/a11y-journey.mjs). `meta` is saved as it goes,
  * so the page shows the check running.
  */
 export async function runCheckInRun(
   target,
   check,
-  { env, compareChoice, dir, meta, io = checkIo() },
+  { env, compareChoice, dir, meta, a11y = null, io = checkIo() },
 ) {
   let compare;
   try {
@@ -137,6 +138,7 @@ export async function runCheckInRun(
         dir,
         relTo: RUNS_DIR,
         io,
+        a11y,
       }),
     );
   } catch (err) {
@@ -166,6 +168,7 @@ export function promptCaseEntries(plan, env, caseIds = []) {
       prompt: c.prompt.prompt,
       viewports: c.prompt.viewports,
       parallel: c.prompt.parallel,
+      a11y: c.prompt.a11y,
       status: 'pending',
     }));
 }
@@ -180,7 +183,7 @@ export function promptCaseEntries(plan, env, caseIds = []) {
 export async function runPromptCases(
   entries,
   plan,
-  { env, compareChoice, dir, meta, scheduler },
+  { env, compareChoice, dir, meta, scheduler, a11y = null },
 ) {
   const started = [];
   for (const entry of entries) {
@@ -196,6 +199,7 @@ export async function runPromptCases(
         compareChoice,
         dir: `${dir}/prompts/${entry.id}`,
         meta,
+        a11y,
         io,
       });
     if (entry.parallel) {

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { CaseDetails } from '../../components/CaseDetails';
 import { CloseButton } from '../../components/CloseButton';
 import { CASE_PANEL_ID, type ShownCase } from '../../hooks/useCasePanel';
+import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 import { useRerun } from '../../hooks/useRerun';
 
 // The top of the run page's right column, above the output: one case of the
@@ -28,11 +29,7 @@ export function CasePanel({
     ref.current?.parentElement?.scrollTo({ top: 0 });
   }, []);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  useEscapeToClose(onClose);
 
   return (
     <aside

@@ -4,6 +4,12 @@
 import { hostOf } from '../../../scripts/lib/site.mjs';
 import { publicEnv } from '../environments.mjs';
 import { ApiError } from '../errors.mjs';
+import {
+  journeyEnv,
+  journeyFromReport,
+  journeyStatus,
+  mergeJourneys,
+} from './a11y-journey.mjs';
 import { beginRun, endRun, isStopped, launch, newRunId } from './lifecycle.mjs';
 import {
   checkPlanRunnable,
@@ -27,8 +33,10 @@ import {
  * ones a few at a time, and alongside the tests when the plan is Parallel
  * too; the others one by one),
  * comparing with `compare` when they compare (default: each environment's
- * own comparison site). Resolves with its run.json once it has started; the
- * run goes on in the background.
+ * own comparison site). With `a11y`, every page and dialog the tests and
+ * prompt cases reach is scanned for accessibility (runs/a11y-journey.mjs);
+ * a broken rule fails the run. Resolves with its run.json once it has
+ * started; the run goes on in the background.
  */
 export async function startRun(
   plan,
@@ -40,6 +48,7 @@ export async function startRun(
     compare,
     suite,
     checkLogin,
+    a11y = false,
   } = {},
 ) {
   checkPlanRunnable(plan);
@@ -68,6 +77,8 @@ export async function startRun(
       ? shownCommand(env, ['playwright', 'test', ...chosen.args])
       : null,
     compare: compare ?? null,
+    a11yScan: a11y,
+    a11y: null,
     status: 'running',
     startedAt: now.toISOString(),
     finishedAt: null,
@@ -87,19 +98,34 @@ export async function startRun(
           env,
           args: chosen.args,
           progress: meta,
+          extraEnv: a11y ? journeyEnv(dir) : {},
         });
         meta.exitCode = result.code;
         Object.assign(meta, result.summary ?? {});
+        if (a11y) meta.a11y = await journeyFromReport(dir);
         return playwrightStatus(result);
       });
     const { testStatus, done } = await runPlanWork(
       prompts,
       plan,
-      { env, compareChoice: compare, dir, meta, scheduler: promptScheduler() },
+      {
+        env,
+        compareChoice: compare,
+        dir,
+        meta,
+        scheduler: promptScheduler(),
+        a11y: a11y ? { seenDir: journeyEnv(dir).A11Y_JOURNEY_SEEN_DIR } : null,
+      },
       runTests,
     );
     await done;
-    meta.status = combinedStatus(testStatus, promptsStatus(prompts));
+    // The tests' scans and the prompt cases' (their own result keeps theirs).
+    meta.a11y = mergeJourneys([meta.a11y, ...prompts.map((p) => p.a11y)]);
+    meta.status = combinedStatus(
+      testStatus,
+      promptsStatus(prompts),
+      journeyStatus(meta.a11y),
+    );
     await endRun(meta);
   });
   return meta;
@@ -165,10 +191,13 @@ function checkPromptCases(plan, env, cases) {
   }
 }
 
-/** One run status from Playwright's (null if it didn't run) and the prompts'. */
-export function combinedStatus(tests, prompts) {
+/**
+ * One run status from Playwright's (null if it didn't run), the prompts' and
+ * the accessibility scans' (null when off).
+ */
+export function combinedStatus(tests, prompts, a11y = null) {
   if (isStopped()) return 'stopped';
-  const all = [tests, prompts].filter(Boolean);
+  const all = [tests, prompts, a11y].filter(Boolean);
   if (!all.length) return 'error';
   for (const s of ['error', 'failed', 'attention'])
     if (all.includes(s)) return s;

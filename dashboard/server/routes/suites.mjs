@@ -59,6 +59,7 @@ suiteRoutes.get(SUITE, async (c) => {
 });
 
 // POST /api/suites/:slug/run — run it, or the plans and prompts picked.
+// `a11y: true` scans every page it reaches for accessibility.
 suiteRoutes.post(
   `${SUITE}/run`,
   jsonBody(
@@ -66,6 +67,8 @@ suiteRoutes.post(
       env: envField,
       plans: strings.optional(),
       headed: flag,
+      // Scan every page the run reaches for accessibility.
+      a11y: flag,
       compare: compareField,
     }),
   ),
@@ -78,6 +81,7 @@ suiteRoutes.post(
       headed: body.headed === true,
       compare: compareParam(body.compare),
       checkLogin: checkSessionOnce,
+      a11y: body.a11y === true,
     });
     return c.json(run, 201);
   },

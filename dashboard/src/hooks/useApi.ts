@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { api } from '../api/client';
 
 interface Result<T> {
@@ -18,6 +18,8 @@ export function useApi<T>(path: string) {
   const [nonce, setNonce] = useState(0);
   const [result, setResult] = useState<Result<T>>({ key: '' });
   const key = `${path}#${nonce}`;
+  // Stable, so callers can list it in an effect's dependencies.
+  const reload = useCallback(() => setNonce((n) => n + 1), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -35,6 +37,6 @@ export function useApi<T>(path: string) {
     data: result.data,
     error: result.key === key ? result.error : undefined,
     loading: result.key !== key,
-    reload: () => setNonce((n) => n + 1),
+    reload,
   };
 }

@@ -11,11 +11,15 @@ import {
   createContext,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   type ReactNode,
 } from 'react';
 import type { PlanSummary, PlansResponse } from '../api/types';
+import { hostOf } from '../lib/format';
+import { offProdReason } from '../lib/prod';
 import { useApi } from './useApi';
+import { useEnv } from './useEnv';
 
 interface RerunState {
   planBySlug: (slug: string | undefined) => PlanSummary | undefined;
@@ -47,22 +51,48 @@ export function RerunProvider({
     if (lastStatus.current === runStatus) return;
     lastStatus.current = runStatus;
     reload();
-    // reload changes every render; only the status matters here.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [runStatus]);
+  }, [runStatus, reload]);
 
-  const plans = data?.plans ?? [];
+  // Memoized, so the run page's polls don't re-render every reader.
+  const value = useMemo<RerunState>(() => {
+    const plans = data?.plans ?? [];
+    return {
+      planBySlug: (slug) => plans.find((p) => p.slug === slug),
+      activeRun: data?.activeRun ?? null,
+      suite: suite ?? null,
+    };
+  }, [data, suite]);
   return (
-    <RerunContext.Provider
-      value={{
-        planBySlug: (slug) => plans.find((p) => p.slug === slug),
-        activeRun: data?.activeRun ?? null,
-        suite: suite ?? null,
-      }}
-    >
-      {children}
-    </RerunContext.Provider>
+    <RerunContext.Provider value={value}>{children}</RerunContext.Provider>
   );
+}
+
+// For a button that runs `cases` of a plan again (all of them when left
+// out): the plan, and why the button is disabled, if it is. Null when there
+// is nothing to run again from (outside a <RerunProvider>, or the plan
+// can't run). Disabled while any run is going, and on production when
+// everything it would run is no-prod.
+//
+//   const gate = useRunGate(planSlug, body.cases);
+//   if (!gate) return null;
+//   <button disabled={!!gate.blocked} title={gate.blocked ?? 'Run it'}>
+export function useRunGate(planSlug: string | undefined, cases?: string[]) {
+  const { currentEnv } = useEnv();
+  const rerun = useRerun();
+  const plan = rerun?.planBySlug(planSlug);
+  if (!rerun || !plan?.runnable) return null;
+  const blocked = rerun.activeRun
+    ? 'Another run is in progress'
+    : currentEnv.production
+      ? offProdReason(plan, cases)
+      : null;
+  return {
+    plan,
+    suite: rerun.suite,
+    blocked,
+    // "QA (qa.example.org)", for the button's title.
+    where: `${currentEnv.name} (${hostOf(currentEnv.baseURL)})`,
+  };
 }
 
 // The plan case a test belongs to, from the ID at the start of its title

@@ -1,4 +1,11 @@
-import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
+import {
+  Fragment,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 
 export interface Column<T> {
   head: ReactNode;
@@ -66,6 +73,10 @@ export function Table<T>({
     () => new Set(initialOpen),
   );
   const highlightRef = useRef<HTMLTableRowElement>(null);
+  // Prefixes the details rows' ids, so two tables on one page with the
+  // same row keys (a suite run's steps) don't share ids.
+  const idPrefix = useId();
+  const detailsId = (key: string) => `${idPrefix}-details-${key}`;
   useEffect(() => {
     highlightRef.current?.scrollIntoView({ block: 'center' });
   }, []);
@@ -76,20 +87,26 @@ export function Table<T>({
       return next;
     });
 
+  // What each row opens to show, worked out once per render (it builds
+  // elements, and the toggle cell and the row both need it).
+  const expanded = new Map<string, ReactNode>(
+    expand ? rows.map((row) => [rowKey(row), expand(row)]) : [],
+  );
+
   const cols = [
     expand && {
       head: <VisuallyHidden>Details</VisuallyHidden>,
       className: 'cell-toggle',
       cell: (row: T) => {
         const key = rowKey(row);
-        if (!expand(row)) return null;
+        if (!expanded.get(key)) return null;
         const isOpen = open.has(key);
         return (
           <button
             type="button"
             className="row-toggle"
             aria-expanded={isOpen}
-            aria-controls={`row-details-${key}`}
+            aria-controls={detailsId(key)}
             aria-label={expandLabel(row)}
             title={isOpen ? 'Hide details' : 'Show details'}
             onClick={() => toggle(key)}
@@ -125,11 +142,12 @@ export function Table<T>({
         <tbody>
           {rows.map((row) => {
             const key = rowKey(row);
-            const details = expand && open.has(key) && expand(row);
+            const content = expanded.get(key);
+            const expandable = Boolean(content);
+            const details = expandable && open.has(key) && content;
             const extra = below?.(row);
             // Columns before `belowFrom`, counting the expand toggle.
             const lead = belowFrom + (expand ? 1 : 0);
-            const expandable = Boolean(expand?.(row));
             const rowClass = [
               expandable && 'row-expandable',
               (details || extra) && 'row-open',
@@ -166,7 +184,7 @@ export function Table<T>({
                   </tr>
                 )}
                 {details && (
-                  <tr className="row-details" id={`row-details-${key}`}>
+                  <tr className="row-details" id={detailsId(key)}>
                     <td colSpan={cols.length}>{details}</td>
                   </tr>
                 )}

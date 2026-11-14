@@ -1,6 +1,14 @@
-import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import {
+  memo,
+  useCallback,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { useParams } from 'react-router';
 import type { Run } from '../../api/types';
+import { A11yJourney } from '../../components/A11yJourney';
 import { ErrorBox, Loading } from '../../components/Callouts';
 import { BackLink } from '../../components/PageTitle';
 import { PromptCases } from '../../components/PromptCases';
@@ -11,7 +19,7 @@ import { TestResults } from '../../components/TestResults';
 import { CasePanelContext, type ShownCase } from '../../hooks/useCasePanel';
 import { useEnv } from '../../hooks/useEnv';
 import { RerunProvider } from '../../hooks/useRerun';
-import { runOwnerPath } from '../../lib/runs';
+import { fullA11y, runOwnerPath } from '../../lib/runs';
 import { CasePanel } from './CasePanel';
 import { RunHead } from './RunHead';
 import { useRunPolling } from './useRunPolling';
@@ -25,6 +33,7 @@ export function RunPage() {
   const { currentEnv } = useEnv();
   const [shown, setShown] = useState<ShownCase | null>(null);
   const closePanel = useCallback(() => setShown(null), []);
+  const casePanel = useMemo(() => ({ shown, show: setShown }), [shown]);
 
   if (error)
     return (
@@ -41,11 +50,16 @@ export function RunPage() {
       runStatus={run.status}
       suite={run.suite}
     >
-      <CasePanelContext.Provider value={{ shown, show: setShown }}>
+      <CasePanelContext.Provider value={casePanel}>
         <div className="split">
           <div className="split-main">
             <BackLink to={runOwnerPath(run)}>
-              ← {run.suite ? run.planName : 'Suites'}
+              ←{' '}
+              {run.kind === 'a11y-journey'
+                ? 'Accessibility Scan'
+                : run.suite
+                  ? run.planName
+                  : 'Suites'}
             </BackLink>
             <div>
               <RunHead run={run} />
@@ -78,7 +92,10 @@ export function RunPage() {
   );
 }
 
-function RunResults({ run }: { run: Run }) {
+// Memoized: the page re-renders on every new line of output, but the run
+// itself only changes now and then (useRunPolling keeps the same object).
+const RunResults = memo(function RunResults({ run }: { run: Run }) {
+  const a11y = fullA11y(run);
   if (run.kind === 'suite')
     return (
       <>
@@ -87,15 +104,17 @@ function RunResults({ run }: { run: Run }) {
             <RunSummary runId={run.id} />
           )}
         <SuiteSteps run={run} />
+        {a11y && <A11yJourney journey={a11y} />}
       </>
     );
   return (
     <>
       <RunTests run={run} />
       {!!run.prompts?.length && <PromptCases prompts={run.prompts} />}
+      {a11y && <A11yJourney journey={a11y} />}
     </>
   );
-}
+});
 
 // A plan run's Playwright results (none when only prompt cases ran).
 function RunTests({ run }: { run: Run }) {

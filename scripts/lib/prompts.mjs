@@ -13,6 +13,7 @@
 //   **Viewports:** desktop 1366x768, phone 390x844                   (optional)
 //   **Screenshots:** 16                                              (optional)
 //   **Parallel:** yes | no                                           (optional)
+//   **Accessibility scan:** yes | no                                 (optional)
 //   (notes for people, ignored)
 //   ## Prompt
 //   <the prompt, sent to Claude as written>
@@ -147,6 +148,14 @@ export function parsePrompt(slug, text, where = {}) {
   if (parallel === null)
     problems.push(`Parallel: "${parallelText}" is not yes or no.`);
 
+  // Yes: an accessibility journey. The browser scans every page and dialog
+  // it reaches with axe, and Claude checks keyboard use and focus
+  // (tests/helpers/a11y-journey.ts, dashboard/server/runs/prompt.mjs).
+  const a11yText = option(lines, 'Accessibility scan');
+  const a11y = parallelValue(a11yText);
+  if (a11y === null)
+    problems.push(`Accessibility scan: "${a11yText}" is not yes or no.`);
+
   // A saved login is for one environment, so the comparison site would show
   // the page logged out.
   if (compares && role && compare !== 'baseline')
@@ -175,6 +184,7 @@ export function parsePrompt(slug, text, where = {}) {
     viewports,
     screenshots,
     parallel: Boolean(parallel),
+    a11y: Boolean(a11y),
     prompt,
     problems,
   };
@@ -242,7 +252,8 @@ export function resolveCompare(prompt, env, override) {
     overrideWords.length && overrideWords.join() !== 'default'
       ? overrideWords
       : compareList(prompt.compare);
-  if (choice.join() === 'default') choice = [env.compareWith ?? 'baseline'].flat();
+  if (choice.join() === 'default')
+    choice = [env.compareWith ?? 'baseline'].flat();
   if (choice.join() === 'none') return { mode: 'none' };
   const ids = choice.filter((id) => id !== 'baseline' && id !== env.id);
   if (!ids.length) return { mode: 'baseline' };

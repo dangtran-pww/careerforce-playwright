@@ -1,9 +1,7 @@
 import type { ReactNode } from 'react';
 import { post } from '../api/client';
 import { useEnv } from '../hooks/useEnv';
-import { useRerun } from '../hooks/useRerun';
-import { hostOf } from '../lib/format';
-import { offProdReason } from '../lib/prod';
+import { useRunGate } from '../hooks/useRerun';
 import { AsyncButton } from './AsyncButton';
 
 interface Props {
@@ -17,33 +15,28 @@ interface Props {
 // Opens a plan, or some of its cases, in Playwright's UI mode on the
 // environment picked in the header: a window on this computer where you run
 // the test step by step and look through its trace. It isn't a dashboard
-// run, so nothing shows up here. Same limits as RerunButton.
+// run, so nothing shows up here. Same limits as RerunButton (useRunGate).
 export function UiModeButton({ planSlug, body, className, children }: Props) {
   const { currentEnv } = useEnv();
-  const rerun = useRerun();
-  const plan = rerun?.planBySlug(planSlug);
-  if (!rerun || !plan?.runnable) return null;
+  const gate = useRunGate(planSlug, body.cases);
+  if (!gate) return null;
 
-  const blocked = currentEnv.production
-    ? offProdReason(plan, body.cases)
-    : null;
-  const busy = Boolean(rerun.activeRun);
   return (
     <AsyncButton
       className={className}
-      disabled={busy || Boolean(blocked)}
+      disabled={Boolean(gate.blocked)}
       busyLabel="Opening…"
       title={
-        busy
-          ? 'Another run is in progress'
-          : (blocked ??
-            `Open Playwright UI mode on ${currentEnv.name} (${hostOf(currentEnv.baseURL)}). It opens in its own window.`)
+        gate.blocked ??
+        `Open Playwright UI mode on ${gate.where}. It opens in its own window.`
       }
       onClick={() =>
-        post(`/api/plans/${plan.slug}/ui`, {
+        post(`/api/plans/${gate.plan.slug}/ui`, {
           env: currentEnv.id,
           ...body,
-        }).catch((err: Error) => alert(`Couldn't open UI mode: ${err.message}`))
+        }).catch((err: Error) => {
+          throw new Error(`Couldn't open UI mode: ${err.message}`);
+        })
       }
     >
       {children}

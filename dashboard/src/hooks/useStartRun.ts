@@ -3,8 +3,8 @@ import { post } from '../api/client';
 import { useEnv } from './useEnv';
 
 // Returns start(path, body): POST a run request on the current environment,
-// then open the new run's page. On failure it calls `onError`, or says why
-// in an alert when there is none.
+// then open the new run's page. On failure it calls `onError`, or, when
+// there is none, throws an error saying why (an AsyncButton shows it).
 //
 //   const start = useStartRun();
 //   await start(`/api/plans/${plan.slug}/run`, { cases: ['AM-1'] });
@@ -21,7 +21,7 @@ export function useStartRun(onError?: (err: Error) => void) {
       navigate(`/runs/${run.id}`);
     } catch (err) {
       if (onError) return onError(err as Error);
-      alert(`Couldn't start the run: ${(err as Error).message}`);
+      throw new Error(`Couldn't start the run: ${(err as Error).message}`);
     }
   };
 }

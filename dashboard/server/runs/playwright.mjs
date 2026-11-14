@@ -187,8 +187,15 @@ function trackTests(target) {
  * tests it has and how many have ended (see trackTests). Resolves with
  * { code, summary } where summary is { stats, results, errors } from the JSON
  * report, or null when Playwright stopped before running anything.
+ * `extraEnv` adds environment variables for the tests (e.g. A11Y_JOURNEY).
  */
-export async function runPlaywright({ dir, env, args, progress }) {
+export async function runPlaywright({
+  dir,
+  env,
+  args,
+  progress,
+  extraEnv = {},
+}) {
   await mkdir(dir, { recursive: true });
   const fullArgs = [
     'playwright',
@@ -204,6 +211,7 @@ export async function runPlaywright({ dir, env, args, progress }) {
       PLAYWRIGHT_JSON_OUTPUT_FILE: join(dir, 'results.json'),
       PLAYWRIGHT_HTML_OUTPUT_DIR: join(dir, 'report'),
       PLAYWRIGHT_HTML_OPEN: 'never',
+      ...extraEnv,
     },
     onStdout: progress ? trackTests(progress) : undefined,
   });

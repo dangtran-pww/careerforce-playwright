@@ -10,6 +10,7 @@ interface Props {
     projects?: string[];
     cases?: string[];
     headed?: boolean;
+    a11y?: boolean; // scan the pages for accessibility
     suite?: string; // the suite page it's started from
   };
   disabled?: boolean;
@@ -17,7 +18,7 @@ interface Props {
   className?: string;
   busyLabel?: string; // shown while the server checks logins and starts it
   // A refused start, e.g. a 409 when a login isn't ready. Without it the
-  // reason shows in an alert.
+  // reason shows beside the button.
   onError?: (err: Error) => void;
   children: ReactNode;
 }

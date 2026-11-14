@@ -20,7 +20,9 @@ Whenever you write or change a plan in `test-suites/`, follow every rule in
    `**Prompt:** [<name>](prompts/<name>.md)`, and
    `test-suites/<suite>/prompts/<name>.md` (in the plan's own suite) has
    `**Role:**`, optional `**Compare with:**`, `**Viewports:**` and
-   `**Screenshots:**`, and a `## Prompt` section. It has no test code.
+   `**Screenshots:**`, optional `**Accessibility scan:** yes` (an
+   accessibility journey: every page it reaches is scanned with axe), and
+   a `## Prompt` section. It has no test code.
 3. **Parallel:** a plan (`Parallel: yes` in its header) or a prompt file
    (`**Parallel:** yes`) runs alongside other work only when it only reads
    the site and nothing it checks depends on other tests. Anything else

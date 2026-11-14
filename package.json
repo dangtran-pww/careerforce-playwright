@@ -1,6 +1,7 @@
 {
     "description": "Playwright end-to-end tests for CareerForce Drupal",
     "devDependencies": {
+        "@axe-core/playwright": "^4.14.0",
         "@eslint/js": "^9.0.0",
         "@hono/node-server": "^2.1.7",
         "@hono/zod-validator": "^0.9.1",
@@ -38,7 +39,8 @@
         "prompt": "node scripts/run-prompt.mjs",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
-        "typecheck": "tsc --noEmit && tsc --noEmit -p dashboard"
+        "typecheck": "tsc --noEmit && tsc --noEmit -p dashboard",
+        "test:dashboard": "node --test --import ./dashboard/test/register.mjs 'dashboard/test/*.test.mjs'"
     },
     "version": "0.1.0"
 }

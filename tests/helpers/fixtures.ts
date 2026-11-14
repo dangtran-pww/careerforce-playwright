@@ -1,5 +1,11 @@
 import { test as base, expect, type Page } from '@playwright/test';
 
+import {
+  expectNoA11yViolations,
+  type AxeResults,
+  type ScanOptions,
+} from './accessibility';
+import { JourneyScanner, journeyEnabled } from './a11y-journey';
 import { isTracking, isWafChallenge } from './blocked-hosts.mjs';
 
 // Keeps test runs out of the site's analytics and ad reporting, and stops the
@@ -24,15 +30,43 @@ function widestOverflow(): string | undefined {
   if (!widest) return undefined;
   const { el, right } = widest;
   const id = el.id ? `#${el.id}` : '';
-  const classes = Array.from(el.classList).map((c) => `.${c}`).join('');
+  const classes = Array.from(el.classList)
+    .map((c) => `.${c}`)
+    .join('');
   return `<${el.tagName.toLowerCase()}${id}${classes}> reaches ${Math.round(right)}px`;
 }
+
+// `a11y.check()` scans the page as it is now with axe (WCAG A/AA) and fails
+// the test softly on any violation. Opt-in: a spec calls it where it wants a
+// scan, e.g. after opening a dialog. See tests/helpers/accessibility.ts.
+export type A11y = {
+  check(options?: ScanOptions & { name?: string }): Promise<AxeResults>;
+};
 
 export const test = base.extend<{
   blockTracking: void;
   blockWafChallenge: void;
   noHorizontalScroll: void;
+  a11y: A11y;
+  a11yJourney: void;
 }>({
+  // With A11Y_JOURNEY=1, scans every page and dialog the test reaches
+  // (tests/helpers/a11y-journey.ts). Reported, never failing the test.
+  a11yJourney: [
+    async ({ context, baseURL }, use, testInfo) => {
+      if (!journeyEnabled() || !baseURL) return use();
+      const scanner = new JourneyScanner(context, testInfo, baseURL);
+      await scanner.start();
+      await use();
+      await scanner.finish();
+    },
+    { auto: true },
+  ],
+  a11y: async ({ page }, use, testInfo) => {
+    await use({
+      check: (options) => expectNoA11yViolations(page, testInfo, options),
+    });
+  },
   blockTracking: [
     async ({ context }, use) => {
       await context.route(isTracking, (route) => route.abort());

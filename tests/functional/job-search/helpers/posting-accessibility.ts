@@ -1,7 +1,19 @@
-import type { ElementHandle, Locator, Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
 import { expect } from '../fixtures';
 import { JobSearchPage } from '../../../pages/job-search.page';
+import { hasFocus } from '../../../helpers/accessibility';
+
+// The general keyboard helpers live in tests/helpers/accessibility.ts;
+// re-exported here for the job-search specs.
+export {
+  FocusVisibility,
+  describeFocus,
+  focusStyle,
+  hasFocus,
+  headings,
+  tabTo,
+} from '../../../helpers/accessibility';
 
 // Helpers for test-suites/job-search/functional-job-search-posting-accessibility.md
 // (posting.spec.ts, responsive.spec.ts, accessibility.spec.ts).
@@ -63,28 +75,6 @@ export async function openFirstNurseJob(page: Page): Promise<JobSummary> {
     location: clean(await cardLocation(card).textContent()),
     summary: clean(await cardSummary(card).textContent()),
   };
-}
-
-// True when keyboard focus is on `element` (or inside it).
-export function hasFocus(element: Locator): Promise<boolean> {
-  return element.evaluate(
-    (el) =>
-      el === document.activeElement || el.contains(document.activeElement),
-  );
-}
-
-// A short description of the focused element, for failure messages.
-export function describeFocus(page: Page): Promise<string> {
-  return page.evaluate(() => {
-    const el = document.activeElement as HTMLElement | null;
-    if (!el || el === document.body) return '<body> (nothing focused)';
-    const id = el.id ? `#${el.id}` : '';
-    const name =
-      el.getAttribute('aria-label') ??
-      el.getAttribute('name') ??
-      (el.textContent ?? '').replace(/\s+/g, ' ').trim().slice(0, 40);
-    return `<${el.tagName.toLowerCase()}${id}> "${name}"`;
-  });
 }
 
 // Does the page scroll sideways? Returns a message when it does.
@@ -162,118 +152,6 @@ export async function expectFitsWidth(scope: Locator, where: string) {
       `${where}: every link, button and field should fit the ${await scope.page().evaluate(() => document.documentElement.clientWidth)}px width`,
     )
     .toEqual([]);
-}
-
-// The styles that show focus: outline, ring (box-shadow), border, and other
-// visible changes such as a new background or underline.
-// Waits for any CSS transition (e.g. on the outline) to finish first, so
-// the look is read once it has settled.
-export function focusStyle(element: Locator | ElementHandle): Promise<string> {
-  const read = async (el: Element) => {
-    await Promise.all(
-      el
-        .getAnimations({ subtree: true })
-        .map((a) => a.finished.catch(() => undefined)),
-    );
-    const s = getComputedStyle(el);
-    const outline =
-      s.outlineStyle === 'none' || parseFloat(s.outlineWidth) === 0
-        ? 'none'
-        : `${s.outlineStyle} ${s.outlineWidth} ${s.outlineColor}`;
-    // An icon button may draw its focus ring on ::before or ::after.
-    const pseudo = (which: string) => {
-      const p = getComputedStyle(el, which);
-      if (p.content === 'none' || p.content === 'normal')
-        return `${which}: none`;
-      return `${which}: ${p.outlineStyle} ${p.outlineWidth} ${p.outlineColor} ${p.boxShadow} ${p.borderTopColor} ${p.backgroundColor} ${p.color} ${p.opacity}`;
-    };
-    return [
-      pseudo('::before'),
-      pseudo('::after'),
-      `outline: ${outline}`,
-      `box-shadow: ${s.boxShadow}`,
-      `border: ${s.borderTopColor} ${s.borderTopWidth} ${s.borderBottomColor} ${s.borderBottomWidth}`,
-      `background: ${s.backgroundColor}`,
-      `color: ${s.color}`,
-      `text-decoration: ${s.textDecorationLine}`,
-      // A "skip" link that is moved on screen only when focused.
-      `position: ${s.position} ${s.clip} ${s.clipPath} ${s.width} ${s.height}`,
-    ].join('; ');
-  };
-  return (element as Locator).evaluate(read);
-}
-
-// Records each focus stop's look while focused, and checks it differs from
-// its look once focus has left it. Purely keyboard: the check for a stop runs
-// after the next key has moved focus on.
-export class FocusVisibility {
-  private readonly stops: Array<{
-    handle: ElementHandle;
-    name: string;
-    focused: string;
-  }> = [];
-
-  constructor(private readonly page: Page) {}
-
-  // Call while the element is focused (by the keyboard).
-  async record(): Promise<string> {
-    const handle = (await this.page.evaluateHandle(
-      () => document.activeElement,
-    )) as ElementHandle<Element>;
-    const name = await describeFocus(this.page);
-    this.stops.push({ handle, name, focused: await focusStyle(handle) });
-    return name;
-  }
-
-  // Checks every recorded stop that focus has left. A stop that still has
-  // focus is kept for a later call.
-  async expectAllVisible(where: string) {
-    for (const stop of this.stops.splice(0)) {
-      if (await stop.handle.evaluate((el) => el === document.activeElement)) {
-        this.stops.push(stop);
-        continue;
-      }
-      const unfocused = await focusStyle(stop.handle);
-      expect
-        .soft(
-          stop.focused,
-          `${where}: focus should be visible on ${stop.name} (its outline, ring or look should change when focused)`,
-        )
-        .not.toBe(unfocused);
-    }
-  }
-}
-
-// Presses Tab until `target` has focus, at most `max` times. Fails with the
-// stops it passed when it never gets there.
-export async function tabTo(
-  page: Page,
-  target: Locator,
-  what: string,
-  max = 120,
-) {
-  const passed: string[] = [];
-  for (let i = 0; i < max; i++) {
-    await page.keyboard.press('Tab');
-    if (await hasFocus(target)) return passed;
-    passed.push(await describeFocus(page));
-  }
-  throw new Error(
-    `Tab never reached ${what} in ${max} presses. Last stops: ${passed.slice(-8).join(', ')}`,
-  );
-}
-
-// The headings a screen reader finds, in page order (getByRole leaves out
-// hidden ones but keeps visually hidden, screen-reader-only headings).
-export async function headings(
-  page: Page,
-): Promise<Array<{ level: number; name: string }>> {
-  return page.getByRole('heading').evaluateAll((els) =>
-    els.map((el) => ({
-      level: Number(el.getAttribute('aria-level') ?? el.tagName.slice(1)),
-      name: (el.textContent ?? '').replace(/\s+/g, ' ').trim(),
-    })),
-  );
 }
 
 // The login dialog's controls ("the login dialog" in the plan).

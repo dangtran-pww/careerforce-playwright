@@ -7,6 +7,9 @@ type Props = Omit<ComponentProps<'button'>, 'onClick'> & {
 };
 
 // A button that runs an async action and is disabled until it finishes.
+// When the action throws, its message shows beside the button until the
+// next press, so a caller can let a failed request's error through rather
+// than alert() it.
 export function AsyncButton({
   onClick,
   busyLabel = 'Starting…',
@@ -16,25 +19,36 @@ export function AsyncButton({
   ...props
 }: Props) {
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleClick() {
     if (confirmMessage && !confirm(confirmMessage)) return;
     setBusy(true);
+    setError(null);
     try {
       await onClick();
+    } catch (err) {
+      setError((err as Error).message);
     } finally {
       setBusy(false);
     }
   }
 
   return (
-    <button
-      type="button"
-      {...props}
-      disabled={disabled || busy}
-      onClick={handleClick}
-    >
-      {busy ? busyLabel : children}
-    </button>
+    <>
+      <button
+        type="button"
+        {...props}
+        disabled={disabled || busy}
+        onClick={handleClick}
+      >
+        {busy ? busyLabel : children}
+      </button>
+      {error && (
+        <span className="async-error" role="alert">
+          {error}
+        </span>
+      )}
+    </>
   );
 }

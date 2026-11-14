@@ -39,6 +39,12 @@ import {
   shownCommand,
 } from './playwright.mjs';
 import {
+  journeyEnv,
+  journeyFromReport,
+  journeyStatus,
+  mergeJourneys,
+} from './a11y-journey.mjs';
+import {
   promptCaseEntries,
   promptScheduler,
   promptsStatus,
@@ -49,12 +55,14 @@ import {
 
 /**
  * Start a suite run. `choice` says which plans to run:
- * { env, plans: [slug], headed, compare, checkLogin }.
+ * { env, plans: [slug], headed, compare, checkLogin, a11y }. With `a11y`,
+ * every page each step reaches is scanned for accessibility, each page
+ * state once in the whole run (runs/a11y-journey.mjs).
  * Leaving `plans` out runs all of them. `checkLogin(role, env)`
  * resolves to a session check ({ role, status, message, loginCommand }).
  */
 export async function startSuiteRun(suite, choice) {
-  const { env, headed = false, compare, checkLogin } = choice;
+  const { env, headed = false, compare, checkLogin, a11y = false } = choice;
   const plans = choice.plans
     ? suite.plans.filter((p) => choice.plans.includes(p.slug))
     : suite.plans;
@@ -139,6 +147,8 @@ export async function startSuiteRun(suite, choice) {
     site: hostOf(env),
     headed,
     compare: compare ?? null,
+    a11yScan: a11y,
+    a11y: null,
     // Kept for the runs table, which lists projects and cases.
     projects: [],
     cases: [],
@@ -149,13 +159,14 @@ export async function startSuiteRun(suite, choice) {
   };
   const dir = await beginRun(meta);
 
-  launch(meta, () => run(meta, dir, { planSteps, env, headed, compare }));
+  const scan = a11y ? journeyEnv(dir) : null;
+  launch(meta, () => run(meta, dir, { planSteps, env, headed, compare, scan }));
   return meta;
 }
 
 // ---- running ---------------------------------------------------------------
 
-async function run(meta, dir, { planSteps, env, headed, compare }) {
+async function run(meta, dir, { planSteps, env, headed, compare, scan }) {
   const scheduler = promptScheduler();
   // Steps whose prompt cases are still going, finished when they end.
   const finishing = [];
@@ -193,6 +204,7 @@ async function run(meta, dir, { planSteps, env, headed, compare }) {
         compare,
         meta,
         scheduler,
+        scan,
       });
     } catch (err) {
       done = failed(step, err);
@@ -202,6 +214,7 @@ async function run(meta, dir, { planSteps, env, headed, compare }) {
     );
   }
   await Promise.all(finishing);
+  meta.a11y = mergeJourneys(meta.steps.map((s) => s.a11y));
   meta.status = suiteStatus(meta);
   await endRun(meta);
 }
@@ -236,7 +249,7 @@ async function planStep(
   step,
   stepDir,
   plan,
-  { env, headed, compare, meta, scheduler },
+  { env, headed, compare, meta, scheduler, scan },
 ) {
   const chosen = planArgs(plan, { env, projects: step.projects, headed });
   if (chosen)
@@ -249,19 +262,47 @@ async function planStep(
         env,
         args: chosen.args,
         progress: step,
+        extraEnv: scan ?? {},
       });
       Object.assign(step, result.summary ?? {});
       step.exitCode = result.code;
+      if (scan) step.a11y = await journeyFromReport(stepDir, step.n);
       return playwrightStatus(result);
     });
   const { testStatus, done } = await runPlanWork(
     step.prompts,
     plan,
-    { env, compareChoice: compare, dir: stepDir, meta, scheduler },
+    {
+      env,
+      compareChoice: compare,
+      dir: stepDir,
+      meta,
+      scheduler,
+      a11y: scan ? { seenDir: scan.A11Y_JOURNEY_SEEN_DIR } : null,
+    },
     runTests,
   );
   return done.then(() => {
-    const status = combinedStatus(testStatus, promptsStatus(step.prompts));
+    // The tests' scans and the prompt cases' (with the step's number).
+    step.a11y = mergeJourneys([
+      step.a11y,
+      ...step.prompts.map((p) =>
+        p.a11y
+          ? {
+              ...p.a11y,
+              pages: p.a11y.pages.map((pg) => ({
+                ...pg,
+                visits: pg.visits.map((v) => ({ ...v, step: step.n })),
+              })),
+            }
+          : null,
+      ),
+    ]);
+    const status = combinedStatus(
+      testStatus,
+      promptsStatus(step.prompts),
+      journeyStatus(step.a11y),
+    );
     // A step that needs a look is "unsure", like a prompt case.
     step.status = status === 'attention' ? 'unsure' : status;
   });

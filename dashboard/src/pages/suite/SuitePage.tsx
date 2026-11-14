@@ -5,15 +5,20 @@ import { AsyncButton } from '../../components/AsyncButton';
 import { ActiveRunBanner, ErrorBox, Loading } from '../../components/Callouts';
 import { EnvTag } from '../../components/EnvTag';
 import { Facts } from '../../components/Facts';
+import { LoginsNote } from '../../components/LoginsNote';
 import { BackLink, TitleRow } from '../../components/PageTitle';
 import { RunsTable } from '../../components/RunsTable';
 import { useApi } from '../../hooks/useApi';
 import { useEnv } from '../../hooks/useEnv';
-import { useLoginsPanel, useNeededLogins } from '../../hooks/useLogins';
+import { useNeededLogins } from '../../hooks/useLogins';
 import { useStartRun } from '../../hooks/useStartRun';
 import { plural } from '../../lib/format';
 import { toggled } from '../../lib/sets';
-import { defaultChoice, neededLogins, type SuiteChoice } from './choice';
+import {
+  defaultSuiteChoice,
+  neededRoles,
+  type SuiteChoice,
+} from './suiteChoice';
 import { PlanPanel } from './PlanPanel';
 import { RunRefused, useRunRefusal } from './RunRefused';
 import { PlanChecklist } from './StepChecklists';
@@ -37,10 +42,9 @@ export function SuitePage() {
 
 function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
   const { currentEnv: env } = useEnv();
-  const [choice, setChoice] = useState(() => defaultChoice(suite));
+  const [choice, setChoice] = useState(() => defaultSuiteChoice(suite));
   // Why the last Run press didn't start a run; cleared on the next press.
   const { refusal, onError, clear: clearRefusal } = useRunRefusal();
-  const { openPanel } = useLoginsPanel();
   const start = useStartRun(onError);
   // The plan whose details show in the right-hand column; none leaves it
   // empty (the column is always there, so the page never changes width).
@@ -80,8 +84,8 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
     env.production &&
     chosenPlans.length > 0 &&
     chosenPlans.every((p) => p.allNoProd);
-  const logins = neededLogins(suite, choice, env);
-  useNeededLogins(logins.map((l) => l.role));
+  const loginRoles = neededRoles(suite, choice);
+  useNeededLogins(loginRoles);
 
   return (
     <div className="split">
@@ -143,32 +147,44 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
             />
             <span>Show the browser while the tests run</span>
           </label>
+          <label className="check">
+            <input
+              type="checkbox"
+              checked={choice.a11y}
+              onChange={(e) =>
+                setChoice((c) => ({ ...c, a11y: e.target.checked }))
+              }
+            />
+            <span>Scan pages for accessibility</span>
+          </label>
+          {choice.a11y && (
+            <p className="note small">
+              Every page and dialog the tests and prompt cases reach is checked
+              with axe (WCAG 2.2 A/AA), each one once per run. A broken rule
+              fails the run; the results are on the run page.
+            </p>
+          )}
           <p className="note small">
             Plans run one after another, each with its prompt cases after its
             tests. Stop ends the current plan and skips the rest. Each prompt
             case runs Claude Code (claude -p) and uses your Claude plan or API
             credits.
           </p>
-          <p className="note small">
-            {logins.length
-              ? `Logs in as ${logins.map((l) => l.role).join(', ')}. `
-              : 'The chosen plans need no login. '}
-            {logins.length > 0 && (
-              <button type="button" className="link" onClick={openPanel}>
-                Check the login sessions
-              </button>
-            )}
-          </p>
+          <LoginsNote
+            roles={loginRoles}
+            none="The chosen plans need no login."
+          />
           {refusal && <RunRefused refusal={refusal} />}
           <div className="actions">
             <AsyncButton
               disabled={Boolean(activeRun) || blocked || total === 0}
-              busyLabel={logins.length ? 'Checking logins…' : 'Starting…'}
+              busyLabel={loginRoles.length ? 'Checking logins…' : 'Starting…'}
               onClick={() => {
                 clearRefusal();
                 return start(`/api/suites/${suite.slug}/run`, {
                   plans: [...choice.plans],
                   headed: choice.headed,
+                  a11y: choice.a11y,
                 });
               }}
             >
@@ -199,6 +215,7 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
             suite.plans.find((p) => p.slug === shownPlan)?.projects ?? []
           }
           headed={choice.headed}
+          a11y={choice.a11y}
           activeRun={activeRun}
         />
       ) : (

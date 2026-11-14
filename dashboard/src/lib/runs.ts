@@ -1,6 +1,6 @@
 // Facts about a run.
 
-import type { Run } from '../api/types';
+import type { A11yCounts, A11yJourney, Run } from '../api/types';
 import { elapsed, plural } from './format';
 
 // A run's or step's files are served at /runs/<path>, path relative to
@@ -34,9 +34,10 @@ export function showTestRow(id: string): boolean {
 }
 
 // The page a run was started from: its suite's page (for a plan run, with
-// that plan's panel open), or the suite list for an older plan run that
-// didn't record its suite.
+// that plan's panel open), the Accessibility page for a scan, or the suite
+// list for an older plan run that didn't record its suite.
 export function runOwnerPath(run: Run): string {
+  if (run.kind === 'a11y-journey') return '/a11y';
   if (!run.suite) return '/suites';
   if (run.kind === 'suite') return `/suites/${run.suite}`;
   return `/suites/${run.suite}?plan=${encodeURIComponent(run.plan ?? '')}`;
@@ -61,6 +62,8 @@ export function runCounts(run: Run): string | null {
 
 // What a run covered, e.g. "HP-1, HP-2 · chromium" or "2 plans · 1 prompt".
 export function whatRan(run: Run): string {
+  if (run.kind === 'a11y-journey' && run.journey)
+    return `Journey · ${run.journey.role ? `as ${run.journey.role}` : 'visitor'} · ${run.journey.device}`;
   if (run.kind === 'suite') {
     const steps = run.steps ?? [];
     const count = (kind: string) => steps.filter((s) => s.kind === kind).length;
@@ -75,4 +78,24 @@ export function whatRan(run: Run): string {
     ? `${run.cases.join(', ')} · `
     : 'All cases · ';
   return `${cases}${run.projects.join(', ')}`;
+}
+
+// A run's full accessibility result (on its own page), not the counts the
+// run list carries.
+export function fullA11y(run: Run): A11yJourney | null {
+  const a = run.a11y;
+  return a && Array.isArray(a.pages) ? (a as A11yJourney) : null;
+}
+
+// What a run's accessibility scans found, e.g. "3 rules broken · 12 pages";
+// null when it didn't scan.
+export function a11yCounts(run: Run): string | null {
+  const a = run.a11y;
+  if (!a) return run.a11yScan ? 'Nothing scanned' : null;
+  const full = fullA11y(run);
+  const pages = full ? full.pages.length : (a as A11yCounts).pages;
+  const rules = full
+    ? full.pages.reduce((n, p) => n + p.violations.length, 0)
+    : (a as A11yCounts).violations;
+  return `${rules ? `${plural(rules, 'rule')} broken` : 'Nothing broken'} · ${plural(pages, 'page')}`;
 }

@@ -18,7 +18,7 @@ export const isPromptCase = (c: PlanCase) =>
 /** Whether the case can run: it has tests or is a usable prompt case. */
 export const canRun = (c: PlanCase) => c.testCount > 0 || isPromptCase(c);
 
-export const defaultChoice = (plan: Plan): PlanChoice => ({
+export const defaultPlanChoice = (plan: Plan): PlanChoice => ({
   projects: new Set(plan.projects.filter((p) => p.selected).map((p) => p.name)),
   cases: new Set(),
   headed: false,
@@ -86,12 +86,16 @@ export function comparedSites(
 ): string[] | null {
   const own = c.prompt?.compare ?? 'none';
   if (own === 'none') return null;
+  // Like compareList: "Stage, Prod" and "stage and prod" are the same.
   const words = (text: string) =>
     text
-      .split(/\s*,\s*/)
+      .toLowerCase()
+      .split(/\s*(?:,|\band\b)\s*/)
       .map((w) => w.trim())
       .filter(Boolean);
-  let targets = words(compare !== 'default' ? compare : own);
+  const override = words(compare);
+  let targets =
+    override.length && override.join() !== 'default' ? override : words(own);
   if (targets.join() === 'default')
     targets = [env.compareWith ?? 'baseline'].flat();
   if (targets.join() === 'none') return null;

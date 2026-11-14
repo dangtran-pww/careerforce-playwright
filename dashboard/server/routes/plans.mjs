@@ -78,7 +78,8 @@ planRoutes.get(`${PLAN}/markdown`, async (c) => {
 });
 
 // POST /api/plans/:slug/run — run it, once every login it needs is checked
-// (409 with { logins } when one isn't ready).
+// (409 with { logins } when one isn't ready). `a11y: true` scans every page
+// it reaches for accessibility.
 planRoutes.post(
   `${PLAN}/run`,
   jsonBody(
@@ -87,6 +88,8 @@ planRoutes.post(
       projects: strings.optional(),
       cases: strings.optional(),
       headed: flag,
+      // Scan every page the tests reach for accessibility.
+      a11y: flag,
       compare: compareField,
       // The suite page it was started from, so the run links back there.
       suite: z
@@ -106,6 +109,7 @@ planRoutes.post(
       compare: compareParam(body.compare),
       suite: body.suite,
       checkLogin: checkSessionOnce,
+      a11y: body.a11y === true,
     });
     return c.json(run, 201);
   },

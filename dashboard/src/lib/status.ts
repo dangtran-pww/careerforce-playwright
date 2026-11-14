@@ -1,6 +1,6 @@
 // Label and colour (tone) for every status the API returns. <Badge> turns a
 // map and a key into a coloured tag. Tones match the .badge-<tone> classes
-// in styles.css.
+// in styles/base.css.
 
 export type Tone = 'good' | 'bad' | 'warn' | 'neutral';
 export type StatusMap = Record<string, { label: string; tone: Tone }>;
@@ -76,4 +76,13 @@ export const FAILURE_CAUSE: StatusMap = {
   environment: { label: 'Looks like the environment', tone: 'warn' },
   flaky: { label: 'Looks like timing', tone: 'warn' },
   unclear: { label: 'Cause unclear', tone: 'neutral' },
+};
+
+// How bad an accessibility violation is (axe's impact).
+export const A11Y_IMPACT: StatusMap = {
+  critical: { label: 'Critical', tone: 'bad' },
+  serious: { label: 'Serious', tone: 'bad' },
+  moderate: { label: 'Moderate', tone: 'warn' },
+  minor: { label: 'Minor', tone: 'neutral' },
+  none: { label: 'OK', tone: 'good' },
 };

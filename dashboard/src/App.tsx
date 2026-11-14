@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router';
 import { Header } from './components/Header';
 import { useEnv } from './hooks/useEnv';
+import { A11yPage } from './pages/a11y/A11yPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { RunPage } from './pages/run/RunPage';
 import { SuitePage } from './pages/suite/SuitePage';
@@ -28,6 +29,7 @@ export function App() {
           <Route path="/" element={<Navigate to="/suites" replace />} />
           <Route path="/suites" element={<SuitesPage />} />
           <Route path="/suites/:slug" element={<SuitePage />} />
+          <Route path="/a11y" element={<A11yPage />} />
           <Route path="/runs/:id" element={<RunPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>

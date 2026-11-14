@@ -7,6 +7,7 @@
 //   /api/plans/...      routes/plans.mjs
 //   /api/suites/...     routes/suites.mjs
 //   /api/runs/...       routes/runs.mjs
+//   /api/a11y/...       routes/a11y.mjs
 //   /runs/:id/...       routes/files.mjs (a run's files, e.g. its report)
 //   anything else       routes/files.mjs (the app)
 //
@@ -20,6 +21,7 @@ import { Hono } from 'hono';
 import { bodyLimit } from 'hono/body-limit';
 import { HTTPException } from 'hono/http-exception';
 import { ApiError } from './errors.mjs';
+import { a11yRoutes } from './routes/a11y.mjs';
 import { environmentRoutes } from './routes/environments.mjs';
 import { appRoutes, runFileRoutes } from './routes/files.mjs';
 import { roleRoutes, sessionRoutes } from './routes/logins.mjs';
@@ -74,6 +76,7 @@ const api = new Hono()
   .route('/plans', planRoutes)
   .route('/suites', suiteRoutes)
   .route('/runs', runRoutes)
+  .route('/a11y', a11yRoutes)
   .all('*', (c) => c.json({ error: 'Not found' }, 404));
 
 /** The whole app. `vite` is Vite's dev server in --dev mode, else null. */

@@ -1,15 +1,18 @@
 import type { ReactNode } from 'react';
 import { useEnv } from '../hooks/useEnv';
-import { useRerun } from '../hooks/useRerun';
+import { useRunGate } from '../hooks/useRerun';
 import { useStartRun } from '../hooks/useStartRun';
-import { hostOf } from '../lib/format';
-import { offProdReason } from '../lib/prod';
 import { AsyncButton } from './AsyncButton';
 
 interface Props {
   planSlug: string | undefined;
   // What to run; cases left out runs all of them.
-  body: { projects?: string[]; cases?: string[]; headed?: boolean };
+  body: {
+    projects?: string[];
+    cases?: string[];
+    headed?: boolean;
+    a11y?: boolean;
+  };
   className?: string;
   // The label; "on <environment>" is added after it.
   children: ReactNode;
@@ -17,32 +20,22 @@ interface Props {
 
 // Runs a plan, or some of its cases, again on the environment picked in the
 // header. Disabled while any run is going, and on production when everything
-// it would run is no-prod.
+// it would run is no-prod (useRunGate).
 export function RerunButton({ planSlug, body, className, children }: Props) {
   const { currentEnv } = useEnv();
-  const rerun = useRerun();
+  const gate = useRunGate(planSlug, body.cases);
   const start = useStartRun();
-  const plan = rerun?.planBySlug(planSlug);
-  if (!rerun || !plan?.runnable) return null;
+  if (!gate) return null;
 
-  const blocked = currentEnv.production
-    ? offProdReason(plan, body.cases)
-    : null;
-  const busy = Boolean(rerun.activeRun);
   return (
     <AsyncButton
       className={className}
-      disabled={busy || Boolean(blocked)}
-      title={
-        busy
-          ? 'Another run is in progress'
-          : (blocked ??
-            `Run on ${currentEnv.name} (${hostOf(currentEnv.baseURL)})`)
-      }
+      disabled={Boolean(gate.blocked)}
+      title={gate.blocked ?? `Run on ${gate.where}`}
       onClick={() =>
-        start(`/api/plans/${plan.slug}/run`, {
+        start(`/api/plans/${gate.plan.slug}/run`, {
           ...body,
-          ...(rerun.suite ? { suite: rerun.suite } : {}),
+          ...(gate.suite ? { suite: gate.suite } : {}),
         })
       }
     >

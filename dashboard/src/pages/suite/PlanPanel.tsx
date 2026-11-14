@@ -1,10 +1,11 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { Plan, PlanResponse } from '../../api/types';
 import { Badge } from '../../components/Badge';
 import { CloseButton } from '../../components/CloseButton';
 import { PlanNoProdBadge } from '../../components/NoProdBadge';
 import { ErrorBox, Loading } from '../../components/Callouts';
 import { Facts } from '../../components/Facts';
+import { LoginsNote } from '../../components/LoginsNote';
 import { Modal } from '../../components/Modal';
 import { PlanMarkdown } from '../../components/PlanMarkdown';
 import { PlanOverview } from '../../components/PlanOverview';
@@ -12,12 +13,13 @@ import { PlanRunButton } from '../../components/PlanRunButton';
 import { ToggleButton } from '../../components/ToggleButton';
 import { useApi } from '../../hooks/useApi';
 import { useEnv } from '../../hooks/useEnv';
-import { useLoginsPanel } from '../../hooks/useLogins';
+import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 import { loginsFact } from '../../components/LoginBadges';
 import { offProdReason } from '../../lib/prod';
 import { PLAN_STATUS } from '../../lib/status';
 import { PanelCases } from './PanelCases';
 import { RunRefused, useRunRefusal } from './RunRefused';
+import { RunOptionsContext, runBody, useRunOptions } from './runOptions';
 
 export const PLAN_PANEL_ID = 'plan-panel';
 
@@ -35,6 +37,7 @@ export function PlanPanel({
   onClose,
   projects,
   headed,
+  a11y,
   activeRun,
   openCase = null,
 }: {
@@ -43,6 +46,7 @@ export function PlanPanel({
   onClose: () => void;
   projects: string[]; // the suite's projects for this plan
   headed: boolean;
+  a11y: boolean; // scan the pages for accessibility
   activeRun: string | null;
   openCase?: string | null; // a case whose row starts opened
 }) {
@@ -65,13 +69,15 @@ export function PlanPanel({
     ref.current?.focus();
   }, []);
 
-  // Escape closes the panel, unless it's closing the full-plan modal.
-  useEffect(() => {
-    if (showPlan) return;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose, showPlan]);
+  // Escape closes the panel, unless it's closing the full-plan modal (or
+  // anything else on top, such as the Login Sessions popover).
+  useEscapeToClose(onClose, !showPlan);
+
+  // How every Run button in the panel runs (runOptions.tsx).
+  const runOptions = useMemo(
+    () => ({ suite, projects, headed, a11y, activeRun, onRunError }),
+    [suite, projects, headed, a11y, activeRun, onRunError],
+  );
 
   const plan = data?.plan;
 
@@ -168,88 +174,42 @@ export function PlanPanel({
                 : `Show test files (${plan.files.length})`}
             </ToggleButton>
           )}
-          {plan.runnable && <PlanLoginsNote plan={plan} />}
-          {refusal && <RunRefused refusal={refusal} />}
-          {plan.runnable && (
-            <p className="actions">
-              <RunPlanButton
-                plan={plan}
-                suite={suite}
-                projects={projects}
-                headed={headed}
-                activeRun={activeRun}
-                onError={onRunError}
-              />
-            </p>
-          )}
-          <PanelCases
-            plan={plan}
-            suite={suite}
-            projects={projects}
-            headed={headed}
-            activeRun={activeRun}
-            openCase={openCase}
-            onRunError={onRunError}
-          />
+          <RunOptionsContext.Provider value={runOptions}>
+            {plan.runnable && <LoginsNote roles={planRoles(plan)} />}
+            {refusal && <RunRefused refusal={refusal} />}
+            {plan.runnable && (
+              <p className="actions">
+                <RunPlanButton plan={plan} />
+              </p>
+            )}
+            <PanelCases plan={plan} openCase={openCase} />
+          </RunOptionsContext.Provider>
         </>
       )}
     </aside>
   );
 }
 
-// The logins a run of the plan needs, with a link to check them now. The
-// server checks them again when Run is pressed.
-function PlanLoginsNote({ plan }: { plan: Plan }) {
-  const { openPanel } = useLoginsPanel();
-  const roles = plan.roleCases?.map((rc) => rc.role) ?? plan.roles;
-  return (
-    <p className="note small">
-      {roles.length
-        ? `Logs in as ${roles.join(', ')}. The logins are checked before the run starts. `
-        : 'Needs no login.'}
-      {roles.length > 0 && (
-        <button type="button" className="link" onClick={openPanel}>
-          Check the login sessions
-        </button>
-      )}
-    </p>
-  );
-}
+// The roles a run of the whole plan logs in as.
+const planRoles = (plan: Plan) =>
+  plan.roleCases?.map((rc) => rc.role) ?? plan.roles;
 
 // Runs the whole plan on the environment picked in the header, in the
 // projects the suite runs it in. On production the server leaves out the
 // no-prod cases.
-function RunPlanButton({
-  plan,
-  suite,
-  projects,
-  headed,
-  activeRun,
-  onError,
-}: {
-  plan: Plan;
-  suite: string;
-  projects: string[];
-  headed: boolean;
-  activeRun: string | null;
-  onError: (err: Error) => void;
-}) {
+function RunPlanButton({ plan }: { plan: Plan }) {
   const { currentEnv } = useEnv();
-  const roles = plan.roleCases?.map((rc) => rc.role) ?? plan.roles;
+  const options = useRunOptions();
   const blocked = currentEnv.production ? offProdReason(plan) : null;
   return (
     <PlanRunButton
       plan={plan}
-      body={{
-        projects: projects.length ? projects : undefined,
-        headed,
-        suite,
-      }}
-      onError={onError}
-      busyLabel={roles.length ? 'Checking logins…' : undefined}
-      disabled={Boolean(activeRun) || Boolean(blocked)}
+      body={runBody(options)}
+      onError={options.onRunError}
+      busyLabel={planRoles(plan).length ? 'Checking logins…' : undefined}
+      disabled={Boolean(options.activeRun) || Boolean(blocked)}
       title={
-        activeRun
+        options.activeRun
           ? 'Another run is in progress'
           : (blocked ?? `Run every case of ${plan.name} on ${currentEnv.name}`)
       }

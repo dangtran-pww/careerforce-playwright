@@ -334,6 +334,14 @@ is an example.
     match: half as much again for each extra site (16 → 24 for two).
   - `Parallel` (optional; default `no`): `yes` lets the check run at the
     same time as other work. See [Rule 3](#rule-3-parallel-plans-and-prompts).
+  - `Accessibility scan` (optional; default `no`): `yes` makes the prompt an
+    accessibility journey. While Claude follows it, the browser scans every
+    page and dialog it reaches with axe (WCAG 2.2 A/AA), grouped by page
+    pattern (`/user/{id}/edit`), and Claude checks keyboard use, focus and
+    names. A broken rule fails the case. Write the prompt as the journey
+    to follow (as which role, what to open, which dialogs to open); there is
+    no need to list each page. Any plan or suite run can also scan the pages
+    its tests reach: "Scan pages for accessibility" in the dashboard.
   - Everything under `## Prompt` is sent to Claude as written. Write it the
     way you'd ask a tester: what to open, what to look at, and what counts as
     a problem. Content that differs between sites (jobs, events, dates) is

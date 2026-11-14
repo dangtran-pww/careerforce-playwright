@@ -452,6 +452,7 @@ export interface PromptResult {
   model?: string | null;
   tokens?: { in: number; cached: number; out: number }; // in counts cached
   durationMs?: number; // the `claude` process, browser startup included
+  a11y?: A11yJourney | null; // an accessibility journey's scans
 }
 
 export interface SuiteStep extends TestReport {
@@ -469,6 +470,7 @@ export interface SuiteStep extends TestReport {
   projects?: string[];
   command?: string;
   prompts?: PromptResult[]; // the plan's prompt cases
+  a11y?: A11yJourney | null; // with "Scan pages for accessibility"
   // prompt steps (older runs only)
   role?: string;
   file?: string;
@@ -486,10 +488,63 @@ export interface SuiteStep extends TestReport {
   durationMs?: number;
 }
 
+// Accessibility scans along a journey (dashboard/server/runs/a11y-journey.mjs):
+// every page and dialog a run's tests or Claude reached, scanned with axe and
+// grouped by page pattern (/user/{id}/edit).
+export type A11yImpact = 'critical' | 'serious' | 'moderate' | 'minor';
+
+export interface A11yViolation {
+  id: string; // the axe rule, e.g. color-contrast
+  impact: A11yImpact | null;
+  help: string;
+  helpUrl: string;
+  tags: string[]; // its WCAG tags, e.g. wcag2aa, wcag143
+  count: number; // elements it was found on, all visits
+  // The first 20, each with the first URL it was seen at.
+  nodes: { target: string; html: string; summary: string; url?: string }[];
+}
+
+export interface A11yVisit {
+  url: string;
+  test: string;
+  project: string;
+  step: number | null; // the suite step
+  dialog: string | null;
+  layout?: 'phone' | 'wide' | null; // under 768px wide, or not
+  width?: number | null; // CSS pixels
+}
+
+export interface A11yPage {
+  pattern: string;
+  titles: string[];
+  dialogs: string[];
+  visits: A11yVisit[]; // the first 30
+  violations: A11yViolation[];
+}
+
+export interface A11yJourney {
+  scanned: number; // page states scanned
+  interrupted: number; // scans dropped because the page moved on
+  pages: A11yPage[];
+}
+
+// In run lists: just the counts.
+export interface A11yCounts {
+  scanned: number;
+  pages: number;
+  violations: number;
+}
+
+// GET /api/a11y/runs?env=<id>
+export interface A11yRunsResponse {
+  activeRun: string | null;
+  runs: Run[];
+}
+
 export interface Run extends TestReport {
   id: string;
-  kind?: 'plan' | 'suite';
-  plan?: string; // plan slug
+  kind?: 'plan' | 'suite' | 'a11y-journey';
+  plan?: string; // plan slug (none for an accessibility scan)
   suite?: string | null; // suite slug; for a plan run, the suite it was started from
   planName: string;
   status: RunStatus;
@@ -504,6 +559,12 @@ export interface Run extends TestReport {
   command?: string | null; // null: only prompt cases ran
   prompts?: PromptResult[]; // a plan run's prompt cases
   compare?: string | null; // the "Compare with" choice, if one was made
+  a11yScan?: boolean; // it scans the pages it reaches for accessibility
+  // What it found (merged over its tests, steps and prompt cases); counts
+  // only in run lists.
+  a11y?: A11yJourney | A11yCounts | null;
+  // A Claude journey's who, where and what (kind a11y-journey).
+  journey?: { role: string | null; device: 'desktop' | 'mobile'; text: string };
 }
 
 // GET /api/runs/:id?logFrom=N: the run, and its output from character N.

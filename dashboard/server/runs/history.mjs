@@ -50,9 +50,10 @@ export async function getRun(id, { logFrom = 0 } = {}) {
 
 /**
  * Newest first, without per-test results or output. `plan` / `suite` /
- * `env` narrow it down.
+ * `env` narrow it down; `a11y` keeps the runs that scanned for
+ * accessibility.
  */
-export async function listRuns({ plan, suite, env, limit = 50 } = {}) {
+export async function listRuns({ plan, suite, env, a11y, limit = 50 } = {}) {
   const names = (await readdir(RUNS_DIR).catch(() => [])).sort().reverse();
   const runs = [];
   // A batch of run.json files is read at once, newest first, until there
@@ -68,9 +69,21 @@ export async function listRuns({ plan, suite, env, limit = 50 } = {}) {
       if (plan && meta.plan !== plan) continue;
       if (suite && meta.suite !== suite) continue;
       if (env && (meta.env?.id ?? 'qa') !== env) continue;
+      if (a11y && !meta.a11yScan) continue;
       runs.push({
         ...meta,
         results: undefined,
+        // Just how many pages and broken rules, for tables.
+        a11y: meta.a11y
+          ? {
+              scanned: meta.a11y.scanned,
+              pages: meta.a11y.pages.length,
+              violations: meta.a11y.pages.reduce(
+                (n, p) => n + p.violations.length,
+                0,
+              ),
+            }
+          : null,
         steps: meta.steps?.map((s) => ({
           id: s.id,
           kind: s.kind,

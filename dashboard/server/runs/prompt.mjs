@@ -34,6 +34,7 @@ import {
 } from 'node:fs/promises';
 import { basename, join, relative, resolve } from 'node:path';
 import { authFile } from '../../../scripts/lib/site.mjs';
+import { journeyFromFile, journeyStatus } from './a11y-journey.mjs';
 import {
   CLAUDE,
   NOT_STARTED,
@@ -195,11 +196,21 @@ Rules:
   - "problem": what makes the verdict "fail". A "fail" has at least one problem, and a "pass" has none.
   - "warning": something someone should look at that doesn't fail the check, e.g. a difference that looks deliberate, or a block that is missing or different because of the site's content.
   - "note": for information only, e.g. what you checked and found as expected.
-${compareRules(check, env, compare, baseline)}
+${compareRules(check, env, compare, baseline)}${check.a11y ? a11yRules(check) : ''}
 
 The check:
 ${check.prompt}`;
 }
+
+// For an accessibility journey (a prompt file with "Accessibility scan:
+// yes", or one started from the dashboard's Accessibility Scan page).
+const a11yRules = (check) => `
+
+This is an accessibility check that follows a journey. Before anything else, set the browser size with browser_resize to ${viewportList(check.viewports.slice(0, 1))}${check.viewports.length > 1 ? `; then follow the journey again at ${viewportList(check.viewports.slice(1))}` : ''}: the scan checks the page at the size it is shown. While you follow it, the browser scans every page and dialog you reach with axe on its own: you don't run that scan, and its results are added to this check's result. After each page loads or a dialog opens, wait 2 seconds (browser_wait_for) before you act, so the scan can finish. Your part is what a script can't judge:
+- On each page of the journey, use the keyboard: press Tab (browser_press_key) through the main controls, and Enter or Space on the ones the journey uses. Take a screenshot when something is wrong.
+- A "problem": keyboard focus you can't see; a control the journey needs that you can't reach or use with the keyboard; focus that is lost, or goes behind a dialog, when the dialog opens, or that doesn't come back when it closes; focus stuck in a place you can't leave; a link or button whose name doesn't say what it does; a form field with no label you can read; an error message that doesn't say what to fix.
+- A "warning": a Tab order that jumps around the page in a confusing way; an icon-only control whose purpose isn't clear.
+- Verdict "fail" when there is any problem. Fill in fields as the journey asks, but submit nothing it doesn't ask you to.`;
 
 // One line of Claude's stream, as a short line for the run's output.
 function describe(event) {
@@ -291,6 +302,7 @@ export async function runPromptCheck({
   dir,
   relTo,
   io,
+  a11y = null,
 }) {
   const rel = (path) =>
     relative(resolve(relTo), resolve(path)).split('\\').join('/');
@@ -330,9 +342,23 @@ export async function runPromptCheck({
   };
 
   const mcpConfig = join(dir, 'mcp.json');
+  // Accessibility scans along the way: for an accessibility journey, or
+  // any prompt in a run with "Scan pages for accessibility" on (`a11y`:
+  // { seenDir }, the run's record of the states already scanned).
+  const scanning = Boolean(check.a11y || a11y);
+  const journeyFile = resolve(join(dir, 'a11y-journey.jsonl'));
   const serverEnv = {
     BASE_URL: env.baseURL,
     SEED_STORAGE_STATE: check.role ? resolve(authFile(check.role, env)) : '',
+    ...(scanning
+      ? {
+          A11Y_JOURNEY: '1',
+          A11Y_JOURNEY_FILE: journeyFile,
+          A11Y_JOURNEY_SEEN_DIR: resolve(
+            a11y?.seenDir ?? join(dir, 'a11y-seen'),
+          ),
+        }
+      : {}),
   };
   await writeFile(
     mcpConfig,
@@ -424,21 +450,25 @@ export async function runPromptCheck({
       rel(join(shotsDir, f)),
     ),
     baselineScreenshots: baselineFiles.map(rel),
+    ...(scanning ? { a11y: await journeyFromFile(journeyFile) } : {}),
   };
   const verdict = answerOf(result);
-  if (verdict?.verdict)
+  if (verdict?.verdict) {
+    const status =
+      verdict.verdict === 'pass'
+        ? 'passed'
+        : verdict.verdict === 'fail'
+          ? 'failed'
+          : 'unsure';
     return {
       ...out,
       verdict: verdict.verdict,
       summary: verdict.summary,
       findings: verdict.findings ?? [],
-      status:
-        verdict.verdict === 'pass'
-          ? 'passed'
-          : verdict.verdict === 'fail'
-            ? 'failed'
-            : 'unsure',
+      // A broken accessibility rule fails the check, whatever Claude said.
+      status: journeyStatus(out.a11y) === 'failed' ? 'failed' : status,
     };
+  }
   return {
     ...out,
     status: io.isStopped() ? 'stopped' : 'error',

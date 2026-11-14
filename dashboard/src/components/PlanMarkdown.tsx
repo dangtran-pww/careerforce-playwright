@@ -15,6 +15,15 @@ const slugify = (text: string) =>
     .trim()
     .replace(/\s+/g, '-');
 
+// For values put inside an attribute: a quote in a link's title or address
+// would otherwise end the attribute early.
+const escapeAttr = (text: string) =>
+  text
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
 const marked = new Marked({
   gfm: true,
   renderer: {
@@ -24,13 +33,14 @@ const marked = new Marked({
     },
     link({ href, title, tokens }) {
       const label = this.parser.parseInline(tokens);
-      const t = title ? ` title="${title}"` : '';
+      const t = title ? ` title="${escapeAttr(title)}"` : '';
+      const url = escapeAttr(href);
       // In-page: scrolls to the prefixed heading (see onClick below; the
       // URL hash belongs to the router).
       if (href.startsWith('#'))
-        return `<a href="${href}" data-heading="${ID_PREFIX}${href.slice(1)}"${t}>${label}</a>`;
+        return `<a href="${url}" data-heading="${escapeAttr(ID_PREFIX + href.slice(1))}"${t}>${label}</a>`;
       if (/^https?:/.test(href))
-        return `<a href="${href}"${t} target="_blank" rel="noreferrer">${label}</a>`;
+        return `<a href="${url}"${t} target="_blank" rel="noreferrer">${label}</a>`;
       // Repo files (other plans, README.md, specs) aren't served: keep the text.
       return `<span${t}>${label}</span>`;
     },
@@ -38,7 +48,7 @@ const marked = new Marked({
 });
 
 // A plan's whole Markdown file, rendered. The plans are this repo's own
-// files, so their HTML is trusted.
+// files, so raw HTML in them is kept; link attributes are still escaped.
 export function PlanMarkdown({ slug }: { slug: string }) {
   const { data, error } = useApi<PlanMarkdownResponse>(
     `/api/plans/${slug}/markdown`,
