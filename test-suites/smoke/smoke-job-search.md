@@ -59,7 +59,6 @@ FL-6); there, JS-2 to JS-5 were JS-1 to JS-4. The old JS-5 (no JavaScript errors
 |---|---|
 | **JS, JF and JL cases** | None. A visitor who isn't logged in. |
 | **SS and MD cases** | The `jobseeker` role: `playwright/.auth/<env>/jobseeker.json`, from `npm run login:manual -- jobseeker`. Job seekers log in with LoginMN. Use a test account, not a person's own account (see [Open questions](#open-questions)). |
-| **Site password gate** | QA and Stage ask for the `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` from `.env` ([one-time setup](../README.md#one-time-setup)). Production has no gate. |
 | **Accounts touched** | SS and MD add saved searches and bookmarks to the job seeker account and remove them again. They never remove anything they didn't add. |
 
 ## Running it
@@ -119,10 +118,14 @@ comparison sites, shown at the end).
 "Page" is the address after the site name, for example `/job-search` means
 `qa.careerforce.link/job-search`.
 
-### Search and results
-
-Not logged in. `tests/smoke/job-search/job-search.spec.ts`. JS-1 is
-checked first: if Job Search doesn't load, the other cases can't pass.
+All the cases are in one table. Their tests are in `tests/smoke/job-search/`:
+JS in `job-search.spec.ts`, JF in `filters.spec.ts`, SS in
+`saved-search.spec.ts` and MD in `dashboard.spec.ts`. JL-1 is a
+[prompt case](#prompt-case-jl-1) with no test code. JS-1 is checked first:
+if Job Search doesn't load, the other cases can't pass. The SS and MD cases
+are tagged `@no-prod` and run on QA and Stage only. The dashboard in the MD
+cases is the job seeker's account page, `/user` (it opens
+`/user/<their user ID>`).
 
 | ID | Test | Page | Steps | Expected result | Required login | Prod |
 |---|---|---|---|---|---|---|
@@ -131,45 +134,15 @@ checked first: if Job Search doesn't load, the other cases can't pass.
 | JS-3 | Jobs have their links | `/job-search?title=nurse` | Look at the first 3 jobs. | Each of the 3 jobs has: **1.** A title. **2.** A "Learn more and apply" link that opens the employer's posting on another site in a new tab. **3.** A "Read more" link to that job. **4.** A short description of the job, not empty. |  | Yes |
 | JS-4 | A job opens on its own | `/job-search?title=nurse` | Click "Read more" on the first job. | **1.** Only that job shows, with the same title. **2.** Its full description shows. |  | Yes |
 | JS-5 | Save search and Bookmark ask to log in | `/job-search?title=nurse` | Don't log in. 1. Click "Bookmark" on the first job, then close the dialog. 2. Click "Save search" (on a phone, open "Filters" first), then close the dialog. | Each dialog is on top of the page, not hidden behind another layer (on a phone, the Filters drawer). **1.** A dialog shows, saying "Create an account or log in to use this feature", with a "Log In or Register" button, a "Continue Browsing" link, and a "DEED staff and partners log in here." link back to this search. **2.** The same dialog shows. |  | Yes |
-
-### Filters
-
-Not logged in. `tests/smoke/job-search/filters.spec.ts`.
-
-| ID | Test | Page | Steps | Expected result | Required login | Prod |
-|---|---|---|---|---|---|---|
-| JF-1 | Two companies | `/job-search?title=nurse` | 1. Search "nurse". 2. In the Company dropdown, filter by the company with the most jobs. 3. Filter by the company with the second most jobs instead. | See [How the filter cases compare results](#how-the-filter-cases-compare-results). **1.** At least 1 job is listed. **2.** The dropdown shows the chosen company, every job listed is from it, and there are no more jobs than in step 1. **3.** The same as step 2 for the second company, and the results differ from step 2's (a different total, or different jobs on the first page). |  | Yes |
-| JF-2 | Two cities | `/job-search?title=nurse` | 1. Search "nurse". 2. In the City dropdown, filter by the city with the most jobs. 3. Filter by the city with the second most jobs instead. | See [How the filter cases compare results](#how-the-filter-cases-compare-results). **1.** At least 1 job is listed. **2.** The dropdown shows the chosen city, every job listed is in it, and there are no more jobs than in step 1. **3.** The same as step 2 for the second city, and the results differ from step 2's (a different total, or different jobs on the first page). |  | Yes |
+| JF-1 | Two companies | `/job-search?title=nurse` | 1. Search "nurse". 2. In the Company dropdown, filter by the company with the most jobs. 3. Filter by the company with the second most jobs instead. | **1.** At least 1 job is listed. **2.** The dropdown shows the chosen company, every job listed is from it, and there are no more jobs than in step 1. **3.** The same as step 2 for the second company, and the results differ from step 2's (a different total, or different jobs on the first page). |  | Yes |
+| JF-2 | Two cities | `/job-search?title=nurse` | 1. Search "nurse". 2. In the City dropdown, filter by the city with the most jobs. 3. Filter by the city with the second most jobs instead. | **1.** At least 1 job is listed. **2.** The dropdown shows the chosen city, every job listed is in it, and there are no more jobs than in step 1. **3.** The same as step 2 for the second city, and the results differ from step 2's (a different total, or different jobs on the first page). |  | Yes |
 | JF-3 | Sort orders | `/job-search?title=nurse` | 1. Search "nurse". 2. Sort by "Job title". 3. Sort by "Company". 4. Sort by "Date posted". | Each sort shows the same number of jobs as the unsorted search, and the Sort dropdown shows the chosen order. Letter case is ignored when comparing. **1.** At least 1 job is listed. **2.** The job titles on the first page are A–Z. **3.** The companies on the first page are A–Z. **4.** The "Posted … ago" labels on the first page go from newest to oldest. |  | Yes |
 | JF-4 | Filters, sort and keyword keep each other | `/job-search?title=nurse` | Use the page's own controls, not the address. 1. Search "nurse". 2. Pick the city with the most jobs in the City dropdown (on a phone, open "Filters" first). 3. Change Sort to "Date posted". 4. Type "nursing assistant" in Keyword and click "Search". | After each step, the address and the form show everything chosen so far, and from step 2 on every job listed is in the chosen city. **1.** `title=nurse`. **2.** Also `loc=<city>`. **3.** Also `sort=date-posted-desc`. **4.** `title=nursing assistant`, with the same city and sort. |  | Yes |
 | JF-5 | Reset clears the search | `/job-search?title=nurse&loc=<city>&sort=date-posted-desc` | Open JF-4's last search and click "Reset". | **1.** The Keyword box is empty. **2.** The City dropdown shows its placeholder ("List of cities"). **3.** Sort shows "Relevance". **4.** At least 1 job is listed. **5.** The address has no `title`, `loc` or `sort` value. |  | Yes |
-
-### Layout
-
-Not logged in. A [prompt case](#prompt-case-jl-1), with no test code.
-
-| ID | Test | Page | Steps | Expected result | Required login | Prod |
-|---|---|---|---|---|---|---|
 | JL-1 | Job Search layout matches the comparison sites | `/job-search` | **Prompt:** [job-search-compare](prompts/job-search-compare.md): Claude compares Job Search with the [comparison sites](#prompt-case-jl-1) at desktop and phone sizes, part by part (on the phone, with the menu and the Filters drawer open). | **1.** No layout or styling difference from any comparison site that looks unintended: no missing, extra or reordered parts, no broken spacing, fonts, colours, icons or images, and nothing cut off, overlapping or scrolling sideways. **2.** Differences that are only content (other jobs, companies, cities, dates or counts) are listed as notes and don't fail the case. **3.** Matching screenshots of each part on each site at each size are saved with the result. |  | Yes |
-
-### Saved searches
-
-Logged in as `jobseeker`. QA and Stage only, desktop and phone. `tests/smoke/job-search/saved-search.spec.ts`, tagged `@no-prod`.
-
-| ID | Test | Page | Steps | Expected result | Required login | Prod |
-|---|---|---|---|---|---|---|
 | SS-1 | Save a search | `/job-search?title=nurse&loc=<city>` | 1. Search "nurse", filter by the city with the most jobs, and click "Save search" (on a phone, open "Filters" first). 2. Name it `Playwright test <timestamp>` and save. 3. Without reloading, open "Jobs for me" → "Saved searches". **Cleanup:** remove the saved search from the dashboard. | **1.** A dialog "Save this search to your dashboard" with a "Name job search" box opens on top of the page, not hidden behind another layer (on a phone, the Filters drawer). **2.** The dialog closes with no error. **3.** The list shows the new name. | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
 | SS-2 | Run a saved search from Jobs for me | `/job-search` | Save a search as in SS-1 first. 1. Open `/job-search` with no search. 2. In "Jobs for me", pick "Saved searches", then the saved name. **Cleanup:** as SS-1. | After step 2, Job Search opens with the saved search: **1.** The address has `title=nurse` and the same `loc`. **2.** The Keyword box shows "nurse". **3.** The City dropdown shows the city. **4.** At least 1 job is listed. | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
 | SS-3 | Limit of 5 saved searches | `/job-search?title=nurse` | 1. Note how many saved searches the account has. 2. Save `Playwright test <timestamp> 1`, `2`, … until it has 5 saved searches. 3. Click "Save search" once more. 4. Try to save a 6th anyway. **Cleanup:** remove every saved search this test added. | **1.** At step 3, the dialog warns "You have already reached the limit for saved jobs." **2.** At step 4, the 6th is refused: either Save can't be used, or an error message says the search wasn't saved. **3.** "Jobs for me" → "Saved searches" and the dashboard still list exactly the same 5, and the 6th name isn't among them. | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
-
-### My Job Search on the dashboard
-
-Logged in as `jobseeker`. QA and Stage only, desktop and phone. `tests/smoke/job-search/dashboard.spec.ts`, tagged `@no-prod`.
-The dashboard is the job seeker's account page, `/user` (it opens
-`/user/<their user ID>`).
-
-| ID | Test | Page | Steps | Expected result | Required login | Prod |
-|---|---|---|---|---|---|---|
 | MD-1 | My Job Search section shows | `/user` | Open the dashboard. | **1.** The "Jobs For Me" section shows its "Saved searches" and "Bookmarked jobs" groups. **2.** Each group lists its items, or says "You have no saved searches." / "You have no saved jobs.". **3.** Each item has a remove ("x") link. | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
 | MD-2 | A saved search opens from the dashboard | `/user` | Save a search as in SS-1 first. 1. Open the dashboard. 2. Click the saved search's name. **Cleanup:** as SS-1. | **1.** The dashboard lists the saved search by its name. **2.** Job Search opens with `title=nurse` and the same `loc`, and at least 1 job. | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
 | MD-3 | Remove a saved search from the dashboard | `/user` | Save a search as in SS-1 first. 1. On the dashboard, click its "x". 2. Reload the dashboard. 3. Open `/job-search` and look in "Jobs for me" → "Saved searches". | **1.** The saved search disappears from the dashboard. **2.** It stays gone after the reload, and every other saved search is still listed. **3.** "Jobs for me" no longer lists it, and still lists every other saved search. | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
@@ -177,20 +150,13 @@ The dashboard is the job seeker's account page, `/user` (it opens
 | MD-5 | Remove a bookmark from the dashboard | `/user` | Bookmark a job as in MD-4 first. 1. On the dashboard, click its "x". 2. Reload the dashboard. 3. Search "nurse" again. | **1.** The job disappears from the dashboard. **2.** It stays gone after the reload. **3.** In the search results, its bookmark icon is back to its "add bookmark" state. | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
 | MD-6 | Un-bookmark from the results | `/job-search?title=nurse` | Bookmark a job as in MD-4 first. 1. Click its bookmark icon again. 2. Open the dashboard. | **1.** The icon goes back to its "add bookmark" state. **2.** The dashboard no longer lists the job. | `jobseeker` | No: saves, bookmarks and removes on the job seeker account |
 
-### How the filter cases compare results
-
-JF-1 and JF-2 open Job Search with no filter, then with filter X, then with
-filter Y, and expect:
-
-- The unfiltered search shows at least 1 job.
-- X and Y each show no more jobs than the unfiltered search.
-- **X and Y show different results:** a different total, or different jobs on
-  the first page.
-
-Exact counts are never checked.
-
 ## Good to know
 
+- **How JF-1 and JF-2 compare results:** they open Job Search with no
+  filter, then with filter X, then with filter Y. The unfiltered search
+  shows at least 1 job, X and Y each show no more jobs than it, and X and Y
+  show different results (a different total, or different jobs on the first
+  page). Exact counts are never checked.
 - **The jobs come from an outside job feed** (CareerOneStop), so no case names
   a job, company or city. They use whatever "nurse" returns: the companies and
   cities with the most jobs at the time, and the first job on the page.

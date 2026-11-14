@@ -106,7 +106,10 @@ Case tables:
   login` and `Prod` when the plan mixes logins or prod-safe and no-prod
   cases. IDs follow Rule 4: a 2–4 capital-letter prefix that no other
   plan uses (grep `test-suites/` first), `-`, then 1, 2, 3… with no
-  repeats. Group cases into several tables by area.
+  repeats. Put every case in **one table** under `## Test cases` (Rule 5):
+  no `###` area headings and no second table. Keep an area's cases next to
+  each other, and put notes they share (spec file, login, tag) in a short
+  paragraph above the table.
 - Steps and Expected result follow Rule 1 exactly: one action or check is
   plain text; several are `1. … 2. …` and `**1.** … **2.** …`, expected
   item N is the result of step N, preconditions go before `1.`,

@@ -250,6 +250,8 @@ the script if it can be checked automatically.
 | 2 | [Prompt cases](#rule-2-prompt-cases) | Yes |
 | 3 | [Parallel plans and prompts](#rule-3-parallel-plans-and-prompts) | Yes |
 | 4 | [Case IDs](#rule-4-case-ids) | Yes |
+| 5 | [One test case table](#rule-5-one-test-case-table) | Yes |
+| 6 | [No site password gate](#rule-6-no-site-password-gate) | Yes |
 
 ### Rule 1: Steps and Expected result cells
 
@@ -437,6 +439,40 @@ alone, so two cases with one ID would mix up their results.
 The script reports an ID in the wrong format, an ID used twice in a plan,
 and a prefix that another plan also uses. It always compares IDs with every
 plan, even when you name only one plan to check.
+
+### Rule 5: One test case table
+
+A plan lists all its cases in one table, under its `## Test cases`
+heading. The cases aren't split into areas with their own `###` headings
+and tables, so a reader finds every case in one place.
+
+- **One table:** every case is a row of the same table, whatever its
+  prefix or login. Keep cases of one area next to each other (all the JS
+  cases, then all the JF cases), and use the `Required login` and `Prod`
+  columns for what differs between them.
+- **Notes go above the table:** what used to sit under an area heading
+  (which spec file holds which prefix, a login or tag that a group of cases
+  share, which case runs first) goes in a short paragraph between
+  `## Test cases` and the table.
+- **Shared explanations go elsewhere:** something several cases refer to
+  (e.g. how the filter cases compare results) goes in "Good to know" or
+  another `##` section, not in a `###` under Test cases.
+- **Several prefixes are still fine** (Rule 4): `JS-1` and `SS-1` can sit
+  in the same table.
+
+The script reports a plan with more than one case table (a table whose
+first column is `ID`), and a `###` heading inside `## Test cases`.
+
+### Rule 6: No site password gate
+
+A plan doesn't mention the site password gate: the browser "Sign in" pop-up
+that QA and Stage show before any page, or its `BASIC_AUTH_USER` /
+`BASIC_AUTH_PASSWORD` in `.env`. Every plan and test gets past it the same
+way, and [One-time setup](#one-time-setup) already explains it, so a plan's
+Login section covers only the site login and roles the plan itself uses.
+
+The script reports a plan that mentions "password gate", "Basic Auth" or
+`BASIC_AUTH`.
 
 ### Checking a plan
 

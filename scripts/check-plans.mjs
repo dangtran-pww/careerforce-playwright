@@ -26,19 +26,21 @@ function cells(line) {
 }
 
 // The plan's text and lines, and every row of its case tables (tables with
-// an ID column) as { line, id, cells: { <column header>: text } }.
+// an ID column) as { line, id, table, cells: { <column header>: text } },
+// where table is the line of that table's header.
 function readPlan(file) {
   const text = readFileSync(file, 'utf8');
   const lines = text.split('\n');
   const cases = [];
   let header = null;
+  let table = null;
   lines.forEach((l, i) => {
     if (!l.startsWith('|')) return void (header = null);
     const row = cells(l);
-    if (!header) return void (header = row[0] === 'ID' ? row : []);
+    if (!header) return void ((header = row[0] === 'ID' ? row : []), (table = i + 1));
     if (!header.length || /^\|[\s:|-]+$/.test(l)) return; // the |---|---| row
     const byColumn = Object.fromEntries(header.map((h, c) => [h, row[c] ?? '']));
-    cases.push({ line: i + 1, id: row[0], cells: byColumn });
+    cases.push({ line: i + 1, id: row[0], table, cells: byColumn });
   });
   return { file, text, lines, cases };
 }
@@ -188,6 +190,35 @@ const RULES = [
         const other = elsewhere.find((p) => p.cases.some((o) => CASE_ID.exec(o.id)?.[1] === m[1]));
         if (other) add(`The prefix ${m[1]} is also used in ${other.file}. Each prefix belongs to one plan; pick one no other plan uses.`);
       }
+      return problems;
+    },
+  },
+  {
+    id: 5,
+    name: 'One test case table',
+    check(plan) {
+      const problems = [];
+      const tables = [...new Set(plan.cases.map((c) => c.table))];
+      for (const line of tables.slice(1))
+        problems.push({ line, message: `A second case table (the first is on line ${tables[0]}). Put every case in one table under "## Test cases".` });
+      let inCases = false;
+      plan.lines.forEach((l, i) => {
+        if (/^## /.test(l)) inCases = /^## Test cases\s*$/.test(l);
+        else if (inCases && /^### /.test(l))
+          problems.push({ line: i + 1, message: `"${l.slice(4)}" splits the test cases into areas. Remove the heading and move its notes above the table, or to another ## section.` });
+      });
+      return problems;
+    },
+  },
+  {
+    id: 6,
+    name: 'No site password gate',
+    check(plan) {
+      const problems = [];
+      plan.lines.forEach((l, i) => {
+        if (/password gate|basic auth|BASIC_AUTH/i.test(l))
+          problems.push({ line: i + 1, message: 'Mentions the site password gate. Remove it: the README\'s one-time setup covers it for every plan.' });
+      });
       return problems;
     },
   },

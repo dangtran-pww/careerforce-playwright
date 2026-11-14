@@ -78,7 +78,15 @@ From the KB (`docs/kb/events/`, `docs/kb/services/`, `docs/kb/job-seeker-tools/`
 - **Services tab** `/user/<uid>/services`: staff only, lists the job seeker's service records; marking an event attendee attended creates one automatically, copying the event's locations, facilitator and services.
 - **Emails** (confirmation, cancellation, waitlist, occurrence cancelled, updated) are sent by the external Registration API from its own templates, not by Drupal.
 
-## Visitor
+## Test cases
+
+All the cases are in one table, one area after another: what a visitor sees
+(EP), an admin scheduling an event (EA), a job seeker registering and
+cancelling (ER), and attendance with its service record (ES). The EP cases
+need no login. EA logs in as `admin`, ER as `jobseeker`, and ES as both; see
+"Login and test data". EA-3 runs last, in `finally`.
+
+EP-4 to EP-7 were LV-2 and FL-1 to FL-3 in [smoke-public-site.md](smoke-public-site.md), and moved here so all the Smoke events checks are in one plan.
 
 | ID | Test | Page | Steps | Expected result | Required login | Prod |
 |---|---|---|---|---|---|---|
@@ -89,33 +97,16 @@ From the KB (`docs/kb/events/`, `docs/kb/services/`, `docs/kb/job-seeker-tools/`
 | EP-5 | Events filters: Online vs In Person | `/education-and-training/events` | See [Filters](#filters). 1. Open the page with no filter. 2. Filter by Format "Online". 3. Filter by "In Person" instead. | **1.** At least 1 event is listed. **2.** "Online" stays ticked, with no more events than in step 1. **3.** The same for "In Person", and the results differ from step 2's (a different total, or different events on the first page). | | Yes |
 | EP-6 | Events filters: two topics | `/education-and-training/events` | See [Filters](#filters). 1. Open the page with no filter. 2. Filter by Topic "Resumes". 3. Filter by "Job Search" instead. | **1.** At least 1 event is listed. **2.** "Resumes" stays ticked, with no more events than in step 1. **3.** The same for "Job Search", and the results differ from step 2's (a different total, or different events on the first page). | | Yes |
 | EP-7 | Events filters: two event types | `/education-and-training/events` | See [Filters](#filters). 1. Open the page with no filter. 2. Filter by Event Type "Workshop". 3. Filter by "Job Club" instead. | **1.** At least 1 event is listed. **2.** "Workshop" stays ticked, with no more events than in step 1. **3.** The same for "Job Club", and the results differ from step 2's (a different total, or different events on the first page). | | Yes |
-
-EP-4 to EP-7 were LV-2 and FL-1 to FL-3 in [smoke-public-site.md](smoke-public-site.md), and moved here so all the Smoke events checks are in one plan.
-
-### Filters
-
-EP-5 to EP-7 check that a filter actually filters, the same way as the FL cases in [smoke-public-site.md → Filters](smoke-public-site.md#filters). Each opens the Events page with no filter, then with filter X, then with filter Y, and expects at least 1 event unfiltered, no more events for X or Y than unfiltered, and X and Y to show different results (a different total, or different events on the first page). An empty result is fine, and so is a filter that matches everything (on QA, every event is In Person); only X and Y showing the very same results fails. Exact counts are never checked. Every filter is in the page address (for example `?ff[virtual]=virtual`, `ft[791]=791`, `fy[785]=785`), so the tests open that address rather than clicking the form.
-
-## Admin: schedule an event
-
-| ID | Test | Page | Steps | Expected result | Required login | Prod |
-|---|---|---|---|---|---|---|
 | EA-1 | Create an event catalog item | `/admin/content/add/event-catalog-item` | 1. Fill in the catalog item as in "Login and test data" and click "Save". 2. Open `/admin/content/events/event-catalog-item?n=<name>`. **Cleanup:** EA-3. | **1.** A status message confirms the save, with no error message. **2.** The catalog item is listed once, Active, with a "Schedule" operation. | `admin` | No: creates an event catalog item |
 | EA-2 | Schedule a short recurring session | `/happenings/catalog-item/<id>/schedule` | Use the catalog item from EA-1. 1. Fill in session S as in "Login and test data", click "Preview Occurrence Dates", close the preview, and click "Save". 2. Open `/admin/content/events/event-session?label=<name>`, then the session's page. 3. As a visitor, search the Events page for the name (`?fq=<name>`). **Cleanup:** EA-3. | **1.** The preview lists one weekday from the start date to the Until date per line, with no Saturday or Sunday; after saving, no error message shows. **2.** The list shows the session once, Active, "Weekly on Monday, Tuesday, Wednesday, Thursday or Friday", with 10 seats; its page lists one occurrence for each of those weekdays. **3.** Every occurrence is listed, each linking to `/events/event-occurrence/<id>`. | `admin` | No: creates events visitors can see |
 | EA-3 | Remove the test events | `/admin/content/events/event-session?label=<name>` | Runs last, in `finally`. 1. Cancel session S: tick it and run "Cancel Session" (it has had registrations, so it can't be deleted). 2. Edit the catalog item and set its Status to Inactive. 3. As a visitor, search the Events page for the name. | **1.** A status message confirms the action, and the session's Status is Cancelled. **2.** A status message confirms the save. **3.** No event with the name is listed. | `admin` | No: cancels test events |
-
-## Job seeker: register and cancel
-
-| ID | Test | Page | Steps | Expected result | Required login | Prod |
-|---|---|---|---|---|---|---|
 | ER-1 | Register for an event | the 1st occurrence of S | 1. Open the occurrence and click "Register". 2. Click "Complete Registration". 3. Open the occurrence again. 4. Open the dashboard `/user/<uid>` and My Events & Appointments `/user/<uid>/events_appointments`. **Cleanup:** ER-2. | **1.** `/events/event-occurrence/<id>/registration` opens, titled "Confirm Your Registration", with "Complete Registration". **2.** `/events/event-occurrence/<id>/registration-success` opens, with no error message. **3.** The page shows "You are registered for this event." and "Cancel Registration", and no "Register". **4.** Both list the occurrence under upcoming events with Status "Registered". | `jobseeker` | No: registers for an event |
 | ER-2 | Cancel the registration | the 1st occurrence of S | Use the registration from ER-1. 1. On the occurrence's page, click "Cancel Registration". 2. Click "Yes". 3. Open the dashboard `/user/<uid>`. 4. Open the occurrence's page. | **1.** A dialog shows "Cancel Event Registration" and "Are you sure you would like to cancel your event registration?" **2.** "Your registration has been cancelled." shows on `/user/<uid>/events_appointments`, where the occurrence has Status "Canceled". **3.** The dashboard's events block no longer lists the occurrence. **4.** "Register" shows again, and "You are registered for this event." doesn't. | `jobseeker` | No: cancels a registration |
-
-## Attendance and service record
-
-| ID | Test | Page | Steps | Expected result | Required login | Prod |
-|---|---|---|---|---|---|---|
 | ES-1 | Mark an attendee attended and a service record appears | the 2nd occurrence of S | The job seeker isn't registered for it. 1. As the admin, on the occurrence's Attendees tab, click "+ Add Attendee", type the job seeker's email, pick them from the suggestions, choose "In Person", and click "Add Attendee". 2. Click "Mark Attended" on the job seeker's row. 3. As the job seeker, open My Events & Appointments. 4. As the admin, open the job seeker's Services tab `/user/<uid>/services`. **Cleanup:** click "Undo Attendance" (expect "Attendance has been undone and the attendee is now Registered. Service record deleted."), then "Mark Canceled". | **1.** The job seeker is listed with Status "Registered" and Format "In Person". **2.** "Attendance marked successfully. Service record created." shows, and the row has Status "Attended". **3.** The occurrence is listed with Status "Attended". **4.** A service record for the occurrence's date is listed. | `admin`, `jobseeker` | No: registers a job seeker and creates a service record |
+
+## Filters
+
+EP-5 to EP-7 check that a filter actually filters, the same way as the FL cases in [smoke-public-site.md → Filters](smoke-public-site.md#filters). Each opens the Events page with no filter, then with filter X, then with filter Y, and expects at least 1 event unfiltered, no more events for X or Y than unfiltered, and X and Y to show different results (a different total, or different events on the first page). An empty result is fine, and so is a filter that matches everything (on QA, every event is In Person); only X and Y showing the very same results fails. Exact counts are never checked. Every filter is in the page address (for example `?ff[virtual]=virtual`, `ft[791]=791`, `fy[785]=785`), so the tests open that address rather than clicking the form.
 
 ## Not covered
 

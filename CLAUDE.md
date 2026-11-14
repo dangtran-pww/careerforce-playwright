@@ -32,6 +32,11 @@ Whenever you write or change a plan in `test-suites/`, follow every rule in
    capital letters, `-`, a number from 1 (`SS-1`). A prefix belongs to one
    plan only; grep `test-suites/` before picking one, and a new case takes
    the next number.
+5. **One test case table:** all of a plan's cases are in one table under
+   `## Test cases`, with no `###` area headings. Notes that a group of
+   cases share go in a paragraph above the table.
+6. **No site password gate:** plans don't mention QA and Stage's Basic Auth
+   pop-up or `BASIC_AUTH_*`; the README's one-time setup covers it.
 
 Then run `npm run check:plans` and fix every problem it reports in the
 plans you touched before you finish.

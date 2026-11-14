@@ -33,7 +33,6 @@ RS-3 are E1, AX-1 to AX-4 are E2, and AX-5 and AX-6 are E3. PO-9 is added.
 | | |
 |---|---|
 | **Role** | None. A visitor who isn't logged in. No saved session is loaded. |
-| **Site password gate** | QA and Stage ask for the `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` from `.env` ([one-time setup](../README.md#one-time-setup)). Production has no gate. |
 | **Accounts touched** | None. |
 
 ## Running it
@@ -64,9 +63,17 @@ Add `--ui` to [watch it run](../README.md#watching-a-run), or put
 Register" button, a "Continue Browsing" link and a "DEED staff and partners
 log in here." link.
 
-### One job on its own
+The cases are in one table, one area after another:
 
-`tests/functional/job-search/posting.spec.ts`
+- **PO (one job on its own):** `tests/functional/job-search/posting.spec.ts`.
+- **RS (at phone width):** `tests/functional/job-search/responsive.spec.ts`.
+  Each case sets the browser to 390 × 844 pixels and checks that no page in
+  it scrolls sideways.
+- **AX (keyboard and accessibility):**
+  `tests/functional/job-search/accessibility.spec.ts`. Keyboard cases use
+  only Tab, Shift+Tab, Enter, Space, Esc and the arrow keys: no mouse
+  clicks. "Focus is visible" means the focused control shows an outline,
+  ring or other change that isn't there when it isn't focused.
 
 | ID | Test | Page | Steps | Expected result |
 |---|---|---|---|---|
@@ -79,27 +86,9 @@ log in here." link.
 | PO-7 | Save search asks a visitor to log in | `/job-search?title=nurse` | Same as PO-6 with "Save search". | Same as PO-6, with focus going back to "Save search". |
 | PO-8 | Customize my search asks a visitor to log in | `/job-search?title=nurse` | Same as PO-6 with "Customize my search" in the Jobs for me block. | Same as PO-6, with focus going back to "Customize my search". |
 | PO-9 | The dialog's login links come back to this search | `/job-search?title=nurse` | Don't log in, and don't go further than the first page. 1. Open the login dialog from the first job's bookmark icon and look where "Log In or Register" and "DEED staff and partners log in here." go (their link, or the address the browser is sent to). 2. Do the same from "Save search". | Each time, "DEED staff and partners log in here." leads to this site's `/user/login`, with a return address back to this search, and "Log In or Register" leads to the login page (LoginMN, or this site's `/user/login`) with a return address back to this search (`/job-search?title=nurse`), followed by: **1.** `#bookmark[<that job's ID>]` from the bookmark icon. **2.** `#save-search` from "Save search". |
-
-### At phone width
-
-`tests/functional/job-search/responsive.spec.ts`. Each case sets the browser
-to 390 × 844 pixels and checks that no page in it scrolls sideways.
-
-| ID | Test | Page | Steps | Expected result |
-|---|---|---|---|---|
 | RS-1 | Search at phone width | `/job-search` | 1. Type "nurse" in Keyword and "Saint Paul, MN" in Location. 2. Search. | No sideways scrolling and no text or button cut off. **1.** The form fits the width. **2.** The address has `title=nurse` and `location[text]=Saint Paul, MN`, at least 1 job is listed, and the form, the results and every job's links fit the width. |
 | RS-2 | Company filter at phone width | `/job-search?title=nurse` | 1. Open "Filters". 2. Pick the company with the most jobs. 3. Open "Filters" again and clear the company. | No sideways scrolling with the drawer open or closed. **1.** The "Filters" button opens the drawer, and the Company and City dropdowns and "Save search" are in it and can be used. **2.** With the filter, every job listed shows that company. **3.** After clearing, the original total is back. |
 | RS-3 | The login dialog at phone width | `/job-search?title=nurse` | 1. Open the login dialog from the first job's bookmark icon and close it. 2. Open "Filters", click "Save search", and close the dialog. 3. Open the first job's "Read more". | Each time the dialog fits the screen: its text, its three links and its close button are all visible without sideways scrolling, and it is on top of the drawer, not behind it. It closes and leaves the page usable. **1.** The dialog from the bookmark icon fits and closes. **2.** The dialog from "Save search" fits and closes. **3.** The job on its own fits the width too. |
-
-### Keyboard and accessibility
-
-`tests/functional/job-search/accessibility.spec.ts`. Keyboard cases use only
-Tab, Shift+Tab, Enter, Space, Esc and the arrow keys: no mouse clicks.
-"Focus is visible" means the focused control shows an outline, ring or
-other change that isn't there when it isn't focused.
-
-| ID | Test | Page | Steps | Expected result |
-|---|---|---|---|---|
 | AX-1 | Search with the keyboard only | `/job-search` | 1. From the top of the page, Tab to Keyword and type "nurse". 2. Tab to Location and type "Saint Paul, MN". 3. Tab to Distance and pick "10 miles" with the arrow keys. 4. Tab to "Search" and press Enter. | Every control is reached by Tab, in the order Keyword, Location, Distance, Search, and focus is visible at every stop. **1.** A "Skip to main content" link (or similar) is the first stop, then Keyword. **2.** The next stop is Location. **3.** The next stop is Distance (with only the Location suggestions, if open, between them). **4.** The next stop is Search, and the search runs: the address has `title=nurse`, `location[text]=Saint Paul, MN` and `radius=10`, and jobs are listed. |
 | AX-2 | Change the sort with the keyboard only | `/job-search?title=nurse` | 1. Tab to the Sort dropdown. 2. Choose "Job title" with the keyboard (open it with Space or Alt+Down, move with the arrows, confirm with Enter). | **1.** Focus is visible on the dropdown. **2.** Moving through the options doesn't reload the page until the choice is confirmed. After confirming, the address has `sort=job-title-asc` and the dropdown shows "Job title". |
 | AX-3 | Open and close the login dialog with the keyboard only | `/job-search?title=nurse` | 1. Tab to the first job's bookmark icon and press Enter. 2. Tab through the dialog until focus comes back to where it started. 3. Press Esc. 4. Do steps 1 and 2 again with Space instead of Enter. 5. Close with the dialog's close button (Tab to it, press Enter). | **1.** Enter opens the dialog, and focus moves into it. **2.** Tab stays inside the dialog (it goes round its controls, not to the page behind), and focus is visible on every control in it. **3.** Esc closes it, and focus goes back to the bookmark icon. **4.** Space opens it too, focus moves into it, and Tab stays inside it as in step 2. **5.** The close button closes it, and focus goes back to the bookmark icon. |

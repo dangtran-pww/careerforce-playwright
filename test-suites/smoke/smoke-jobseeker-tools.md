@@ -45,25 +45,24 @@ On Production the no-prod cases are left out whatever the command.
 | **`jobseeker`** | `playwright/.auth/<env>/jobseeker.json`, for JT-1 to JT-5. |
 | **Environments** | JT-6 to JT-8: QA, Stage and Production. JT-1 to JT-5: QA and Stage only. |
 
-## Visitor
+## Test cases
+
+JT-6 to JT-8 run as a visitor who isn't logged in. JT-1 to JT-5 log in as
+`jobseeker` and change (or may change) that account, so they run on QA and
+Stage only.
 
 | ID | Test | Page | Steps | Expected result | Required login | Prod |
 |---|---|---|---|---|---|---|
 | JT-6 | Skills Matcher gives results | `/occupations/skills_matcher` | 1. Answer the 10 skill groups on the first page. 2. Click "Continue" until the last page. 3. Submit. | A "Matching Careers By My Skills" results page shows. | | Yes |
 | JT-7 | Interest Profiler gives results | `/occupations/interest_profiler` | 1. On each page, answer every question and click "Continue" (60 questions in all). 2. On the last page, submit. | An "Interest Assessment Results" page shows. | | Yes |
 | JT-8 | Employment Readiness Assessment opens | `/employment-readiness/take` | Open the page. | **1.** The page title "Employment Readiness Assessment" shows. **2.** No login is needed. | | Yes |
-
-## Job seeker
-
-| ID | Test | Page | Steps | Expected result | Required login | Prod |
-|---|---|---|---|---|---|---|
 | JT-1 | Skills Matcher: add a matched career to goals | `/occupations/skills_matcher` | Source checklist: "compare skills and add to goals". 1. Answer the skills and submit, as in JT-6. 2. On the results, click "Add to goals" (or similar) on the first career. 3. Open the dashboard. **Cleanup:** JT-2. | **1.** The results page shows. **2.** A confirmation shows. **3.** The career is listed in the dashboard's goals section. | `jobseeker` | No: adds a career to the job seeker's goals |
 | JT-2 | Remove a career from goals | the dashboard | On the dashboard, remove the career added in JT-1 from the goals section. | The career is no longer listed. | `jobseeker` | No: changes the job seeker's goals |
 | JT-3 | Interest Profiler as a job seeker | `/occupations/interest_profiler` | Confirm during generation whether results are saved to the account. 1. Answer every question and submit, as in JT-7. 2. Open the dashboard. | **1.** An "Interest Assessment Results" page shows. **2.** If results are saved to the account, they show on the dashboard. | `jobseeker` | No: may save results on the job seeker account |
 | JT-4 | Employment Readiness Assessment as a job seeker | `/employment-readiness/take` | JT-8 only checks the page opens; this completes it. 1. Answer every question and submit. 2. Open the dashboard. | **1.** A results page shows. **2.** If results are saved to the account, they show on the dashboard. | `jobseeker` | No: may save results on the job seeker account |
 | JT-5 | Save a career from Explore Careers | `/explore/careers` | The logged-in half of the checklist's §20 flow (the visitor half needs LoginMN). 1. Search "Nursing" and open a career. 2. Click Save / Add to goals, then open the dashboard. **Cleanup:** remove the career in `finally`. | **1.** The career page opens. **2.** The career is listed in the dashboard's goals. | `jobseeker` | No: saves a career on the job seeker account |
 
-Good to know:
+## Good to know
 
 - **The Skills Matcher needs only 10 answers** (all on the first page), but
   Submit is only on the last page, so you still click "Continue" to get

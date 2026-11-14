@@ -133,31 +133,20 @@ From the source (`drupal/autologout` 2.0.3, `config/sync/autologout.*`,
 
 ## Test cases
 
-### Settings on the page
-
-Read-only. `tests/smoke/auto-logout/settings.spec.ts`.
+AO-1 and AO-2 only read the page's settings, in
+`tests/smoke/auto-logout/settings.spec.ts`. AO-3 to AO-5 check the warning,
+in `tests/smoke/auto-logout/warning.spec.ts`: before opening the page,
+install Playwright's clock on the page and block the logout addresses (see
+Scope), and don't move the mouse or type until the warning shows. AO-6
+checks what a visitor sees after a logout.
 
 | ID | Test | Page | Steps | Expected result | Required login | Prod |
 |---|---|---|---|---|---|---|
 | AO-1 | Admin pages carry the 11 + 4 minute settings | `/admin/reports/status`, `/user` | Read the settings from the page's `drupalSettings.autologout`, then go to `about:blank` straight away. 1. Open the status report. 2. Open the account page. | Each step: **1.** `timeout` is 660000 (11 minutes), `timeout_padding` is 240000 (4 minutes), `no_dialog` and `disable_buttons` are false, `refresh_only` is false, `title` is "CareerForce Alert", `yes_button` is "Yes", `no_button` is "No", and `redirect_url` starts with `/user/login?` and has `autologout_timeout=1`. **2.** The same values, and `redirect_url` has `destination=/user/<the admin's user ID>`. | `admin` | Yes |
 | AO-2 | Job seeker pages carry the same settings | `/user`, `/job-search` | Read as in AO-1. 1. Open the dashboard. 2. Open Job Search. | **1.** `timeout` is 660000 and `timeout_padding` is 240000, with the same dialog values as AO-1. **2.** The same values. | `jobseeker` | Yes |
-
-### The warning
-
-`tests/smoke/auto-logout/warning.spec.ts`. Before opening the page:
-install Playwright's clock on the page, and block the logout addresses
-(see Scope). Don't move the mouse or type until the warning shows.
-
-| ID | Test | Page | Steps | Expected result | Required login | Prod |
-|---|---|---|---|---|---|---|
 | AO-3 | Admin: warning at 11 minutes, Yes keeps the session | `/admin/reports/status` | 1. Open the page and advance its clock by 10 minutes 50 seconds. 2. Advance it 15 seconds more (to 11:05), then pause it. 3. Click "Yes". 4. Reload the page. | No request to a logout address is sent at any step. **1.** No warning shows. **2.** A modal dialog titled "CareerForce Alert" shows the message "We are about to log you out for inactivity. If we do, you will lose any unsaved work. Do you need more time?" with "Yes" and "No" buttons. **3.** The dialog closes, and a request to `/autologout_ajax_set_last` succeeds (HTTP 200). **4.** The status report still shows (no login page), so the session is still valid. | `admin` | Yes |
 | AO-4 | Job seeker: warning at 11 minutes, Yes keeps the session | `/user` | As AO-3, on the dashboard. 1. Open the page and advance its clock by 10 minutes 50 seconds. 2. Advance it 15 seconds more (to 11:05), then pause it. 3. Click "Yes". 4. Reload the page. | No request to a logout address is sent at any step. **1.** No warning shows. **2.** The "CareerForce Alert" dialog shows with the same message and buttons as AO-3. **3.** The dialog closes, and a request to `/autologout_ajax_set_last` succeeds (HTTP 200). **4.** The dashboard still shows (no login page). | `jobseeker` | Yes |
 | AO-5 | No, or no answer, asks to log out | `/admin/reports/status` | The logout addresses are blocked, so the session isn't really ended. 1. Open the page, advance its clock to 11:05 and click "No". 2. Open the page again in a new page with a fresh clock, advance it to 11:05, then advance it 4 minutes more (to 15:05) without answering. 3. Open `/admin/reports/status` again. | **1.** The dialog closes and the page sends one POST to `/autologout_ajax_logout` (blocked by the test). **2.** The dialog closes by itself and the page sends one POST to `/autologout_ajax_logout` (blocked). **3.** The status report shows: the session is still valid. | `admin` | Yes |
-
-### After a logout
-
-| ID | Test | Page | Steps | Expected result | Required login | Prod |
-|---|---|---|---|---|---|---|
 | AO-6 | Visitors: the inactivity message, and no timer | `/user/login` | Don't log in. 1. Open `/user/login`. 2. Open `/user/login?destination=/user&autologout_timeout=1` (the address a logged-out page goes to). | **1.** The page has no `drupalSettings.autologout` and shows no "logged out due to inactivity" message. **2.** A status message says "You have been logged out due to inactivity.", and the login page shows. | | Yes |
 
 ## Not covered

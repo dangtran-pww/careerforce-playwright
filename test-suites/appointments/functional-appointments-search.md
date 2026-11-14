@@ -63,7 +63,6 @@ showed on 2026-11-12.
 | | |
 |---|---|
 | **Role** | None. A visitor who isn't logged in. No saved session is loaded. |
-| **Site password gate** | QA and Stage ask for the `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` from `.env` ([one-time setup](../README.md#one-time-setup)). Production has no gate. |
 | **Accounts touched** | None. AE-1 follows a time button to the site's "Log In or Register" page and stops there. Nothing is booked. |
 
 ## Running it
@@ -312,9 +311,27 @@ are calendar days from D. Counts are never compared with a number written
 here; a filtered day is compared with the same day unfiltered, read in the
 same test.
 
-### First load and results
+The cases are in one table, one area after another. Their tests are in
+`tests/functional/appointments/`:
 
-`tests/functional/appointments/search.spec.ts`
+- **AQ (first load and results):** `search.spec.ts`.
+- **AW (week strip and the booking window):** `week-strip.spec.ts`.
+- **AF (filters):** `filters.spec.ts`. Each filter is used through the
+  page's form, then compared with the same values opened by the address.
+- **AH (what the search hides):** `hidden-slots.spec.ts`. A visitor can't
+  tell a booked, Draft or Cancelled slot from an open one (every booking
+  address sends a visitor to the login page), so these cases use slots the
+  team names per environment.
+- **AU (the address):** `search-address.spec.ts`. AU-3's values are in
+  [Test data](#au-3-values).
+- **AE (where a time leads, and links to the search):** `entry-points.spec.ts`.
+- **APW (at phone width):** `search-responsive.spec.ts`. Each case sets the
+  browser to 390 × 844 pixels and checks that no page in it scrolls
+  sideways.
+- **AK (keyboard and accessibility):** `search-accessibility.spec.ts`.
+  Keyboard cases use only Tab, Shift+Tab, Enter, Space, Esc and the arrow
+  keys. "Focus is visible" means the focused control shows an outline, ring
+  or other change that isn't there when it isn't focused.
 
 | ID | Test | Page | Steps | Expected result |
 |---|---|---|---|---|
@@ -323,13 +340,6 @@ same test.
 | AQ-3 | Order, and one button per time | each linked day of the strip, this week and next | Open each day that has times and read every card. | On every day: **1.** Each location has one card. **2.** In each card the times are earliest first, and no two have the same time (several seats at one time show as one). **3.** No booking address appears twice on the page. **4.** With no location chosen, the cards are in alphabetical order of their names. |
 | AQ-4 | Several seats at one time show as one time | the environment's time with several seats | Open its day (skipped with a reason where none is known). | **1.** Its location's card has one time button for that time. **2.** The button lists every format offered by any of its seats (for example "online phone in person" when one seat is online and another phone and in person). |
 | AQ-5 | A day the strip marks as empty | the day in the strip marked empty | Click it (skipped with a reason if no linked day is marked). | **1.** The address has `start=<that day>` and the heading names it. **2.** "There are no appointments available on this day. Try adjusting your filters or selecting another day." shows, with no card. **3.** The filters and the strip are still there and can be used. |
-
-### Week strip and the booking window
-
-`tests/functional/appointments/week-strip.spec.ts`
-
-| ID | Test | Page | Steps | Expected result |
-|---|---|---|---|---|
 | AW-1 | Picking a day | `/connect-careerforce/schedule-an-appointment` | 1. Click the first linked day in the strip. 2. Click today ("Today"), if today is still a link. | **1.** The address has `start=<that day>`; the heading is "Available appointments for <that day>"; that day is now the selected day (not a link, `aria-current="date"`), and today is a link; every time shows that day's date. **2.** Today is selected again and the heading names today. |
 | AW-2 | Next Week and Previous Week | `/connect-careerforce/schedule-an-appointment` | Runs while Next Week is a link on first load (always on a weekday). 1. Click "Next Week". 2. Click "Previous Week". | **1.** The address has `start=<next Monday>`; the strip shows next Monday to Friday with Monday selected, and the month heading names the month (or both months when the week spans two); "Previous Week" is a link; every time shows Monday's date. **2.** The strip shows this week again, with a day that isn't before today selected (on QA, the Friday); "Previous Week" is disabled. |
 | AW-3 | The strip stops at the booking window | `/connect-careerforce/schedule-an-appointment` | 1. Read "Next Week" on first load. 2. Click "Next Week" while it is a link, and read it on each week reached. | **1.** "Next Week" is a link when next Monday is no more than 8 days after D, and "Next Week, disabled" (not a link) otherwise. **2.** Every week reached starts on a Monday no more than 8 days after D, and the last one has "Next Week, disabled". |
@@ -339,14 +349,6 @@ same test.
 | AW-7 | On a weekend the search opens on the next Monday | `/connect-careerforce/schedule-an-appointment` | Open the search with nothing after it, on a Saturday or Sunday in America/Chicago (skipped with that reason on a weekday). | **1.** The strip shows next Monday to Friday, with Monday selected. **2.** The heading is "Available appointments for <next Monday>", not the Saturday or Sunday. **3.** Every time shows Monday's date. |
 | AW-8 | A weekend date by the address opens the next Monday | `?start=<next Saturday>`, then `?start=<next Sunday>` | Skipped if the next Monday is more than 8 days after D. 1. Open the Saturday by the address. 2. Open the Sunday by the address. | Each time the page shows the following Monday, as on a weekend with no date (AW-7): that Monday's week in the strip with Monday selected, the heading "Available appointments for <that Monday>", and that Monday's times or the empty message. **1.** For the Saturday. **2.** For the Sunday. |
 | AW-9 | "No results on this date" tells the truth | each linked day of the strip, this week and next | 1. Read each linked day's name, then open it. 2. Add `format[online]=online` (or the format the day in "Day with no time in one format" lacks) and do the same. | **1.** A day named "<date>. No results on this date." shows the empty message, and a day named without it shows at least 1 time. **2.** The same holds with the filter. |
-
-### Filters
-
-`tests/functional/appointments/filters.spec.ts`. Each filter is used through
-the page's form, then compared with the same values opened by the address.
-
-| ID | Test | Page | Steps | Expected result |
-|---|---|---|---|---|
 | AF-1 | Each format through the form | a day with a time that lacks the format | One test per format (Online, Phone, In person), on a day that has a time without that format (else the reference day): note the day's times, tick the format and click "Filter". | **1.** The address keeps `start=<the day>` and adds `format[<format>]=<format>`; the box stays ticked and the day stays selected. **2.** Every time lists that format; every time of the unfiltered day that lists it is still there; the ones that don't are gone. **3.** The times are the same as opening that address. |
 | AF-2 | Formats combined | the day with 2 or more locations | 1. Tick Online and Phone and click "Filter". 2. Tick all three and click "Filter". | **1.** Both stay ticked; every time lists online or phone, and the times are exactly those of the Online-only and Phone-only results together. **2.** The times are the same as the unfiltered day. |
 | AF-3 | A format with no time that day | the day with no time in one format | Tick that format and click "Filter" (skipped with a reason if there is no such day). | **1.** The empty message shows, with no card. **2.** The format stays ticked and the day stays selected. **3.** The strip's days are named "No results on this date" by the filtered results (as in AW-9). |
@@ -356,33 +358,30 @@ the page's form, then compared with the same values opened by the address.
 | AF-7 | "In person" with a far location | the day of a time that lists in person and phone or online | Tick In person, type a far city ("55437" for Duluth), choose "10 mi" and click "Filter" (skipped with a reason if there is no such day; on QA, 2026-11-19 Duluth 1:00 pm). | See Open questions. **1.** No time from a location more than about 10 miles from the city is listed, even when it also offers phone or online: a visitor who asks for in-person times near them isn't offered one far away. **2.** Either the empty message or nearby times show, and In person stays ticked. |
 | AF-8 | The filters, the day and the week stay together | the reference day | 1. Tick In person, type "55437", choose "100 mi" and click "Filter". 2. Click another linked day in the strip. 3. Click "Next Week" (skipped if disabled). 4. Click "Previous Week". | After every step the address and the form hold everything chosen so far, every time lists in person, and the times are the same as opening an address with only those values. **1.** The day, `format[in_person]`, the location and 100 mi. **2.** The new day, with the filters kept. **3.** Next Monday, with the filters kept. **4.** A day of this week, with the filters kept. |
 | AF-9 | Reset | `?start=<reference day>&format[in_person]=in_person&location[loc][text]=55437&location[radius]=160.93` | Click "Reset" (on a phone, the "Reset" button below "Filters"). | **1.** The address is `/connect-careerforce/schedule-an-appointment` with nothing after it. **2.** Location is empty, Distance From shows "40 mi", nothing is ticked, and "Reset" is gone. **3.** The page is the same as on first load (AQ-1): today selected and today's times. |
-
-### What the search hides
-
-`tests/functional/appointments/hidden-slots.spec.ts`. A visitor can't tell
-a booked, Draft or Cancelled slot from an open one (every booking address
-sends a visitor to the login page), so these cases use slots the team names
-per environment.
-
-| ID | Test | Page | Steps | Expected result |
-|---|---|---|---|---|
 | AH-1 | A booked time isn't offered | the day of the environment's booked slot in the window | Skipped with a reason where none is known. 1. Open its day. 2. Open its day with each of its formats as a filter. | **1.** No time links to the booked slot; if it was the only seat at that time and place, that time isn't shown. **2.** The same with each filter. |
 | AH-2 | A Draft time isn't offered | the day of the environment's Draft slot in the window | Open its day (skipped with a reason where none is known). | No time links to the Draft slot; if it was the only seat at that time and place, that time isn't shown. |
 | AH-3 | A Cancelled time isn't offered | the day of the environment's Cancelled slot in the window | Open its day (skipped with a reason where none is known). | No time links to the Cancelled slot; if it was the only seat at that time and place, that time isn't shown. |
 | AH-4 | A time with one seat booked stays, with the open seats' formats | the environment's time with several seats, one of them booked | Open its day (skipped with a reason where none is known). | **1.** The time is still listed once. **2.** It lists only the formats of its open seats, and links to an open seat, not the booked one. |
-
-### The address
-
-`tests/functional/appointments/search-address.spec.ts`
-
-| ID | Test | Page | Steps | Expected result |
-|---|---|---|---|---|
 | AU-1 | A search opened from a link | `?start=<reference day>&format[phone]=phone&location[loc][text]=55437&location[radius]=160.93` | Open the address in a fresh browser that has never visited the site. | **1.** The form shows every value: "55437", "100 mi" and Phone ticked; the reference day is selected and named in the heading. **2.** Either the empty message shows, or every time lists phone and shows the reference day's date. |
 | AU-2 | Back and Forward | `/connect-careerforce/schedule-an-appointment` | 1. Pick the reference day. 2. Tick Online and click "Filter". 3. Click "Next Week" (or another day when it is disabled). 4. Click Back twice, then Forward twice. | **1.** The reference day is selected. **2.** Online is ticked and the day is kept. **3.** The new week or day is selected and Online is kept. **4.** Each Back and Forward shows that step's address, its selected day, its form values and the same times as when it was first shown; no form shows the values of a different step. |
 | AU-3 | Bad values in the address | See [the table below](#au-3-values) | One test per row: open the search with the row's value by the address. | **1.** The page loads with no raw error. **2.** What the row says. |
 | AU-4 | Markup and special characters in Location | `/connect-careerforce/schedule-an-appointment` | 1. Type `C++ & "R&D"` in Location and click "Filter". 2. Open `?location[loc][text]=<b>x</b>` by the address. 3. Type `<script>alert(1)</script>` in Location and click "Filter". | No alert or other dialog opens at any step, and the page gains no `<script>`, `<b>` or `<img onerror>` from the value. The firewall's "403 Forbidden" page is a pass. **1.** The box shows `C++ & "R&D"` exactly, with no `&amp;` or `&quot;`, and times or the empty message show. **2.** The box shows `<b>x</b>` as text and nothing on the page is bold from it. **3.** When the search page loads, the box shows the characters as plain text. |
+| AE-1 | A time button sends a visitor to log in | the reference day | Click the first time, without logging in and without going further than the site's login page. | **1.** The browser lands on `/user/login?destination=/appointments/<id>/booking`, where `<id>` is the time's slot. **2.** "Log In or Register" and "Log In or Register with LoginMN" show. **3.** No booking form, "Complete Booking" or booking message shows. |
+| AE-2 | A booking address that doesn't exist | `/appointments/99999999/booking`, then `/appointments/abc/booking` | Open each. | **1.** Each answers 404 with "Page Not Found". **2.** No empty booking page and no login page shows. |
+| AE-3 | The booking success page for a visitor | `/appointments/<first time's id on the reference day>/booking-success` | Open it by the address. | **1.** The visitor is sent to the search (or the login page), not shown "Your Appointment is Booked!". **2.** No one's booking details show. |
+| AE-4 | Public links to the search | `/connect-careerforce`, then `/education-and-training/events` | 1. On `/connect-careerforce`, click "Sign up for a 1:1 appointment". 2. On `/connect-careerforce`, click "Schedule an Appointment" in the section menu. 3. On the Events search, click "Book an appointment". 4. On the Events search, click "Book now" in "Book a 1:1 appointment with a Career Specialist". | Each time the search opens as on first load (AQ-1), with nothing after its address. **1.** From the content link. **2.** From the section menu. **3.** From the quick link. **4.** From the promo. |
+| APW-1 | The search at phone width | the reference day | 1. Look at the page. 2. Tap another linked day. 3. Tap "Next Week" (skipped if disabled). | No sideways scrolling and nothing cut off. **1.** The strip's five days and both arrows, "Filters", "Reset", the cards, their times and addresses fit the width; the sidebar filters are hidden. **2.** That day is selected and its times fit. **3.** Next week's strip and times fit. |
+| APW-2 | The filters drawer | the reference day | 1. Tap "Filters". 2. Tick In person and tap "Filter". 3. Tap "Filters", then press Esc. 4. Tap "Filters", then tap "Close filters". | **1.** The drawer opens with "Close filters", Location, Distance From, the formats, "Filter" and "Reset", all visible without sideways scrolling; focus moves into it, and "Filters" tells screen readers it is expanded (`aria-expanded="true"`). **2.** The address keeps the day and has `format[in_person]=in_person`; every time lists in person. **3.** The drawer opens with In person still ticked; Esc closes it and focus goes back to "Filters", which now says collapsed. **4.** "Close filters" closes it, and focus goes back to "Filters". |
+| APW-3 | Location suggestions at phone width | the reference day | 1. Tap "Filters" and type "Dulu" in Location. 2. Tap "Duluth, MN", then "Filter". | **1.** The suggestions open within the drawer's width and can be tapped. **2.** The address has `location[loc][text]=Duluth, MN` and the drawer is closed. |
+| AK-1 | Filter with the keyboard only | the reference day | 1. Tab from the top of the page to Location and type "55437". 2. Tab to Distance From and choose "100 mi" with the arrow keys. 3. Tab to "In person" and press Space. 4. Tab to "Filter" and press Enter. | Focus is visible at every stop, and the stops follow the order on screen. **1.** Location is reached and takes the text. **2.** The dropdown shows "100 mi" and the page doesn't reload. **3.** In person is ticked. **4.** The address keeps the day and has the location, `location[radius]=160.93` and `format[in_person]=in_person`. |
+| AK-2 | The strip with the keyboard only | `/connect-careerforce/schedule-an-appointment` | 1. Tab to the first linked day and press Enter. 2. Tab to "Next Week" and press Enter (skipped if disabled). | Focus is visible at every stop; past days and disabled arrows are not Tab stops. **1.** That day is selected. **2.** Next week loads, and focus is on "Next Week", or, when it is now disabled, on a link in the strip, not at the top of the page. |
+| AK-3 | Location suggestions with the keyboard | `/connect-careerforce/schedule-an-appointment` | 1. Tab to Location and type "Dulu". 2. Press the Down arrow, then Enter. 3. Type "Bloom", then press Esc. | **1.** The suggestions open. **2.** The highlighted suggestion is put in the box ("Duluth, MN" when it is first) and the list closes, without submitting the form. **3.** The list closes and focus stays in Location. |
+| AK-4 | Every control has a name | the reference day, at desktop and phone width | Read the accessibility tree. | **1.** Location and Distance From have labels; the formats are a group named "Format" with checkboxes named "Online", "Phone" and "In person"; "Filter", "Reset", "Filters" and "Close filters" are named buttons. **2.** The strip is a list named "Appointment booking dates"; each linked day is named by its full date ("Friday, November 13, 2026"), with ". No results on this date." when it has no times; past days read "<date>, disabled"; the selected day has `aria-current="date"`; a disabled arrow reads "Previous Week, disabled" or "Next Week, disabled". **3.** Each time link's name has its time, its date and its formats. |
+| AK-5 | Headings | the reference day | Read the page's headings. | **1.** Exactly one level-1 heading: "Schedule an Appointment". **2.** "Appointment Search Filters", the month, and "Available appointments for <the selected day>" are level-2 headings (the last may be visually hidden). **3.** Each location's name is a level-3 heading under "Available appointments for". **4.** No level is skipped on the way down. |
 
-#### AU-3 values
+## Test data
+
+### AU-3 values
 
 | Value added to the address | Expected result |
 |---|---|
@@ -394,44 +393,6 @@ per environment.
 | `start=<reference day>&location[loc][text]=<300 × "a">&location[radius]=16.09` | The week strip, the filters and the reference day still show; a message saying Location is too long shows once, or the location is ignored. |
 | `start=<reference day>&location[loc][text]=zzqxqzz&location[radius]=16.09` | "The location "zzqxqzz" could not be resolved and was ignored." shows, and the times are the same, in the same order, as the reference day with no location. |
 | `start=<reference day>&page=5` | The reference day's times (the same as with no `page`), not the empty message. |
-
-### Where a time leads, and links to the search
-
-`tests/functional/appointments/entry-points.spec.ts`
-
-| ID | Test | Page | Steps | Expected result |
-|---|---|---|---|---|
-| AE-1 | A time button sends a visitor to log in | the reference day | Click the first time, without logging in and without going further than the site's login page. | **1.** The browser lands on `/user/login?destination=/appointments/<id>/booking`, where `<id>` is the time's slot. **2.** "Log In or Register" and "Log In or Register with LoginMN" show. **3.** No booking form, "Complete Booking" or booking message shows. |
-| AE-2 | A booking address that doesn't exist | `/appointments/99999999/booking`, then `/appointments/abc/booking` | Open each. | **1.** Each answers 404 with "Page Not Found". **2.** No empty booking page and no login page shows. |
-| AE-3 | The booking success page for a visitor | `/appointments/<first time's id on the reference day>/booking-success` | Open it by the address. | **1.** The visitor is sent to the search (or the login page), not shown "Your Appointment is Booked!". **2.** No one's booking details show. |
-| AE-4 | Public links to the search | `/connect-careerforce`, then `/education-and-training/events` | 1. On `/connect-careerforce`, click "Sign up for a 1:1 appointment". 2. On `/connect-careerforce`, click "Schedule an Appointment" in the section menu. 3. On the Events search, click "Book an appointment". 4. On the Events search, click "Book now" in "Book a 1:1 appointment with a Career Specialist". | Each time the search opens as on first load (AQ-1), with nothing after its address. **1.** From the content link. **2.** From the section menu. **3.** From the quick link. **4.** From the promo. |
-
-### At phone width
-
-`tests/functional/appointments/search-responsive.spec.ts`. Each case sets
-the browser to 390 × 844 pixels and checks that no page in it scrolls
-sideways.
-
-| ID | Test | Page | Steps | Expected result |
-|---|---|---|---|---|
-| APW-1 | The search at phone width | the reference day | 1. Look at the page. 2. Tap another linked day. 3. Tap "Next Week" (skipped if disabled). | No sideways scrolling and nothing cut off. **1.** The strip's five days and both arrows, "Filters", "Reset", the cards, their times and addresses fit the width; the sidebar filters are hidden. **2.** That day is selected and its times fit. **3.** Next week's strip and times fit. |
-| APW-2 | The filters drawer | the reference day | 1. Tap "Filters". 2. Tick In person and tap "Filter". 3. Tap "Filters", then press Esc. 4. Tap "Filters", then tap "Close filters". | **1.** The drawer opens with "Close filters", Location, Distance From, the formats, "Filter" and "Reset", all visible without sideways scrolling; focus moves into it, and "Filters" tells screen readers it is expanded (`aria-expanded="true"`). **2.** The address keeps the day and has `format[in_person]=in_person`; every time lists in person. **3.** The drawer opens with In person still ticked; Esc closes it and focus goes back to "Filters", which now says collapsed. **4.** "Close filters" closes it, and focus goes back to "Filters". |
-| APW-3 | Location suggestions at phone width | the reference day | 1. Tap "Filters" and type "Dulu" in Location. 2. Tap "Duluth, MN", then "Filter". | **1.** The suggestions open within the drawer's width and can be tapped. **2.** The address has `location[loc][text]=Duluth, MN` and the drawer is closed. |
-
-### Keyboard and accessibility
-
-`tests/functional/appointments/search-accessibility.spec.ts`. Keyboard
-cases use only Tab, Shift+Tab, Enter, Space, Esc and the arrow keys. "Focus
-is visible" means the focused control shows an outline, ring or other
-change that isn't there when it isn't focused.
-
-| ID | Test | Page | Steps | Expected result |
-|---|---|---|---|---|
-| AK-1 | Filter with the keyboard only | the reference day | 1. Tab from the top of the page to Location and type "55437". 2. Tab to Distance From and choose "100 mi" with the arrow keys. 3. Tab to "In person" and press Space. 4. Tab to "Filter" and press Enter. | Focus is visible at every stop, and the stops follow the order on screen. **1.** Location is reached and takes the text. **2.** The dropdown shows "100 mi" and the page doesn't reload. **3.** In person is ticked. **4.** The address keeps the day and has the location, `location[radius]=160.93` and `format[in_person]=in_person`. |
-| AK-2 | The strip with the keyboard only | `/connect-careerforce/schedule-an-appointment` | 1. Tab to the first linked day and press Enter. 2. Tab to "Next Week" and press Enter (skipped if disabled). | Focus is visible at every stop; past days and disabled arrows are not Tab stops. **1.** That day is selected. **2.** Next week loads, and focus is on "Next Week", or, when it is now disabled, on a link in the strip, not at the top of the page. |
-| AK-3 | Location suggestions with the keyboard | `/connect-careerforce/schedule-an-appointment` | 1. Tab to Location and type "Dulu". 2. Press the Down arrow, then Enter. 3. Type "Bloom", then press Esc. | **1.** The suggestions open. **2.** The highlighted suggestion is put in the box ("Duluth, MN" when it is first) and the list closes, without submitting the form. **3.** The list closes and focus stays in Location. |
-| AK-4 | Every control has a name | the reference day, at desktop and phone width | Read the accessibility tree. | **1.** Location and Distance From have labels; the formats are a group named "Format" with checkboxes named "Online", "Phone" and "In person"; "Filter", "Reset", "Filters" and "Close filters" are named buttons. **2.** The strip is a list named "Appointment booking dates"; each linked day is named by its full date ("Friday, November 13, 2026"), with ". No results on this date." when it has no times; past days read "<date>, disabled"; the selected day has `aria-current="date"`; a disabled arrow reads "Previous Week, disabled" or "Next Week, disabled". **3.** Each time link's name has its time, its date and its formats. |
-| AK-5 | Headings | the reference day | Read the page's headings. | **1.** Exactly one level-1 heading: "Schedule an Appointment". **2.** "Appointment Search Filters", the month, and "Available appointments for <the selected day>" are level-2 headings (the last may be visually hidden). **3.** Each location's name is a level-3 heading under "Available appointments for". **4.** No level is skipped on the way down. |
 
 ## Good to know
 

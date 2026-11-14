@@ -34,7 +34,6 @@ SE-12 is A8.
 | | |
 |---|---|
 | **Role** | None. A visitor who isn't logged in. No saved session is loaded. |
-| **Site password gate** | QA and Stage ask for the `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` from `.env` ([one-time setup](../README.md#one-time-setup)). Production has no gate. |
 | **Accounts touched** | None. |
 
 ## Running it
@@ -85,6 +84,8 @@ clicking "Search", not editing the address, unless the case says otherwise.
 | SE-10 | A 300-character keyword | `/job-search` | Type a 300-character keyword ("registered" 30 times, no spaces) and search. | **1.** The page loads normally: no "Request-URI Too Long" or other error page. **2.** If the Keyword box has a length limit, the box holds the first characters up to that limit; otherwise it holds all 300 characters. **3.** Either jobs are listed or the friendly empty state from SE-8 shows. |
 | SE-11 | Script and HTML in the search are shown as text | `/job-search` | 1. Type `<script>alert(1)</script>` in Keyword and search. 2. Type it in Location and search. 3. Open these addresses directly: `/job-search?title="><img src=x onerror=alert(1)>`, then the same value in `location[text]`, `company` and `loc`. | At every step, no alert or other dialog opens, and the page gains no `<script>` element and no `<img>` with an `onerror` from the search. Anywhere the page repeats the search (the boxes, the empty-state message, the Company and City dropdowns, the page title), it shows the characters, not an element. **1.** The Keyword box shows the typed text as plain text. **2.** The Location box shows the typed text as plain text. **3.** For `title` and `location[text]`, the Keyword and Location boxes show the value as plain text. |
 | SE-12 | Location suggestions | `/job-search` | 1. Type "Roch" in Location. 2. Pick "Rochester, MN" from the suggestions. 3. Type "nurse" in Keyword and search. | **1.** A list of suggestions opens under Location within a few seconds. Every suggestion contains "Roch", and every one is in Minnesota, Wisconsin, South Dakota, North Dakota or Iowa (it ends in ", MN", ", WI", ", SD", ", ND" or ", IA", or the full state name). "Rochester, MN" is among them. **2.** Picking it puts "Rochester, MN" in the box and closes the list. **3.** The address has `location[text]=Rochester, MN`, and at least 1 job is listed. |
+
+## Test data
 
 ### SE-3 locations
 

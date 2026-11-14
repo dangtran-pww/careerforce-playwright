@@ -31,7 +31,6 @@ out because they change site state.
 | **Role** | `admin`: a PWW staff Google account that has admin rights on the environment being tested. It must be able to rebuild permissions (`/admin/reports/status/rebuild`) and manage Search API indexes (`/admin/config/search/search-api`). |
 | **How to log in** | By hand, once per environment: `npm run login:manual -- admin --env <qa\|stage>` (without `--env`, it uses the environment `BASE_URL` in `.env` points at). A Chromium window opens on the login page. Click "PWW Staff Log In" and finish the Google sign-in. The session is saved as soon as you're back on the site, then close the window. The tests can't log in themselves: Google blocks sign-in from a browser Playwright controls. |
 | **Saved session** | `playwright/.auth/<env>/admin.json`, one file per environment, shared with [smoke-admin-reports](smoke-admin-reports.md). A QA session doesn't work on Stage. |
-| **Site password gate** | QA and Stage also ask for the Basic Auth username and password. The tests and the login window both take it from `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` in `.env` ([one-time setup](../README.md#one-time-setup)). |
 | **When it expires** | Run the login command again. Each spec calls `useRole('admin')`, which checks the session before the first test; if it has expired, the tests fail with the login command to fix it. Drupal can also end the session early, e.g. when the same account logs in somewhere else. |
 | **Environments** | QA and Stage only. The plan is no-prod (`Prod: No` in the header): AM-1 and AM-2 change site state, and AM-3 to AM-5 run after AM-2. |
 
@@ -83,7 +82,9 @@ Every case runs as `admin`.
 | AM-4 | Events search sort and filters | `/education-and-training/events?<query>` | After AM-2, open the page with each query in "Events search sort and filter cases" below. | Each case's result is in that table. | Filters go in the URL rather than through the form. The page renders the filter form several times (desktop sidebar, mobile drawer, sort-only form in the header), so clicking the form needs scoping to one copy |
 | AM-5 | Appointments search date strip and filters | `/connect-careerforce/schedule-an-appointment` | After AM-2, run the cases in "Appointments search cases" below, most of which start from a **reference day** (the first day in the strip, this week then next week, with at least 2 slots). | Each case's result is in that table. | Same thinking as AM-4: never assert fixed counts or location names, only relations to the unfiltered results on the same day. Don't click a booking link through to submission, because that would create a real booking |
 
-Indexes for AM-2:
+## Test data
+
+### Indexes for AM-2
 
 | Index | Machine name |
 |---|---|
@@ -92,7 +93,7 @@ Indexes for AM-2:
 | General site content index | `general_site_content` |
 | Occupations | `occupations` |
 
-Searches for AM-3:
+### Searches for AM-3
 
 | Search | Index | URL | Keyword |
 |---|---|---|---|
@@ -101,6 +102,55 @@ Searches for AM-3:
 | Appointments search | `appointment_occurrences` | `/connect-careerforce/schedule-an-appointment` | n/a, no keyword box. Walk the date strip from today until a day shows ≥ 1 location card (`.civiserv-location--appointments-for-booking`) with a booking link (`.appt-slots a[href*="/appointments/"]`); fail if no day in the strip has any. See "Appointments search page" below |
 | Events more like this | `events_mlt` | "Similar Events" block on event detail pages (`/events/event-occurrence/<id>`) | n/a. Collect every event link from the events search (`a.cf-events-search-card-link`, all pager pages), pick 10 at random, and open each. Pass if **at least one** shows the block with ≥ 1 event; for every page that has the block, each similar-event link must point to `/events/event-occurrence/<id>` and not to the event itself. See "Similar Events block" below |
 | Occupations | `occupations` | `/explore/careers?otitle=<keyword>` | Run three times: "taxi driver", "nurse", "project manager" |
+
+### Events search sort and filter cases
+
+The assertions compare against the unfiltered count and against what is
+on the cards, never against fixed numbers, so the cases hold up as
+events come and go.
+
+| Case | Query | Assertions |
+|---|---|---|
+| Topic filter | `ft[789]=789` (Job Search) | 0 < count ≤ unfiltered count |
+| Format: Online | `ff[virtual]=virtual` | 0 < count ≤ unfiltered; every card's location text contains "Online" |
+| Event type: Job Club | `fy[783]=783` | 0 < count ≤ unfiltered |
+| Event type: Workshop | `fy[785]=785` | 0 < count ≤ unfiltered |
+| Date range | `fs=<today>&fe=<today + 30 days>` | every card date is within the range |
+| Featured | `fa=605` | page loads and shows either results or "No results found." (there are no featured events right now) |
+| Keyword + filter combined | `fq=job&fy[783]=783` | count ≤ the count for `fq=job` alone |
+| Sort: Relevance | `fq=job&sort_by=sr` | count > 0; card dates are in ascending order |
+| Sort: Distance with location | `fq=job&fp[loc][text]=Minneapolis&fp[radius]=160.93&sort_by=sp` | count > 0; the first card's location contains "Minneapolis" |
+| Location radius | `fp[loc][text]=55401&fp[radius]=16.09` | 0 < count ≤ unfiltered |
+| No match | `fq=zzzxqqnomatch` | "No results found." visible; no cards |
+
+### Appointments search cases
+
+"Slots" means the `.appt-slots a` links, and each slot's formats are read
+from its text. *Ref day* is the reference day from AM-5.
+
+| Case | Steps | Assertions |
+|---|---|---|
+| Default day | `goto('/connect-careerforce/schedule-an-appointment')` | Heading reads "Available appointments for <today>"; days before today in the strip are `aria-disabled="true"`; today has no link; either location cards or the empty message is shown |
+| Pick a day | Click a linked day in the strip | URL has `start=<that date>`; heading shows that date; that day is now the one without a link |
+| Week navigation | Click Next Week, then Previous Week | Next: the strip shows the following Monday–Friday and the URL `start` is that Monday. Previous: back to the current week. On the current week, Previous Week is disabled |
+| Booking window | Go to the furthest week the strip allows | Next Week is disabled (the strip reached about 1 week ahead on QA) |
+| Format: Online | Ref day + `format[online]=online` | Every slot shown lists "online"; slot count ≤ unfiltered |
+| Format: Phone | Ref day + `format[phone]=phone` | Every slot lists "phone"; slot count ≤ unfiltered |
+| Format: In person | Ref day + `format[in_person]=in_person` | Every slot lists "in person"; slot count ≤ unfiltered |
+| Formats combined | Ref day + `format[online]` + `format[phone]` | Every slot lists at least one of the two; slot count ≥ each single-format count |
+| Format narrows | Ref day, picked so that at least one slot lacks some format (fall back to skipping the case if none does) | Filtering by the missing format hides that slot |
+| Location sorts by distance | Ref day with ≥ 2 locations; take the *last* card's city (strip "CareerForce in ") and send it as `location[loc][text]` with `location[radius]=16.09` | That location's card is now first |
+| Radius hides distant in-person-only slots | Find a day with an in-person-only slot (text lists only "in person"); note its location's city. Search that day with a city at least 50 mi from it (e.g. Duluth for a Twin Cities slot, Bloomington for a Duluth/Bemidji slot) and `location[radius]=16.09` | That in-person-only slot is gone. Every slot that lists "phone" or "online" is still shown. Searching that slot's own city with the same radius shows it again. Skip with a reason if no in-person-only slot is in the strip |
+| Remote slots ignore radius | Ref day + a far-away location + `location[radius]=16.09` | Every slot from the unfiltered day that lists "phone" or "online" is still shown |
+| Reset | Apply a format + location, click "Reset" | URL has no format/location params; the results match the unfiltered day |
+| Empty day | `goto('?start=<a weekday beyond the booking window>')` | The empty message is visible; no cards |
+| Booking link target | Ref day, read the first slot's `href` | Matches `/appointments/<id>/booking`; optionally `goto` it and check the booking page loads, **without submitting** |
+
+If no day in the strip has a slot, the cases that need a reference day
+are skipped with a `test.skip` reason, not failed. The AM-3 check is
+what catches "no appointments at all".
+
+### Index counts on QA
 
 Counts on QA on 2026-11-12 (not asserted, they change with content). The
 Confluence checklist still lists General 4351 and Occupations 26471, which
@@ -114,6 +164,8 @@ is lower than the tracked count on every index except Occupations.
 | Events More Like This | 462/462 | Occurrence 461, External Session 1 | 416 |
 | General site content index | 4574/4574 | Location 1175, Group 846, Occurrence 461, External Session 1, Content 2068, Taxonomy term 23 | 4132 |
 | Occupations | 35280/35280 | O*Net Occupations 1016, Military MOC data 34264 | 35280 |
+
+## What the site has
 
 ### Events search page
 
@@ -249,53 +301,6 @@ How the filters behaved:
   8:00 am in-person-only slot, but kept its 8:30 am slot (all formats)
   and Faribault's phone + in-person slots. Bloomington + 10 mi kept
   everything.
-
-### Events search sort and filter cases
-
-The assertions compare against the unfiltered count and against what is
-on the cards, never against fixed numbers, so the cases hold up as
-events come and go.
-
-| Case | Query | Assertions |
-|---|---|---|
-| Topic filter | `ft[789]=789` (Job Search) | 0 < count ≤ unfiltered count |
-| Format: Online | `ff[virtual]=virtual` | 0 < count ≤ unfiltered; every card's location text contains "Online" |
-| Event type: Job Club | `fy[783]=783` | 0 < count ≤ unfiltered |
-| Event type: Workshop | `fy[785]=785` | 0 < count ≤ unfiltered |
-| Date range | `fs=<today>&fe=<today + 30 days>` | every card date is within the range |
-| Featured | `fa=605` | page loads and shows either results or "No results found." (there are no featured events right now) |
-| Keyword + filter combined | `fq=job&fy[783]=783` | count ≤ the count for `fq=job` alone |
-| Sort: Relevance | `fq=job&sort_by=sr` | count > 0; card dates are in ascending order |
-| Sort: Distance with location | `fq=job&fp[loc][text]=Minneapolis&fp[radius]=160.93&sort_by=sp` | count > 0; the first card's location contains "Minneapolis" |
-| Location radius | `fp[loc][text]=55401&fp[radius]=16.09` | 0 < count ≤ unfiltered |
-| No match | `fq=zzzxqqnomatch` | "No results found." visible; no cards |
-
-### Appointments search cases
-
-"Slots" means the `.appt-slots a` links, and each slot's formats are read
-from its text. *Ref day* is the reference day from AM-5.
-
-| Case | Steps | Assertions |
-|---|---|---|
-| Default day | `goto('/connect-careerforce/schedule-an-appointment')` | Heading reads "Available appointments for <today>"; days before today in the strip are `aria-disabled="true"`; today has no link; either location cards or the empty message is shown |
-| Pick a day | Click a linked day in the strip | URL has `start=<that date>`; heading shows that date; that day is now the one without a link |
-| Week navigation | Click Next Week, then Previous Week | Next: the strip shows the following Monday–Friday and the URL `start` is that Monday. Previous: back to the current week. On the current week, Previous Week is disabled |
-| Booking window | Go to the furthest week the strip allows | Next Week is disabled (the strip reached about 1 week ahead on QA) |
-| Format: Online | Ref day + `format[online]=online` | Every slot shown lists "online"; slot count ≤ unfiltered |
-| Format: Phone | Ref day + `format[phone]=phone` | Every slot lists "phone"; slot count ≤ unfiltered |
-| Format: In person | Ref day + `format[in_person]=in_person` | Every slot lists "in person"; slot count ≤ unfiltered |
-| Formats combined | Ref day + `format[online]` + `format[phone]` | Every slot lists at least one of the two; slot count ≥ each single-format count |
-| Format narrows | Ref day, picked so that at least one slot lacks some format (fall back to skipping the case if none does) | Filtering by the missing format hides that slot |
-| Location sorts by distance | Ref day with ≥ 2 locations; take the *last* card's city (strip "CareerForce in ") and send it as `location[loc][text]` with `location[radius]=16.09` | That location's card is now first |
-| Radius hides distant in-person-only slots | Find a day with an in-person-only slot (text lists only "in person"); note its location's city. Search that day with a city at least 50 mi from it (e.g. Duluth for a Twin Cities slot, Bloomington for a Duluth/Bemidji slot) and `location[radius]=16.09` | That in-person-only slot is gone. Every slot that lists "phone" or "online" is still shown. Searching that slot's own city with the same radius shows it again. Skip with a reason if no in-person-only slot is in the strip |
-| Remote slots ignore radius | Ref day + a far-away location + `location[radius]=16.09` | Every slot from the unfiltered day that lists "phone" or "online" is still shown |
-| Reset | Apply a format + location, click "Reset" | URL has no format/location params; the results match the unfiltered day |
-| Empty day | `goto('?start=<a weekday beyond the booking window>')` | The empty message is visible; no cards |
-| Booking link target | Ref day, read the first slot's `href` | Matches `/appointments/<id>/booking`; optionally `goto` it and check the booking page loads, **without submitting** |
-
-If no day in the strip has a slot, the cases that need a reference day
-are skipped with a `test.skip` reason, not failed. The AM-3 check is
-what catches "no appointments at all".
 
 ## Non-goals
 

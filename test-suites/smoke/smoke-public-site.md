@@ -60,7 +60,6 @@ The checks come from the team's manual checklist on Confluence,
 |---|---|
 | **Site login** | None. Every test runs as a visitor who isn't logged in. |
 | **Role** | Anonymous. No saved session is used, so there is nothing to run `npm run login:manual` for, and nothing that can expire. |
-| **Site password gate** | QA and Stage ask for a username and password (a browser "Sign in" pop-up) before showing any page. The tests answer it with `BASIC_AUTH_USER` / `BASIC_AUTH_PASSWORD` from your `.env` file ([one-time setup](../README.md#one-time-setup)). Production has no gate. |
 | **Accounts touched** | None. HP-2 opens the login sections but never fills them in or submits. |
 
 If a run fails with 401 / "Unauthorized" on QA or Stage, the gate
@@ -193,7 +192,9 @@ after the site name, for example `/programs-services` means
 | GN-4 | Skip to main content | `/` | 1. Press Tab once. 2. Press Enter. 3. Press Tab again. | **1.** The "Skip to main content" link shows. **2.** The page goes to the main content (`#main-content`). **3.** Focus lands inside the main content, not in the header menu. |
 | GN-5 | No JavaScript errors | see the list below | Open each page. | No JavaScript error. |
 
-Location pages for LV-1:
+## Test data
+
+### Location pages for LV-1
 
 | Location | Page |
 |---|---|
@@ -220,7 +221,7 @@ Before any choice, the cards are Find a Job, Connect With CareerForce and Job
 Loss Resources. Every answer shows 3 cards, except "I am receiving
 unemployment benefits…", which shows 5.
 
-Main menu pages for GN-3:
+### Main menu pages for GN-3
 
 | Menu item | Page |
 |---|---|
@@ -230,7 +231,39 @@ Main menu pages for GN-3:
 | Education and Training | `/education-and-training` |
 | Resources for | `/resources-job-seekers-and-career-explorers` |
 
-Good to know:
+### Pages for GN-5
+
+| Page | Address |
+|---|---|
+| Homepage | `/` |
+| Site search | `/search?k=job` |
+| Explore Careers | `/explore/careers?otitle=Nursing` |
+
+### Filters
+
+The FL cases check that a filter actually filters. Each one opens the listing
+with no filter, then with filter X, then with filter Y, and expects:
+
+- The unfiltered listing shows at least 1 result.
+- X and Y each show no more results than the unfiltered listing.
+- **X and Y show different results:** a different total, or different items
+  on the first page.
+
+An empty result is fine. QA has no job fairs at the moment, for example, so
+filtering by them shows "No results found." A filter can also match
+everything. Only X and Y showing the very
+same results fails, because that means the filter was ignored. Exact counts
+are never checked.
+
+- **Every filter is in the page address**, for example
+  `/training-programs?field_virtual=1`, so the tests open
+  that address rather than clicking the form.
+- **FL-5 and FL-6 moved** to [smoke-job-search.md](smoke-job-search.md) as
+  JF-1 and JF-2, and **FL-1 to FL-3** (Events) to
+  [smoke-events.md](smoke-events.md) as EP-5 to EP-7. The other FL cases
+  keep their numbers.
+
+## Good to know
 
 - **Job seekers log in with LoginMN** (the State of Minnesota's shared login),
   so the Job Seekers section has no username or password boxes of its own.
@@ -265,42 +298,6 @@ Good to know:
   check it.
 - **The footer phone number is plain text**, not a link you can tap to call,
   so GN-2 checks the text only.
-
-Pages for GN-5:
-
-| Page | Address |
-|---|---|
-| Homepage | `/` |
-| Site search | `/search?k=job` |
-| Explore Careers | `/explore/careers?otitle=Nursing` |
-
-### Known issues
-
-None at the moment.
-
-### Filters
-
-The FL cases check that a filter actually filters. Each one opens the listing
-with no filter, then with filter X, then with filter Y, and expects:
-
-- The unfiltered listing shows at least 1 result.
-- X and Y each show no more results than the unfiltered listing.
-- **X and Y show different results:** a different total, or different items
-  on the first page.
-
-An empty result is fine. QA has no job fairs at the moment, for example, so
-filtering by them shows "No results found." A filter can also match
-everything. Only X and Y showing the very
-same results fails, because that means the filter was ignored. Exact counts
-are never checked.
-
-- **Every filter is in the page address**, for example
-  `/training-programs?field_virtual=1`, so the tests open
-  that address rather than clicking the form.
-- **FL-5 and FL-6 moved** to [smoke-job-search.md](smoke-job-search.md) as
-  JF-1 and JF-2, and **FL-1 to FL-3** (Events) to
-  [smoke-events.md](smoke-events.md) as EP-5 to EP-7. The other FL cases
-  keep their numbers.
 
 ## Mobile
 
