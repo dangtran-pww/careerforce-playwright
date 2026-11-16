@@ -16,7 +16,7 @@ the playwright-test-generator agent turns the plan into specs later.
 
 Before you open the browser, read:
 
-- `CLAUDE.md` (the "Test plan rules" list).
+- `.claude/rules/test-plans.md` (the test plan rules, in short).
 - `test-suites/README.md` in full, especially "Layout", "Status on every
   plan", "Plan writing rules" (every numbered rule), "Smoke plans" or
   "Functional plans" (whichever your plan is), and "Keeping tests off

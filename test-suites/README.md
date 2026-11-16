@@ -242,7 +242,7 @@ here.
 Every plan follows these rules. Each has a number, and
 `npm run check:plans` checks the ones a script can check (see
 `scripts/check-plans.mjs`). To add a rule, give it the next number here,
-add a line for it under "Test plan rules" in `CLAUDE.md`, and add a check to
+add a line for it in `.claude/rules/test-plans.md`, and add a check to
 the script if it can be checked automatically.
 
 | # | Rule | Checked by script |
