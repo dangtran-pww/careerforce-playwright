@@ -73,15 +73,6 @@ h1 {
   color: var(--neutral-fg);
 }
 
-.message {
-  margin: 12px 0 0;
-}
-
-.fix p {
-  margin: 12px 0 6px;
-  color: var(--muted);
-}
-
 .command {
   display: flex;
   align-items: center;

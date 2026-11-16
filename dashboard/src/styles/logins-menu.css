@@ -2,22 +2,21 @@
 
 /* A native popover: it sits in the top layer, just under the top bar below
    the Logins button (LoginsMenu.tsx sets --logins-left), and scrolls on its
-   own when the cards don't fit. The scrollbar's space is kept even when it
-   isn't needed, so the cards don't reflow when it appears as answers come in
-   (that reflow sometimes left cards drawn on top of each other). */
+   own when the rows don't fit. The scrollbar's space is kept even when it
+   isn't needed, so the rows don't reflow when it appears as answers come in. */
 .logins-panel {
   position: fixed;
   inset: auto;
   top: calc(var(--topbar-height, 56px) + 8px);
   left: var(--logins-left, 16px);
-  width: min(920px, calc(100vw - 32px));
+  width: min(840px, calc(100vw - 32px));
   max-height: calc(100vh - var(--topbar-height, 56px) - 24px);
   margin: 0;
   padding: 16px;
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-gutter: stable;
-  background: var(--bg);
+  background: var(--surface);
   color: var(--text);
   border: 1px solid var(--control-border);
   border-radius: 10px;
@@ -36,25 +35,124 @@
   font-size: var(--fs-lg);
 }
 
-.logins-panel > .note {
-  margin: 4px 0 12px;
+.logins-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
+button.logins-check-all {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+/* One row per role (SessionRow.tsx). Each row is a subgrid of this grid, so
+   the toggle, badge, role and check button columns line up from row to row:
+   ▸ | badge | role | email or login command | ↻ */
 .logins-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  grid-template-columns: auto auto auto minmax(0, 1fr) auto;
+  column-gap: 10px;
+  margin-top: 12px;
 }
 
-/* Group headings and notes run across both columns. */
-.logins-list > :not(.card) {
+/* Group headings and notes run across all the columns. */
+.logins-list > :not(.session-row) {
   grid-column: 1 / -1;
 }
 
-/* One column once two cards would get too narrow. */
-@media (max-width: 760px) {
+.session-row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+  row-gap: 6px;
+  min-height: 44px;
+  padding: 6px 0;
+  border-top: 1px solid var(--border);
+}
+
+.session-row .row-toggle {
+  transform: none;
+}
+
+.session-row .row-toggle:disabled {
+  visibility: hidden;
+}
+
+.session-badge {
+  justify-self: start;
+}
+
+.session-role {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* The email or message: one line, cut short (the full text is in the
+   details and on hover). */
+.session-main {
+  min-width: 0;
+}
+
+.session-main > .note {
+  display: block;
+  overflow: hidden;
+  font-size: var(--fs-md);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-main .command {
+  padding: 2px 2px 2px 10px;
+}
+
+/* Wrap a long command between words only (narrow windows), never inside
+   a role name. */
+.session-main .command code {
+  overflow-wrap: normal;
+}
+
+.session-row > .icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  line-height: 0;
+}
+
+.session-details {
+  grid-column: 2 / -1;
+  padding-bottom: 6px;
+  font-size: var(--fs-md);
+}
+
+.session-details p {
+  margin: 0 0 6px;
+}
+
+.session-details .facts {
+  margin: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+/* Narrow windows: the email or command moves to a second line under the
+   role, so the role column doesn't get squeezed. */
+@media (max-width: 560px) {
   .logins-list {
-    grid-template-columns: minmax(0, 1fr);
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+  }
+
+  .session-main {
+    grid-row: 2;
+    grid-column: 2 / -1;
+  }
+
+  .session-details {
+    grid-row: 3;
   }
 }
 
@@ -114,6 +212,14 @@
 
 .logins-list > .note {
   margin: 0;
+}
+
+.logins-list > .logins-group {
+  margin-top: 12px;
+}
+
+.logins-list > .logins-group:first-child {
+  margin-top: 0;
 }
 
 /* A test's buttons in the results table ("Run SR-1 again", "Open SR-1 in

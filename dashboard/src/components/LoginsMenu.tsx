@@ -6,16 +6,17 @@ import { useLoginsMenuState } from '../hooks/useLogins';
 import { ErrorBox, Loading } from './Callouts';
 import { CloseButton } from './CloseButton';
 import { EnvTag } from './EnvTag';
-import { SessionCard } from './SessionCard';
+import { InfoTip } from './InfoTip';
+import { RefreshIcon, SessionRow } from './SessionRow';
 
-// The header's "Login Sessions" button and the panel it opens: one session card per
-// role, in two columns (one on narrow windows): admin, and every role a plan,
-// suite prompt or saved session uses,
-// for the environment picked in the header. On a page that runs tests (the
-// suite page), the roles its chosen steps need come first (useLogins.tsx).
+// The header's "Login Sessions" button and the panel it opens: one compact
+// row per role (SessionRow), in the order the server gives (ROLES in
+// tests/helpers/environments.mts), for the environment picked in the header.
+// On a page that runs tests (the suite page), the roles its chosen steps need
+// come first (useLogins.tsx). "Check all" checks every row again.
 //
 // The panel is a native popover, so Esc and a click outside close it. Its
-// cards are only made the first time it opens, because each one asks the
+// rows are only made the first time it opens, because each one asks the
 // site; after that they stay mounted while hidden, so reopening shows the
 // last answer instead of checking every role again.
 //
@@ -28,7 +29,7 @@ export function LoginsMenu() {
   const panelRef = useRef<HTMLDivElement>(null);
   const [opened, setOpened] = useState(false);
   const [open, setOpen] = useState(false);
-  const { needed, round, registerOpener } = useLoginsMenuState();
+  const { needed, round, recheck, registerOpener } = useLoginsMenuState();
 
   // Lets pages open the panel, e.g. when a run is refused over logins.
   useEffect(() => {
@@ -42,7 +43,7 @@ export function LoginsMenu() {
     if (!panel || !button) return;
     // Matches .logins-panel's width in styles/logins-menu.css.
     const place = () => {
-      const width = Math.min(920, window.innerWidth - 32);
+      const width = Math.min(840, window.innerWidth - 32);
       const left = Math.max(
         16,
         Math.min(
@@ -94,19 +95,29 @@ export function LoginsMenu() {
           <h2 id="logins-panel-heading">
             Login sessions on <EnvTag env={currentEnv} />
           </h2>
-          <CloseButton
-            label="Close login sessions"
-            popoverTarget="logins-panel"
-            popoverTargetAction="hide"
-          />
+          <div className="logins-panel-actions">
+            <InfoTip label="About login sessions">
+              Tests that need a role are skipped or fail when its session has
+              expired. Each environment has its own logins.
+            </InfoTip>
+            <button
+              type="button"
+              className="logins-check-all"
+              onClick={recheck}
+              disabled={!opened}
+            >
+              <RefreshIcon /> Check all
+            </button>
+            <CloseButton
+              label="Close login sessions"
+              popoverTarget="logins-panel"
+              popoverTargetAction="hide"
+            />
+          </div>
         </div>
-        <p className="note small">
-          Tests that need a role are skipped or fail when its session has
-          expired. Each environment has its own logins.
-        </p>
         {/* Keyed by environment: picking another one starts fresh. */}
         {opened && (
-          <RoleCards
+          <RoleRows
             key={currentEnv.id}
             envId={currentEnv.id}
             needed={needed}
@@ -118,10 +129,10 @@ export function LoginsMenu() {
   );
 }
 
-// One flat list, so a card keeps its state (and doesn't ask the site again)
+// One flat grid, so a row keeps its state (and doesn't ask the site again)
 // when ticking a step moves its role between the two groups. `round` remakes
-// every card, which checks them all again.
-function RoleCards({
+// every row, which checks them all again.
+function RoleRows({
   envId,
   needed,
   round,
@@ -134,15 +145,10 @@ function RoleCards({
   if (error) return <ErrorBox>{error.message}</ErrorBox>;
   if (!data) return <Loading>Finding the roles the tests use…</Loading>;
 
-  // Under a group heading (h3) the cards are h4; without groups, h3.
-  const card = (role: string) => (
-    <SessionCard
-      key={`card:${role}:${round}`}
-      role={role}
-      headingLevel={needed ? 4 : 3}
-    />
+  const row = (role: string) => (
+    <SessionRow key={`row:${role}:${round}`} role={role} />
   );
-  if (!needed) return <div className="logins-list">{data.roles.map(card)}</div>;
+  if (!needed) return <div className="logins-list">{data.roles.map(row)}</div>;
 
   const others = data.roles.filter((r) => !needed.includes(r));
   const items = [
@@ -150,7 +156,7 @@ function RoleCards({
       Needed by the chosen steps
     </h3>,
     ...(needed.length
-      ? needed.map(card)
+      ? needed.map(row)
       : [
           <p key="none" className="note">
             The chosen steps need no login.
@@ -161,7 +167,7 @@ function RoleCards({
           <h3 key="others" className="logins-group">
             Other roles
           </h3>,
-          ...others.map(card),
+          ...others.map(row),
         ]
       : []),
   ];

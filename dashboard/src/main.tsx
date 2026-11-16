@@ -10,7 +10,7 @@
 //   pages/            one component per page; a page with several parts has
 //                     its own folder (suite/, run/)
 //   components/       pieces the pages share (Table, Facts, Badge,
-//                     SessionCard, RunsTable, TestResults, SuiteSteps…)
+//                     SessionRow, RunsTable, TestResults, SuiteSteps…)
 //   hooks/            useApi (load data), useEnv (current environment),
 //                     useLogins (the header's Login Sessions panel),
 //                     useStartRun, useRerun (run again from a run page),
