@@ -18,9 +18,18 @@ body:has(.split, .page-wide) {
   min-width: 0;
 }
 
-/* The panel grows with its content, so the page has one scrollbar. */
 .side-panel {
   min-width: 0;
+}
+
+/* The suite page's plan panel stays in view as the page scrolls, just under
+   the top bar, and is never taller than the window: a long plan scrolls
+   inside it. It never goes above the top of its column. */
+.split > .side-panel {
+  position: sticky;
+  top: calc(var(--topbar-height, 0px) + 16px);
+  max-height: calc(100vh - var(--topbar-height, 0px) - 32px);
+  overflow: auto;
 }
 
 .side-panel:focus {
@@ -162,9 +171,11 @@ button.small {
     display: none;
   }
 
-  .side-panel {
+  .side-panel,
+  .split > .side-panel {
     position: fixed;
     inset: 0 0 0 auto;
+    max-height: none;
     z-index: 30;
     width: min(100%, 640px);
     overflow: auto;

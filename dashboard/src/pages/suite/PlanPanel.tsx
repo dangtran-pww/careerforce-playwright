@@ -64,9 +64,10 @@ export function PlanPanel({
   const { refusal, onError: onRunError } = useRunRefusal();
 
   // Move focus into the panel when it opens, so keyboard and screen reader
-  // users land on what they asked for.
+  // users land on what they asked for. Without scrolling: the panel sticks
+  // in view, and scrolling to it would jump the page.
   useEffect(() => {
-    ref.current?.focus();
+    ref.current?.focus({ preventScroll: true });
   }, []);
 
   // Escape closes the panel, unless it's closing the full-plan modal (or
@@ -126,7 +127,7 @@ export function PlanPanel({
               className="plan-modal"
               onClose={() => {
                 setShowPlan(false);
-                ref.current?.focus();
+                ref.current?.focus({ preventScroll: true });
               }}
             >
               <PlanMarkdown slug={plan.slug} />
