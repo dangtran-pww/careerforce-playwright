@@ -1,7 +1,13 @@
 import { existsSync } from 'node:fs';
 
 import { test, expect } from './fixtures';
-import { authFile, currentEnv, loginCommand } from './environments.mjs';
+import {
+  authFile,
+  currentEnv,
+  loginCommand,
+  roleAvailableOn,
+  roleEnvironments,
+} from './environments.mjs';
 
 // Runs the tests of the current file (or describe block) logged in as
 // `role`, with that role's saved session for this environment
@@ -23,6 +29,15 @@ import { authFile, currentEnv, loginCommand } from './environments.mjs';
 const checked = new Set<string>();
 
 export function useRole(role: string): void {
+  // A role that only exists on some environments (e.g. staff: local only)
+  // leaves its tests out elsewhere, like @no-prod tests on production.
+  if (!roleAvailableOn(role)) {
+    test.skip(
+      true,
+      `The ${role} role only exists on: ${roleEnvironments(role)!.join(', ')}.`,
+    );
+    return;
+  }
   const file = authFile(role);
   const hint = `Run \`${loginCommand(role, currentEnv())}\` and try again.`;
 

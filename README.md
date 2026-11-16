@@ -67,7 +67,10 @@ Different test cases need to be logged in as different roles — each is its
 own SSO account, so each gets its own saved session and its own Chromium
 profile. CareerForce's roles:
 
-- `partner` (the default)
+- `partner` (the default): a partner profile; the MOC (military career)
+  lookup on `/user/<id>/labor-market` is only shown to partner and staff
+- `staff`: a CareerForce staff profile. **Local only**: staff accounts can
+  only be logged in to on a local DDEV site (`--env local`)
 - `jobseeker`
 - `platform-manager`
 - `event-manager`
@@ -78,7 +81,13 @@ profile. CareerForce's roles:
 npm run login:manual              # default role (partner), on BASE_URL's environment
 npm run login:manual -- admin
 npm run login:manual -- admin --env stage   # qa | stage | prod | sandbox | local
+npm run login:manual -- staff --env local   # staff: local only
 ```
+
+A role limited to some environments is set in `ROLE_ENVIRONMENTS`
+(`tests/helpers/environments.mts`). `login:manual` refuses it anywhere
+else, `useRole('<role>')` skips its tests there, and the dashboard's Logins
+menu only lists it for those environments.
 
 Cookies belong to one site, so each environment has its own logins:
 `playwright/.auth/<env>/<role>.json`, e.g. `playwright/.auth/qa/admin.json`

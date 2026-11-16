@@ -23,7 +23,8 @@ export type SessionStatus =
   'valid' | 'expired' | 'missing' | 'no-access' | 'error';
 
 // GET /api/sessions/:role
-// GET /api/roles?env=<id>: admin first, then A–Z.
+// GET /api/roles?env=<id>: in ROLES order (tests/helpers/environments.mts),
+// then any others A–Z.
 export interface RolesResponse {
   roles: string[];
 }

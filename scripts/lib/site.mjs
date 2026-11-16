@@ -22,6 +22,9 @@ export {
   envFor,
   isActive,
   loginCommand,
+  ROLES,
+  roleAvailableOn,
+  roleEnvironments,
 } from '../../tests/helpers/environments.mts';
 
 // The environment BASE_URL points at, for scripts that use only one.

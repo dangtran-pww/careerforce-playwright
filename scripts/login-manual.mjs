@@ -40,6 +40,8 @@ import {
   hostOf,
   isDrupalSession,
   isSiteCookie,
+  roleAvailableOn,
+  roleEnvironments,
   sessionIsLoggedIn,
 } from './lib/site.mjs';
 import { hostResolverRules } from '../tests/helpers/blocked-hosts.mts';
@@ -81,6 +83,14 @@ const role = args[0] ?? 'partner';
 if (!/^[a-z0-9_-]+$/i.test(role)) {
   console.error(
     `Invalid role "${role}" — use letters, numbers, "-" or "_" only.`,
+  );
+  process.exit(1);
+}
+// Some roles only exist on some environments (e.g. staff: local only).
+if (!roleAvailableOn(role, env)) {
+  console.error(
+    `The ${role} role can only log in on: ${roleEnvironments(role).join(', ')}. ` +
+      `Use --env ${roleEnvironments(role)[0]}.`,
   );
   process.exit(1);
 }

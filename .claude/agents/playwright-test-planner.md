@@ -80,7 +80,9 @@ what you saw, not what you expect.
 3. **As a role:** load a saved login with `browser_set_storage_state`,
    `filename: "playwright/.auth/<env>/<role>.json"` (e.g.
    `playwright/.auth/qa/admin.json`). Run `ls playwright/.auth/<env>/` to
-   see which roles exist (today: `admin`, `jobseeker` on QA). Login is SSO
+   see which roles exist (today: `admin`, `jobseeker` on QA). `staff` exists
+   only on Local (`playwright/.auth/local/staff.json`); a plan that needs
+   staff is checked on Local or marks it in Open questions. Login is SSO
    and can't be automated, so if a role you need has no file, don't try to
    log in: note it in the plan's Open questions and go on.
 4. **Back to a visitor:** `browser_cookie_clear`. Load the role file again

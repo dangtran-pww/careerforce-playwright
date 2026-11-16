@@ -193,6 +193,44 @@ export function authFile(
   return `playwright/.auth/${id}/${role}.json`;
 }
 
+/**
+ * Every CareerForce role, each its own SSO account (see README "Testing with
+ * more than one role"). The dashboard's Logins menu lists all of them, in
+ * this order, for each environment they can log in on.
+ */
+export const ROLES = [
+  'jobseeker',
+  'partner',
+  'staff',
+  'admin',
+  'platform-manager',
+  'event-manager',
+  'content-manager',
+] as const;
+
+/**
+ * Roles that can only log in on some environments, by environment id. A role
+ * not listed here works everywhere. `staff` (a CareerForce staff profile)
+ * can only be logged in to on a local DDEV site.
+ */
+const ROLE_ENVIRONMENTS: Record<string, string[]> = {
+  staff: ['local'],
+};
+
+/** Whether `role` can log in on `env` (see ROLE_ENVIRONMENTS). */
+export function roleAvailableOn(
+  role: string,
+  env: Environment | string = currentEnv(),
+): boolean {
+  const id = typeof env === 'string' ? env : env.id;
+  return ROLE_ENVIRONMENTS[role]?.includes(id) ?? true;
+}
+
+/** The environment ids `role` is limited to, or undefined for any. */
+export function roleEnvironments(role: string): string[] | undefined {
+  return ROLE_ENVIRONMENTS[role];
+}
+
 /** The command that saves that login. */
 export function loginCommand(role: string, env: Environment | string): string {
   const id = typeof env === 'string' ? env : env.id;

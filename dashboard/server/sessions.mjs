@@ -14,6 +14,8 @@ import {
   hostOf,
   isDrupalSession,
   loginCommand as loginCommandFor,
+  ROLES,
+  roleAvailableOn,
   siteRequest,
 } from '../../scripts/lib/site.mjs';
 import { loadPlans } from './catalog/plans.mjs';
@@ -365,11 +367,13 @@ export function checkSessionOnce(role, env) {
   return checks.run(`${env.id}:${role}`, () => checkSession(role, env));
 }
 
-// Every role the header's Logins menu lists for an environment: admin, the
-// roles any plan or suite prompt logs in as, and any role with a saved
-// session there (playwright/.auth/<env>/<role>.json). Admin first, then A–Z.
+// Every role the header's Logins menu lists for an environment: every role
+// in ROLES, plus any other role a plan or suite prompt logs in as or with a
+// saved session there (playwright/.auth/<env>/<role>.json), less any role
+// that can't log in there (e.g. staff: local only). In ROLES order, then any
+// others A–Z.
 export async function knownRoles(env) {
-  const roles = new Set(['admin']);
+  const roles = new Set(ROLES);
   const [{ plans }, suites, saved] = await Promise.all([
     loadPlans(),
     loadSuites(),
@@ -381,6 +385,11 @@ export async function knownRoles(env) {
     const m = name.match(/^([a-z-]+)\.json$/);
     if (m) roles.add(m[1]);
   }
-  const rest = [...roles].filter((r) => r !== 'admin').sort();
-  return ['admin', ...rest];
+  const rank = (r) => {
+    const i = ROLES.indexOf(r);
+    return i < 0 ? ROLES.length : i;
+  };
+  return [...roles]
+    .filter((r) => roleAvailableOn(r, env))
+    .sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
 }
