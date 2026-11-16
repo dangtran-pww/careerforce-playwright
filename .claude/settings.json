@@ -1,6 +1,6 @@
 {
   "sandbox": {
-    "excludedCommands": ["npx playwright"],
+    "excludedCommands": ["npx playwright *"],
     "network": {
       "allowedDomains": [
         "*.careerforce.link", 
@@ -10,7 +10,7 @@
     }
   },
   "permissions": {
-    "allow": ["mcp__playwright-test"],
+    "allow": ["mcp__playwright-test", "Bash(npx playwright test *)"],
     "ask": [
       "mcp__playwright-test__browser_file_upload"
     ]
