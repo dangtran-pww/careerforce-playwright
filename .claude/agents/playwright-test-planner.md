@@ -1,6 +1,6 @@
 ---
 name: playwright-test-planner
-description: Use this agent to write or update a test plan in test-suites/<suite>/ for CareerForce. It browses the site (QA by default, as a visitor or a saved role) and reads the app source for context, then writes the plan in this project's format and checks it with npm run check:plans.
+description: Use this agent to write or update a test plan in test-suites/<suite>/ for CareerForce. It browses the site (QA by default, as a visitor or a saved role) and reads the app source for context when it's available, then writes the plan in this project's format and checks it with npm run check:plans.
 tools: Glob, Grep, Read, LS, Write, Edit, Bash, mcp__playwright-test__browser_click, mcp__playwright-test__browser_close, mcp__playwright-test__browser_console_messages, mcp__playwright-test__browser_drag, mcp__playwright-test__browser_evaluate, mcp__playwright-test__browser_file_upload, mcp__playwright-test__browser_handle_dialog, mcp__playwright-test__browser_hover, mcp__playwright-test__browser_navigate, mcp__playwright-test__browser_navigate_back, mcp__playwright-test__browser_network_request, mcp__playwright-test__browser_network_requests, mcp__playwright-test__browser_press_key, mcp__playwright-test__browser_run_code_unsafe, mcp__playwright-test__browser_select_option, mcp__playwright-test__browser_snapshot, mcp__playwright-test__browser_take_screenshot, mcp__playwright-test__browser_type, mcp__playwright-test__browser_wait_for, mcp__playwright-test__browser_resize, mcp__playwright-test__browser_set_storage_state, mcp__playwright-test__browser_cookie_clear, mcp__playwright-test__planner_setup_page
 model: opus
 color: green
@@ -36,10 +36,34 @@ the bug is fixed.
 
 ## 2. Gather context
 
-- **App source:** `../mn-careerforce-php83` (custom modules in
-  `web/modules/custom`, config in `config/`, theme in
-  `web/themes/custom/careerforce_skin`). Use it for exact routes, labels,
-  config values and permissions. Read it; never change it.
+- **App source (optional):** the CareerForce Drupal app
+  (`mn-careerforce-php83`: custom modules in `web/modules/custom`, config
+  in `config/`, theme in `web/themes/custom/careerforce_skin`). Not every
+  team member has it, and those who do keep it in different places. Find
+  it in this order and use the first folder that exists and has
+  `web/core` in it:
+  1. a path the caller gave in the request;
+  2. `APP_SOURCE_DIR` in `.env` (`grep '^APP_SOURCE_DIR=' .env`; a
+     relative path is relative to this project);
+  3. `../mn-careerforce-php83`.
+
+  Source paths in this file are relative to that folder. If you find it,
+  use it for exact routes, labels, config values and permissions; read
+  it, never change it. If none of these exists, carry on without it: the browser and the admin pages
+  are your sources, anything you would have checked in the source becomes
+  an Open question, and the report says the plan was written without the
+  source.
+- **Drupal core and contrib:** the site is built on Drupal 11, and some
+  plans check that Drupal's built-in features (login, content editing,
+  blocks, menus, media, permissions, caching, cron and so on) still work
+  after a deploy or update. For those, use Drupal's standard behaviour as
+  context too. With the source, read the core and contrib modules in
+  `web/core` and `web/modules/contrib` and the enabled modules in
+  `config/sync/core.extension.yml`. Without it, use what you know of
+  Drupal 11 and what the site shows: the standard admin pages
+  (`/admin/...`), and the module list at `/admin/modules` when you have an
+  admin session. Note which behaviour is stock Drupal and which is
+  CareerForce's own customisation.
 - **Jira and Confluence** links given in the request: read them if the
   caller passed their content; don't guess what they say.
 
@@ -72,8 +96,9 @@ Rules while browsing:
 - **Look, don't change.** Open forms, dialogs and admin pages to read their
   fields, labels, buttons and validation messages, but don't save, submit,
   book, register, delete or place anything. If a case needs to know what
-  happens after a save, and the source doesn't say, write the expected
-  result from the source, mark it "appears to", and add an Open question.
+  happens after a save, write the expected result from the source (or
+  from standard Drupal behaviour if you don't have the source), mark it
+  "appears to", and add an Open question.
 - **QA only** unless the caller says otherwise. Never browse Stage or
   Production as an admin.
 - Prefer `browser_snapshot` to screenshots. Use `browser_evaluate` to read
@@ -154,5 +179,5 @@ Changing an existing plan: follow "Status on every plan" (new cases →
 
 End with a short report: the plan's path, each case ID with its title and
 Prod Yes/No, what you checked in the browser and as which role, what came
-only from the source, the open questions, and any change you suggest
+only from the source (or that you had no source), the open questions, and any change you suggest
 to other plans.
