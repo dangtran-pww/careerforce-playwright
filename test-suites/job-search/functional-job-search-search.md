@@ -24,11 +24,6 @@ whole plan is safe on QA, Stage and Production. The quick post-deploy checks
 of the same page are in [smoke-job-search.md](../smoke/smoke-job-search.md); this plan
 doesn't repeat them.
 
-The cases come from the manual test session in
-`docs/prompts/job-search-part-1-search.md`: SE-1 is A1, SE-2 is A2, SE-3 is
-A3, SE-4 and SE-5 are A4, SE-6 is A5, SE-7 is A6, SE-8 to SE-11 are A7, and
-SE-12 is A8.
-
 ## Login
 
 | | |

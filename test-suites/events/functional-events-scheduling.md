@@ -46,9 +46,7 @@ another and the cases can run in any order. The plan is still not
 cases register the shared `jobseeker` account.
 
 Where the cases come from: the request for this part (the scope above), the
-knowledge base (`docs/kb/events/event-content-model.md`,
-`docs/kb/events/occurrence-generation-and-recurrence.md`, `docs/kb/locations/`)
-and the app source, and what QA showed on 2026-11-12.
+app source, and what QA showed on 2026-11-12.
 
 ## Scope
 
@@ -341,7 +339,7 @@ from November 13) has "This is a private event" ticked, which confirms part
 1's guess about it; the other Aitkin "Applications 101" session (144) is
 not private.
 
-From the KB and the app source (`happenings`, `cf_happenings`, `rrule`,
+From the app source (`happenings`, `cf_happenings`, `rrule`,
 `config/sync`), not checked on a running site:
 
 - **Generation:** saving a new session queues one item per date and runs a

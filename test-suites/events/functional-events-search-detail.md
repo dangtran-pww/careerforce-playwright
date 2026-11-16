@@ -41,8 +41,7 @@ the same browser for about 20 seconds, which would fail any plan running
 alongside it. See [Open questions](#open-questions).
 
 Where the cases come from: the request for this part (the scope above), the
-knowledge base `docs/kb/events/` and the app source, and what QA showed on
-2026-11-12.
+app source, and what QA showed on 2026-11-12.
 
 ## Login
 
@@ -271,7 +270,7 @@ and every card link's accessible name says "… in Bemidji or Online". The
 hybrid Job Club says "Minneapolis, MN and Online" on the search and
 "Minneapolis, MN or Online" on its location page.
 
-From the KB (`docs/kb/events/`) and the app source (`config/sync`,
+From the app source (`config/sync`,
 `cf_happenings`, `happenings`, the theme), not checked on a running site:
 
 - The search is view `content_search`, display `events_search`, on Search

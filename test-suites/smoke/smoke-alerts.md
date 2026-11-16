@@ -56,7 +56,7 @@ with the admin session on 2026-11-12):
   it, so the visitor checks need no cache-busting query. If a visitor still
   sees the old page after a save, that is a bug to report.
 
-**From the KB and the mn-careerforce source at commit `fda433001`** (not
+**From the mn-careerforce source at commit `fda433001`** (not
 checked on a running site):
 
 - **Block type.** `alert_notification`, label "Alert & Notification", so the
@@ -97,8 +97,7 @@ checked on a running site):
   and for the component name). An alert or notification shows on every page
   view until it is removed, so there is no "stays dismissed" behaviour to
   test.
-- **Location announcements** (`docs/kb/locations/location-announcements.md`)
-  are a separate kind of notice: `announcement` entities that location and
+- **Location announcements** are a separate kind of notice: `announcement` entities that location and
   account managers add per group or location under
   `/group/{group}/announcement`, shown in the Status region of group and
   location pages only, with start and end dates. They are not managed in

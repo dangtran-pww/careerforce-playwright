@@ -23,11 +23,6 @@ Every case runs as a visitor who isn't logged in and changes nothing, so the
 whole plan is safe on QA, Stage and Production. No case logs in or applies
 for a job, and no case goes further than the first page of another site.
 
-The cases come from the manual test session in
-`docs/prompts/job-search-part-3-posting-and-accessibility.md`: PO-1 is C1,
-PO-2 is C2, PO-3 is C3, PO-4 and PO-5 are C4, PO-6 to PO-8 are C5, RS-1 to
-RS-3 are E1, AX-1 to AX-4 are E2, and AX-5 and AX-6 are E3. PO-9 is added.
-
 ## Login
 
 | | |

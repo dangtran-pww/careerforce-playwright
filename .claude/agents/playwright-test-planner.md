@@ -1,6 +1,6 @@
 ---
 name: playwright-test-planner
-description: Use this agent to write or update a test plan in test-suites/<suite>/ for CareerForce. It browses the site (QA by default, as a visitor or a saved role) and reads the knowledge base and app source for context, then writes the plan in this project's format and checks it with npm run check:plans.
+description: Use this agent to write or update a test plan in test-suites/<suite>/ for CareerForce. It browses the site (QA by default, as a visitor or a saved role) and reads the app source for context, then writes the plan in this project's format and checks it with npm run check:plans.
 tools: Glob, Grep, Read, LS, Write, Edit, Bash, mcp__playwright-test__browser_click, mcp__playwright-test__browser_close, mcp__playwright-test__browser_console_messages, mcp__playwright-test__browser_drag, mcp__playwright-test__browser_evaluate, mcp__playwright-test__browser_file_upload, mcp__playwright-test__browser_handle_dialog, mcp__playwright-test__browser_hover, mcp__playwright-test__browser_navigate, mcp__playwright-test__browser_navigate_back, mcp__playwright-test__browser_network_request, mcp__playwright-test__browser_network_requests, mcp__playwright-test__browser_press_key, mcp__playwright-test__browser_run_code_unsafe, mcp__playwright-test__browser_select_option, mcp__playwright-test__browser_snapshot, mcp__playwright-test__browser_take_screenshot, mcp__playwright-test__browser_type, mcp__playwright-test__browser_wait_for, mcp__playwright-test__browser_resize, mcp__playwright-test__browser_set_storage_state, mcp__playwright-test__browser_cookie_clear, mcp__playwright-test__planner_setup_page
 model: opus
 color: green
@@ -36,8 +36,6 @@ the bug is fixed.
 
 ## 2. Gather context
 
-- **Knowledge base:** `docs/kb/` (start at `docs/kb/README.md`). It
-  describes the custom features: who can do what, routes, settings.
 - **App source:** `../mn-careerforce-php83` (custom modules in
   `web/modules/custom`, config in `config/`, theme in
   `web/themes/custom/careerforce_skin`). Use it for exact routes, labels,
@@ -74,7 +72,7 @@ Rules while browsing:
 - **Look, don't change.** Open forms, dialogs and admin pages to read their
   fields, labels, buttons and validation messages, but don't save, submit,
   book, register, delete or place anything. If a case needs to know what
-  happens after a save, and the KB or source doesn't say, write the expected
+  happens after a save, and the source doesn't say, write the expected
   result from the source, mark it "appears to", and add an Open question.
 - **QA only** unless the caller says otherwise. Never browse Stage or
   Production as an admin.
@@ -83,7 +81,7 @@ Rules while browsing:
   doesn't show them.
 - Note the date, the environment and the role you checked with. "What the
   site has" opens with a line like "Checked on QA with the admin session on
-  2026-11-12, without saving anything." Facts you got only from the KB or
+  2026-11-12, without saving anything." Facts you got only from the
   source go in their own list, marked as such.
 
 ## 4. Write the plan
@@ -156,5 +154,5 @@ Changing an existing plan: follow "Status on every plan" (new cases →
 
 End with a short report: the plan's path, each case ID with its title and
 Prod Yes/No, what you checked in the browser and as which role, what came
-only from the KB or source, the open questions, and any change you suggest
+only from the source, the open questions, and any change you suggest
 to other plans.

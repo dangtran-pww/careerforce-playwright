@@ -25,11 +25,6 @@ of the filters and sort are JF-1 to JF-5 in
 [smoke-job-search.md](../smoke/smoke-job-search.md); this plan goes further and
 doesn't repeat them.
 
-The cases come from the manual test session in
-`docs/prompts/job-search-part-2-sort-filters-paging.md`: SO-1 to SO-5 are
-B1, FI-1 is B2, FI-2 is B3, FI-3 and FI-4 are B4, UR-1 is B5, PG-2 to PG-5
-are B6, UR-2 is B7, and UR-3 is B8. SO-6, FI-5, FI-6 and PG-1 are added.
-
 ## Login
 
 | | |

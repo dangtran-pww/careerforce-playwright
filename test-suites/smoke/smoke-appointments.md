@@ -63,9 +63,9 @@ Checked on QA as `jobseeker` on 2026-11-12, without booking anything:
 
 - **Dashboard** `/user/<uid>`: "Upcoming Events & Appointments" with Events and Appointments ("You are not registered for any upcoming appointments.") and a "Schedule an Appointment" quick link.
 - **Booking page** `/appointments/521/booking` ("Book Your Appointment"): "What to know before" (arrive early; "you will receive a confirmation email"), "Select a format" (Online, Phone, In Person), "What phone number can we reach you at?", "What topics would you like to focus on? You may choose up to three." (Career Exploration, Digital Skills, Interviewing, Job Search, Networking, Resumes, Other with a text box), "Complete Booking", then the slot's DATE, TIME, LOCATION.
-- **My Events & Appointments** `/user/<uid>/events_appointments`: "Upcoming" ("View printable version", Events, Appointments) and "Past" on the same page. Past Appointments columns: Date & Time, Location, Status, Format. A past Phone appointment shows a phone number in its Location column. `/user/<uid>/past_events_appointments` answers 403 "Access denied" (the KB lists it as the past appointments page).
+- **My Events & Appointments** `/user/<uid>/events_appointments`: "Upcoming" ("View printable version", Events, Appointments) and "Past" on the same page. Past Appointments columns: Date & Time, Location, Status, Format. A past Phone appointment shows a phone number in its Location column. `/user/<uid>/past_events_appointments` answers 403 "Access denied".
 
-From the KB (`docs/kb/appointments/`, `docs/kb/services/`) and the mn-careerforce source (`cf_appointments`, `appointments`), not checked on a running site:
+From the mn-careerforce source (`cf_appointments`, `appointments`), not checked on a running site:
 
 - **Search window:** the search lists slots whose start is after now and no later than now + 8 days (`views.view.book_an_appointment`, `'+8 day'`). Booked and past slots are hidden.
 - **Session saved:** "The appointment session Appointment session #<id> has been created.", then the session page. A start in the past gives "The start date/time must be in the future." Slots are created Monday to Friday, up to 32 days ahead.
@@ -122,7 +122,7 @@ Also not covered here:
 - **Search indexing.** Are new, booked, cancelled and cancelled-booking slots reindexed as soon as they are saved, or only on cron? AA-2, AB-2, AS-3 and AA-3 search right after a change.
 - **Service records (AS-2).** Is sending service records to the State's activity system switched on for QA or Stage? If it is, AS-2 sends one each run, and Undo Attendance may fail when the State's system returns an error.
 - **Date of Service.** The Mark Attended form defaults Date of Service to today, not the appointment's date, and leaves Staff Member empty although the slot has one. Is that intended? AS-2 doesn't check either default.
-- **Past appointments page.** `/user/<uid>/past_events_appointments` answers 403 for the job seeker, while the KB lists it as the past appointments page; past appointments show in the "Past" section of `/user/<uid>/events_appointments`. Which is right?
+- **Past appointments page.** `/user/<uid>/past_events_appointments` answers 403 for the job seeker; past appointments show in the "Past" section of `/user/<uid>/events_appointments`. Is the 403 intended, or should that page still work?
 - **Leftover data.** Session S has had bookings, so it can't be deleted; AA-3 cancels its slots and the session. Is a cancelled session at Aitkin left on QA and Stage each run acceptable?
 
 ## Suggested files

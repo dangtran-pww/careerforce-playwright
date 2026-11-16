@@ -55,8 +55,7 @@ a short time (see
 [functional-events-search-detail → Open questions](../events/functional-events-search-detail.md#open-questions)).
 
 Where the cases come from: the request for this part (the scope above), the
-knowledge base `docs/kb/appointments/` and the app source, and what QA
-showed on 2026-11-12.
+app source, and what QA showed on 2026-11-12.
 
 ## Login
 
@@ -237,7 +236,7 @@ in its quick links and "Book now" in its "Book a 1:1 appointment with a
 Career Specialist" promo. The homepage, `/programs-services` and the
 Aitkin and Bloomington location pages have no link to the search.
 
-From the KB (`docs/kb/appointments/`) and the app source
+From the app source
 (`config/sync/views.view.book_an_appointment.yml`,
 `search_api.index.appointment_occurrences`,
 `happenings.occurrence_manager_settings.appointments_session`, the
@@ -282,9 +281,8 @@ From the KB (`docs/kb/appointments/`) and the app source
 - The booking page needs a login (`_user_is_logged_in`), so a visitor is
   sent to `/user/login?destination=…`. The success page sends anyone but
   the person who booked to the search page or their own appointments.
-- The KB says: "Dates: a week view, Monday to Friday. On a weekend it opens
-  on the next Monday." and "What's hidden: booked and past times." The
-  source also hides Draft and Cancelled times.
+- Dates are a week view, Monday to Friday; on a weekend it opens on the
+  next Monday. Booked, past, Draft and Cancelled times are hidden.
 
 ## Test cases
 
@@ -428,8 +426,8 @@ the page doesn't scroll sideways.
 
 ## Open questions
 
-1. **Weekend dates (AW-7, AW-8).** The KB says the search opens on the next
-   Monday at the weekend. With no date that is what the source does, but
+1. **Weekend dates (AW-7, AW-8).** At the weekend, with no date, the source
+   opens the search on the next Monday, but
    the "Available appointments for" heading would still name the Saturday
    or Sunday. With a weekend date in the address, QA showed the heading for
    the weekend day, no selected day, and this week's strip for a Saturday

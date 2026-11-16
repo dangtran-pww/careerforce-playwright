@@ -53,7 +53,7 @@ Checked on QA as `admin` on 2026-11-12 (see [functional-events-scheduling.md →
 - **Session page:** an occurrence table (Occurrence, Facilitator, Status, Registrants, Seats, Operations).
 - **Deleting and cancelling:** a session with any registration, even a cancelled one, has no Delete (it answers 403), so it can only be cancelled. The edit page of a cancelled session or occurrence answers 403.
 
-From the KB (`docs/kb/events/`, `docs/kb/services/`, `docs/kb/job-seeker-tools/`) and the mn-careerforce source, not checked on a running site (the `jobseeker` session had expired):
+From the mn-careerforce source, not checked on a running site (the `jobseeker` session had expired):
 
 - **Registration** (job seeker, Tier 2): "Register" reserves a seat and opens `/events/event-occurrence/<id>/registration` ("Confirm Your Registration", button "Complete Registration"), then `/registration-success`. The event page then shows "You are registered for this event." and "Cancel Registration". A job seeker who isn't Tier 2 is sent to the next profile step with "Please complete your profile to continue registering for events." and `destination` set to `/registration`. Tier 2 steps: Education and Employment, Equal Opportunity, Military and Veterans, Income and Public Assistance.
 - **Cancel** opens a dialog "Cancel Event Registration", "Are you sure you would like to cancel your event registration?", "Yes"; then "Your registration has been cancelled." and a redirect to `/user/<uid>/events_appointments`.

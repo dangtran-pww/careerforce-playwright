@@ -20,7 +20,6 @@ dashboard/                  # `npm run dashboard` — local test dashboard (see 
                              #   app.mjs mounts routes/; catalog/ reads plans and suites,
                              #   runs/ runs them, claude/ asks Claude Code
   src/                      #   React app (Vite + TypeScript); dist/ is its build (gitignored)
-.claude/skills/             # Claude Code skills: ask-kb, update-kb
 reports/                    # generated test reports (gitignored)
 tests/
   pages/                    # Page objects for the CareerForce smoke suite below
