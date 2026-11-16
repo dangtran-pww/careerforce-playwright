@@ -7,11 +7,18 @@
 // while the dashboard server runs, so it is still there when you come back
 // to the page; restarting the server forgets it. Every request asks Claude
 // again. Explaining the case's code again resets it (forgetReview).
+//
+// Env: REVIEW_MODEL (default opus).
 
 import { ApiError } from '../errors.mjs';
 import { singleFlight } from '../lib/single-flight.mjs';
 import { caseContext, findCase, hashFiles } from './cases.mjs';
 import { answerOf, claudeError, runClaude, usageOf } from './run.mjs';
+
+// Opus: judging whether code really does what the plan says (not just
+// describing it) needs the stronger model. REVIEW_MODEL (e.g. sonnet) picks
+// another.
+const MODEL = process.env.REVIEW_MODEL || 'opus';
 
 const SCHEMA = {
   type: 'object',
@@ -123,7 +130,9 @@ export function forgetReview(plan, id) {
 async function generate(plan, id) {
   const testCase = findCase(plan, id);
   const files = testCase.locations.map((l) => l.file);
-  const result = await runClaude(prompt(plan, testCase), SCHEMA);
+  const result = await runClaude(prompt(plan, testCase), SCHEMA, {
+    model: MODEL,
+  });
   const answer = answerOf(result);
   if (!answer?.verdict || !Array.isArray(answer.findings))
     throw claudeError(result, 'Claude answered without a review. Try again.');
@@ -141,7 +150,7 @@ async function generate(plan, id) {
     files,
     hash: await hashFiles(files),
     createdAt: new Date().toISOString(),
-    ...usageOf(result),
+    ...usageOf(result, MODEL),
     costUsd: result.total_cost_usd ?? null,
   };
 }

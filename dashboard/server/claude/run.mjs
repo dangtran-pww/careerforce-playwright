@@ -13,7 +13,8 @@
 // Either way Claude gets the tools it is given and is denied every tool that
 // writes, runs commands, browses the web or starts other agents.
 //
-// Env: CLAUDE_BIN (default `claude`), EXPLAIN_MODEL (default sonnet),
+// Env: CLAUDE_BIN (default `claude`), EXPLAIN_MODEL (default sonnet; a
+// caller can pass its own model instead, as review.mjs does),
 // EXPLAIN_TIMEOUT_MS (default 5 minutes), CLAUDE_CONCURRENCY (default 2).
 
 import { spawn } from 'node:child_process';
@@ -22,7 +23,8 @@ import { killGroup } from '../lib/processes.mjs';
 
 export const CLAUDE = process.env.CLAUDE_BIN ?? 'claude';
 // Sonnet reads and describes test code well, for much less than Opus.
-// EXPLAIN_MODEL (e.g. haiku, opus) picks another for every runClaude() call.
+// EXPLAIN_MODEL (e.g. haiku, opus) picks another for every runClaude() call
+// that doesn't name its own model.
 const MODEL = process.env.EXPLAIN_MODEL || 'sonnet';
 const TIMEOUT_MS = Number(process.env.EXPLAIN_TIMEOUT_MS ?? 5 * 60_000);
 const CONCURRENCY = Math.max(1, Number(process.env.CLAUDE_CONCURRENCY) || 2);
@@ -178,18 +180,18 @@ export function stopClaudes() {
 /**
  * Ask Claude `text`, with the Read, Grep and Glob tools only (or `tools`,
  * none for an answer from the prompt alone), for a JSON answer that fits
- * `schema`. Resolves with the `claude -p` JSON result; read it with
- * answerOf() and usageOf().
+ * `schema`, on `model` (default MODEL). Resolves with the `claude -p` JSON
+ * result; read it with answerOf() and usageOf().
  */
 export async function runClaude(
   text,
   schema,
-  { tools = READ_TOOLS, maxTurns = 30 } = {},
+  { tools = READ_TOOLS, maxTurns = 30, model = MODEL } = {},
 ) {
   await acquire();
   try {
     return await spawnClaude(
-      claudeArgs(text, schema, { tools, maxTurns, model: MODEL }),
+      claudeArgs(text, schema, { tools, maxTurns, model }),
     );
   } finally {
     release();

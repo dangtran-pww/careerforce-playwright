@@ -1,0 +1,85 @@
+/* InfoTip: a small round "i" button and the bubble it opens, below it and
+   lined up with its right edge (it sits at the right of a row of buttons). */
+.info-tip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+button.info-tip-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border-radius: 50%;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: var(--fs-sm);
+  font-style: italic;
+  line-height: 1;
+}
+
+.info-tip-bubble {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  width: max-content;
+  max-width: min(400px, calc(100vw - 32px));
+  padding: 10px 12px;
+  border: 1px solid var(--control-border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--fs-sm);
+  font-weight: 400;
+  line-height: 1.45;
+  text-align: left;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 12%);
+}
+
+.info-tip-bubble[hidden] {
+  display: none;
+}
+
+.info-tip-bubble p {
+  margin: 0;
+}
+
+.info-tip-bubble p + p {
+  margin-top: 6px;
+}
+
+/* Headed lists inside a bubble, e.g. what a review shows (ReviewHelp). */
+.info-tip-bubble .info-tip-heading {
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+.info-tip-list {
+  margin: 4px 0 0;
+  padding-left: 20px;
+}
+
+.info-tip-list > li + li {
+  margin-top: 6px;
+}
+
+.info-tip-list ul {
+  margin: 4px 0 0;
+  padding-left: 16px;
+}
+
+.info-tip-list ul li + li {
+  margin-top: 3px;
+}
+
+.info-tip-list .case-review-verdict {
+  padding: 0 6px;
+  font-size: var(--fs-xs);
+}
+
+.info-tip-list + p {
+  margin-top: 8px;
+}

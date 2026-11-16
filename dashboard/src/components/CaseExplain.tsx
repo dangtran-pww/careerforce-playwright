@@ -1,7 +1,8 @@
 import { useId, useRef, useState } from 'react';
 import { useCaseClaude } from '../hooks/useCaseClaude';
-import { CaseReviewResult } from './CaseReviewResult';
+import { CaseReviewResult, ReviewHelp } from './CaseReviewResult';
 import { ClaudeUsageNote } from './ClaudeUsageNote';
+import { InfoTip } from './InfoTip';
 import { Spinner } from './Spinner';
 import { ToggleButton } from './ToggleButton';
 
@@ -149,6 +150,9 @@ export function CaseExplain({
                   'Review against plan'
                 )}
               </button>
+              <InfoTip label="How the review works">
+                <ReviewHelp />
+              </InfoTip>
             </div>
             <ToggleButton open controls={bodyId} onToggle={foldFromBottom}>
               Show less
