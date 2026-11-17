@@ -737,7 +737,8 @@ Every plan, by suite folder.
 - `smoke/smoke-profile.md` — Status: implemented. Implemented tests:
   `tests/smoke/profile/*.spec.ts`. Job seeker and admin profile edits.
   No-prod plan, desktop only, `jobseeker` and `admin` logins.
-- `smoke/smoke-events.md` — Status: ready to generate. Events, one pass
+- `smoke/smoke-events.md` — Status: implemented. Implemented tests:
+  `tests/smoke/events/*.spec.ts`. Events, one pass
   each: the 45-day window and event cards as a visitor (prod-safe); an
   admin schedules a short session, a job seeker registers and cancels, and
   attendance creates a service record (no-prod cases, `admin` and

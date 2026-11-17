@@ -1,8 +1,7 @@
 # [Smoke] - Events - Test Plan
 
-Status: partially implemented
-Implemented test: tests/smoke/events/listing.spec.ts, tests/smoke/events/filters.spec.ts
-Pending cases: EP-1 to EP-3, EA-1 to EA-3, ER-1, ER-2, ES-1 — ready to generate
+Status: implemented
+Implemented test: tests/smoke/events/*.spec.ts
 
 A quick check after each deploy that the main events flows still work, one pass each: what visitors see, an admin scheduling an event, a job seeker registering and cancelling, and attendance with its service record. The cases come from the team's manual post-deploy checklist on Confluence, "Prod DEED Smoke Testing 11/05/2026" (events section), and the online-only card check from [MNDEED-9620](https://portland-webworks.atlassian.net/browse/MNDEED-9620) (open). The in-depth versions are the functional Events plans in [test-suites/events/](../events/suite.md).
 
