@@ -733,7 +733,10 @@ Every plan, by suite folder.
   checks (JT-6 to JT-8, moved from smoke-public-site), plus Skills Matcher,
   Interest Profiler, Employment Readiness and career goals as a job seeker
   (JT-1 to JT-5: no-prod cases, QA and Stage only, desktop only).
-- `smoke/smoke-resume-builder.md` — Status: ready to generate.
+- `smoke/smoke-resume-builder.md` — Status: implemented.
+  Implemented tests: `tests/smoke/resume-builder/*.spec.ts`. No-prod plan,
+  `jobseeker` login. Master and targeted resumes, experience and duties,
+  uploads, and the dashboard's My Resume Center link.
 - `smoke/smoke-profile.md` — Status: implemented. Implemented tests:
   `tests/smoke/profile/*.spec.ts`. Job seeker and admin profile edits.
   No-prod plan, desktop only, `jobseeker` and `admin` logins.
