@@ -10,6 +10,7 @@ import { Modal } from '../../components/Modal';
 import { PlanMarkdown } from '../../components/PlanMarkdown';
 import { PlanOverview } from '../../components/PlanOverview';
 import { PlanRunButton } from '../../components/PlanRunButton';
+import { PlanStatusTip } from '../../components/PlanStatusTip';
 import { ToggleButton } from '../../components/ToggleButton';
 import { useApi } from '../../hooks/useApi';
 import { useEnv } from '../../hooks/useEnv';
@@ -37,7 +38,6 @@ export function PlanPanel({
   onClose,
   projects,
   headed,
-  a11y,
   activeRun,
   openCase = null,
 }: {
@@ -46,7 +46,6 @@ export function PlanPanel({
   onClose: () => void;
   projects: string[]; // the suite's projects for this plan
   headed: boolean;
-  a11y: boolean; // scan the pages for accessibility
   activeRun: string | null;
   openCase?: string | null; // a case whose row starts opened
 }) {
@@ -76,8 +75,8 @@ export function PlanPanel({
 
   // How every Run button in the panel runs (runOptions.tsx).
   const runOptions = useMemo(
-    () => ({ suite, projects, headed, a11y, activeRun, onRunError }),
-    [suite, projects, headed, a11y, activeRun, onRunError],
+    () => ({ suite, projects, headed, activeRun, onRunError }),
+    [suite, projects, headed, activeRun, onRunError],
   );
 
   const plan = data?.plan;
@@ -96,6 +95,7 @@ export function PlanPanel({
           {plan && (
             <>
               <Badge map={PLAN_STATUS} value={plan.status} />
+              <PlanStatusTip />
               <PlanNoProdBadge plan={plan} />
             </>
           )}

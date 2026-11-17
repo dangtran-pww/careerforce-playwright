@@ -1,4 +1,3 @@
-import { Link } from 'react-router';
 import type { A11yRunsResponse } from '../../api/types';
 import { ActiveRunBanner, ErrorBox, Loading } from '../../components/Callouts';
 import { RunsTable } from '../../components/RunsTable';
@@ -25,15 +24,6 @@ export function A11yPage() {
         are grouped by page, with IDs in the URL taken out
         (/user/&#123;id&#125;/edit).
       </p>
-      <section className="card" aria-labelledby="tests-heading">
-        <h2 id="tests-heading">Scan with your tests</h2>
-        <p>
-          On a <Link to="/suites">suite</Link>’s page, tick{' '}
-          <strong>Scan pages for accessibility</strong> and run the suite, a
-          plan or some cases. Every page their tests and prompt cases reach is
-          scanned, logged in as they log in.
-        </p>
-      </section>
       <JourneyForm />
       <h2 className="section-title">
         Recent accessibility runs on {currentEnv.name}

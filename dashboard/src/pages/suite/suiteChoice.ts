@@ -4,7 +4,6 @@ import type { Suite } from '../../api/types';
 export interface SuiteChoice {
   plans: Set<string>; // plan slugs
   headed: boolean;
-  a11y: boolean; // scan every page the run reaches for accessibility
 }
 
 // Every plan that can run.
@@ -12,7 +11,6 @@ export function defaultSuiteChoice(suite: Suite): SuiteChoice {
   return {
     plans: new Set(suite.plans.filter((p) => p.runnable).map((p) => p.slug)),
     headed: false,
-    a11y: false,
   };
 }
 

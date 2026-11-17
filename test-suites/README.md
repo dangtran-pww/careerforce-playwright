@@ -365,8 +365,7 @@ is an example.
     pattern (`/user/{id}/edit`), and Claude checks keyboard use, focus and
     names. A broken rule fails the case. Write the prompt as the journey
     to follow (as which role, what to open, which dialogs to open); there is
-    no need to list each page. Any plan or suite run can also scan the pages
-    its tests reach: "Scan pages for accessibility" in the dashboard.
+    no need to list each page.
   - Everything under `## Prompt` is sent to Claude as written. Write it the
     way you'd ask a tester: what to open, what to look at, and what counts as
     a problem. Content that differs between sites (jobs, events, dates) is

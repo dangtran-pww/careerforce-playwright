@@ -1,5 +1,5 @@
-// How the plan panel's Run buttons run: the suite page's choices (headed,
-// accessibility scan), the suite's projects for the plan, whether another
+// How the plan panel's Run buttons run: the suite page's choice (headed),
+// the suite's projects for the plan, whether another
 // run is going, and where a refused start is reported. <PlanPanel> provides
 // them once; every Run button inside it reads them with useRunOptions(),
 // rather than each layer passing them on as props.
@@ -10,7 +10,6 @@ export interface RunOptions {
   suite: string; // the suite page it's on; runs started here link back
   projects: string[]; // the suite's projects for this plan; [] = the plan's own
   headed: boolean;
-  a11y: boolean; // scan the pages for accessibility
   activeRun: string | null;
   onRunError?: (err: Error) => void; // a Run press the server refused
 }
@@ -31,7 +30,6 @@ export function runBody(options: RunOptions, cases?: string[]) {
     projects: options.projects.length ? options.projects : undefined,
     cases,
     headed: options.headed,
-    a11y: options.a11y,
     suite: options.suite,
   };
 }

@@ -152,23 +152,6 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
             />
             <span>Show the browser while the tests run</span>
           </label>
-          <label className="check">
-            <input
-              type="checkbox"
-              checked={choice.a11y}
-              onChange={(e) =>
-                setChoice((c) => ({ ...c, a11y: e.target.checked }))
-              }
-            />
-            <span>Scan pages for accessibility</span>
-          </label>
-          {choice.a11y && (
-            <p className="note small">
-              Every page and dialog the tests and prompt cases reach is checked
-              with axe (WCAG 2.2 A/AA), each one once per run. A broken rule
-              fails the run; the results are on the run page.
-            </p>
-          )}
           <p className="note small">
             Plans run one after another, each with its prompt cases after its
             tests. Stop ends the current plan and skips the rest. Each prompt
@@ -189,7 +172,6 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
                 return start(`/api/suites/${suite.slug}/run`, {
                   plans: [...choice.plans],
                   headed: choice.headed,
-                  a11y: choice.a11y,
                 });
               }}
             >
@@ -220,7 +202,6 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
             suite.plans.find((p) => p.slug === shownPlan)?.projects ?? []
           }
           headed={choice.headed}
-          a11y={choice.a11y}
           activeRun={activeRun}
         />
       ) : (
