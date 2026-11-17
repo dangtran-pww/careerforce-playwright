@@ -4,6 +4,11 @@ Status: implemented
 Implemented test: tests/smoke/content-lifecycle/*.spec.ts
 Prod: No: creates, publishes, translates and deletes test pages.
 
+A quick check after each deploy that a page's life cycle still works for
+editors: create and publish a page, archive and restore it, view and revert
+to older revisions, add and delete a translation, and find a published page
+with site search.
+
 Devices: desktop only. Admin and editor screens are not tested on a phone (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`).
 
 From the team's manual checklist on Confluence,

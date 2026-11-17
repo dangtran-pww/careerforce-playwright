@@ -4,6 +4,10 @@ Status: ready to generate
 Implemented test: —
 Prod: No: uploads to and deletes from the media library.
 
+A quick check after each deploy that content managers can still use the
+media library: browse it from a media field, upload an image through that
+field and a document to the library, and delete what was uploaded.
+
 Devices: desktop only. Admin and editor screens are not tested on a phone (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`).
 
 ## Scope

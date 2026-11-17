@@ -23,7 +23,7 @@ Before you open the browser, read:
   Production".
 - The suite's `suite.md`, and every plan already in that suite, so you
   don't repeat cases another plan has. Reference the other plan's case ID
-  instead ("covered by AM-5 in smoke-admin-maintenance").
+  instead ("covered by AM-3 in smoke-admin-maintenance").
 - Two model plans to copy the shape from:
   `test-suites/smoke/smoke-block-placement.md` (an admin plan that
   creates, checks and cleans up) and `test-suites/smoke/smoke-job-search.md`
@@ -119,8 +119,10 @@ plans' sections:
 
 - Title (`# [Smoke] - <Area> - Test Plan`), then the header lines:
   `Status: ready to generate`, `Implemented test: —`, and when they apply
-  `Prod: No: <reason>`, `Parallel: yes`, `Devices: desktop only. …`.
-- Where the cases come from (checklist item, ticket) in a sentence or two.
+  `Prod: No: <reason>`, `Parallel: yes`.
+- An overview paragraph (Rule 7): what the plan tests, for whom, and why.
+- Then, when it applies, `Devices: desktop only. …`, and where the cases
+  come from (checklist item, ticket) in a sentence or two.
 - **Scope**, **Login and test data**,
   **What the site has**, the **case tables** (Test cases, then Prompt
   cases if any), **Not covered**, **Open

@@ -7,9 +7,6 @@
 No-prod cases: SS and MD (see the Prod column). On Production, the
 dashboard and Playwright run the JS and JF cases only.
 
-SS and MD are tagged `@no-prod`, run on desktop and phone, and need a saved
-session from `npm run login:manual -- jobseeker`.
-
 ## Overview
 
 This plan is the smoke check for Job Search (`/job-search`): the search
@@ -43,6 +40,9 @@ Production, Playwright leaves them out, and `--grep-invert @no-prod` leaves
 them out elsewhere (see
 [Keeping tests off Production](../README.md#keeping-tests-off-production)).
 Each test removes what it added, even when it fails.
+
+SS and MD are tagged `@no-prod`, run on desktop and phone, and need a saved
+session from `npm run login:manual -- jobseeker`.
 
 The plan isn't no-prod as a whole, only SS and MD are (the Prod column), so
 on Production the dashboard runs the plan without them. By hand, they are

@@ -4,14 +4,14 @@ Status: partially implemented
 Implemented test: tests/smoke/events/listing.spec.ts, tests/smoke/events/filters.spec.ts
 Pending cases: EP-1 to EP-3, EA-1 to EA-3, ER-1, ER-2, ES-1 — ready to generate
 
-Devices: EP-1 to EP-4 run on desktop and on a phone. EP-5 to EP-7 are tagged `@desktop-only`: the filtering happens on the server, so checking it once on desktop is enough. Every other case logs in as `admin` or `jobseeker`, changes data, and is tagged `@desktop-only` (and `@no-prod`).
-
 A quick check after each deploy that the main events flows still work, one pass each: what visitors see, an admin scheduling an event, a job seeker registering and cancelling, and attendance with its service record. The cases come from the team's manual post-deploy checklist on Confluence, "Prod DEED Smoke Testing 11/05/2026" (events section), and the online-only card check from [MNDEED-9620](https://portland-webworks.atlassian.net/browse/MNDEED-9620) (open). The in-depth versions are the functional Events plans in [test-suites/events/](../events/suite.md).
+
+Devices: EP-1 to EP-4 run on desktop and on a phone. EP-5 to EP-7 are tagged `@desktop-only`: the filtering happens on the server, so checking it once on desktop is enough. Every other case logs in as `admin` or `jobseeker`, changes data, and is tagged `@desktop-only` (and `@no-prod`).
 
 Already covered elsewhere, so not repeated here:
 
 - Location pages load: LV-1 in [smoke-public-site.md](smoke-public-site.md). "Upcoming Events" lists at least 1 item: HP-1.
-- Events search sort and filters after a reindex, and Similar Events: AM-4 (and AM-3) in [smoke-admin-maintenance.md](smoke-admin-maintenance.md).
+- Events search and Similar Events return results after a reindex, and the Online filter works: AM-3 in [smoke-admin-maintenance.md](smoke-admin-maintenance.md). Sort and filters in depth: [functional-events-search-detail.md](../events/functional-events-search-detail.md).
 
 ## Scope
 

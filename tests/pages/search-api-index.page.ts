@@ -48,18 +48,25 @@ export class SearchApiIndexPage {
   }
 
   // "Rebuild tracking information" goes to a confirm form at
-  // …/index/<id>/rebuild-tracker ("Confirm" / "Cancel"); confirming may run
-  // a tracking batch before landing back on the index page.
-  async rebuildTracking(batchTimeout: number) {
+  // …/index/<id>/rebuild-tracker ("Confirm" / "Cancel").
+  async openRebuildTracker() {
     await this.page
       .getByRole('button', { name: 'Rebuild tracking information' })
       .click();
     await this.page.waitForURL(/\/rebuild-tracker$/);
+  }
+
+  // Confirming may run a tracking batch before landing back on the index
+  // page. Waits for that page rather than reloading it, so its status
+  // message can still be read.
+  async confirmRebuildTracker(batchTimeout: number) {
     await this.page
       .getByRole('button', { name: 'Confirm', exact: true })
       .click();
     await waitForBatch(this.page, batchTimeout);
-    await this.goto();
+    await this.page.waitForURL((url) =>
+      url.pathname.endsWith(`/index/${this.machineName}`),
+    );
   }
 
   async indexNow(batchTimeout: number) {

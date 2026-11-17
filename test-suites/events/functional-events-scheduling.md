@@ -4,8 +4,6 @@ Status: ready to generate
 Implemented test: —
 Prod: No: creates, changes, cancels and deletes event catalog items, sessions, occurrences and locations that visitors see, and OG-5 and DL-2 register the `jobseeker` account for an event.
 
-Devices: desktop only. Every case changes data, so every test is tagged `@desktop-only` and `@no-prod`, and the admin screens aren't tested on a phone.
-
 ## Overview
 
 Part 2 of 5 of the functional plans for Events. It tests how staff build
@@ -19,6 +17,8 @@ the warning when registrations would be cancelled; occurrence overrides;
 the Draft, Active and Cancelled states of sessions and occurrences;
 scheduling from a location's own menu; alternate locations; private events;
 deleting versus cancelling; and which roles may do what.
+
+Devices: desktop only. Every case changes data, so every test is tagged `@desktop-only` and `@no-prod`, and the admin screens aren't tested on a phone.
 
 The other parts:
 

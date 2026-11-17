@@ -4,6 +4,11 @@ Status: ready to generate
 Implemented test: —
 Prod: No: places an alert and a notification that every visitor sees on every page; the checklist also says not to test this on Production during prime time.
 
+A quick check after each deploy that site-wide alerts and notifications
+still work: an admin places an alert and a notification, both show on every
+page for visitors, the notification's text box fills its row, and both are
+removed again.
+
 Devices: desktop only. Admin and editor screens are not tested on a phone (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`). The visitor checks also stay on desktop: the alert and notification markup has no phone-specific layout (no breakpoint classes in the component template), and both regions are printed the same way at every width, so a phone run would repeat the desktop checks while placing the blocks a second time.
 
 The team's manual checklist on Confluence,

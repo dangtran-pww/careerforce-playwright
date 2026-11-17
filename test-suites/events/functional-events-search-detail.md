@@ -28,8 +28,11 @@ The other parts (not written yet):
 
 This plan is the in-depth version of the quick visitor checks in the Smoke
 suite: EP-1 to EP-7 in [smoke-events.md](../smoke/smoke-events.md), and
-AM-4 (and the Similar Events part of AM-3) in
-[smoke-admin-maintenance.md](../smoke/smoke-admin-maintenance.md). Some overlap is
+AM-3 in
+[smoke-admin-maintenance.md](../smoke/smoke-admin-maintenance.md) (after a
+reindex, searches and Similar Events return results, and the Online filter
+works). The sort and filter cases the smoke plan used to have are covered
+here. Some overlap is
 expected; the case IDs here are its own.
 
 Every case runs as a visitor who isn't logged in and changes nothing, so the

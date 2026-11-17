@@ -4,6 +4,11 @@ Status: ready to generate
 Implemented test: —
 Prod: No: creates, edits and uploads resumes on the job seeker account.
 
+A quick check after each deploy that the Resume Builder still works for a
+job seeker: create a master resume, add and edit an experience with duties,
+create and update a tailored resume, upload a resume file, and see the
+resume promo block on the dashboard.
+
 ## Scope
 
 - Creates master and tailored resumes and uploads a resume

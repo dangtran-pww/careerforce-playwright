@@ -4,6 +4,10 @@ Status: implemented
 Implemented test: tests/smoke/block-placement/*.spec.ts
 Prod: No: places a block that every visitor sees.
 
+A quick check after each deploy that editors can still place block content:
+create a custom content block, place it on every page, restrict it to one
+page, and remove it.
+
 Devices: desktop only. Admin and editor screens are not tested on a phone (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`).
 
 The team's manual checklist on Confluence,

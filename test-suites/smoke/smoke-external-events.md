@@ -5,9 +5,9 @@ Implemented test: tests/smoke/external-events/visitor.spec.ts, tests/smoke/exter
 
 A quick check after each deploy that the external events flow still works, one pass each: what a visitor sees ("Submit an Event" form, the link to it, an external event's page), an employer submitting an event, and an admin reviewing it, publishing it and seeing it on the Events search and its own page. The cases come from the external events notes in [functional-events-search-detail.md](../events/functional-events-search-detail.md) (EX cases) and [functional-events-scheduling.md](../events/functional-events-scheduling.md) ("Add External Sessions", External Events, Webform Submissions). The in-depth version is functional-events-external-submissions (Events part 5, not written yet).
 
-Devices: XV-1 to XV-3 run on desktop and on a phone. Every other case submits or reviews an event, changes data, and is tagged `@desktop-only` (and `@no-prod`).
-
 Already covered elsewhere, so not repeated here:
+
+Devices: XV-1 to XV-3 run on desktop and on a phone. Every other case submits or reviews an event, changes data, and is tagged `@desktop-only` (and `@no-prod`).
 
 - External event cards on the Events search and the 45-day window: EP-1 in [smoke-events.md](smoke-events.md). External event cards, their page, and external events not being limited to 45 days in depth: EX-1 to EX-4 in [functional-events-search-detail.md](../events/functional-events-search-detail.md).
 - The form's validation (required fields, phone and ZIP patterns, End time after Start time, the 60-day date limit, allowed event types), Decline and Mark Spam, the bulk "Create Draft" action, cancelling an external event, which roles can review, and the emails: functional-events-external-submissions (to be written).

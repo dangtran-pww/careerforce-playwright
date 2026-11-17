@@ -254,6 +254,7 @@ the script if it can be checked automatically.
 | 4 | [Case IDs](#rule-4-case-ids) | Yes |
 | 5 | [One test case table](#rule-5-one-test-case-table) | Yes |
 | 6 | [No site password gate](#rule-6-no-site-password-gate) | Yes |
+| 7 | [Overview first](#rule-7-overview-first) | Yes |
 
 ### Rule 1: Steps and Expected result cells
 
@@ -506,6 +507,22 @@ Login section covers only the site login and roles the plan itself uses.
 The script reports a plan that mentions "password gate", "Basic Auth" or
 `BASIC_AUTH`.
 
+### Rule 7: Overview first
+
+After the header lines (`Status`, `Implemented test`, `Pending cases`,
+`Updated cases`, `Prod`, `Parallel`), the first paragraph of a plan is its
+overview: what the plan tests, for whom, and why, in a few sentences, so a
+reader knows what the plan is about before any detail. A `## Overview`
+heading above it is fine.
+
+Everything else comes after the overview: the `Devices: …` note, where the
+cases come from, which cases moved from or to other plans, and notes on
+logins, tags or Production.
+
+The script reports a plan whose first paragraph after the header lines is
+the Devices note, a list or table, or a `##` heading other than
+`## Overview` (no overview at all).
+
 ### Checking a plan
 
 ```bash
@@ -677,12 +694,13 @@ Every plan, by suite folder.
   Implemented tests: `tests/smoke/anonymous/*.spec.ts`.
 - `smoke/smoke-admin-reports.md` — Status: implemented.
   Implemented test: `tests/smoke/admin-reports/admin-reports.spec.ts`.
-- `smoke/smoke-admin-maintenance.md` — Status: needs update (AM-2: the
-  rebuild-tracking confirm page is `/rebuild-tracker`; AM-1 not yet run).
+- `smoke/smoke-admin-maintenance.md` — Status: partially implemented (AM-2
+  for Occupations needs a re-run with the repeated "Index now").
   Implemented tests:
   `tests/smoke/admin-maintenance/*.spec.ts`. No-prod plan.
-  Permissions rebuild, search-api rebuild tracking and reindex, and
-  search checks (site, events, appointments, similar events, occupations).
+  Permissions rebuild, search-api rebuild tracking and reindex, search
+  checks (site, events, appointments, similar events, occupations), plus one
+  events and one appointments filter check.
 - `smoke/smoke-content-lifecycle.md` — Status: implemented.
   Implemented tests: `tests/smoke/content-lifecycle/*.spec.ts`. No-prod plan.
   Publish/unpublish, revisions, translation.

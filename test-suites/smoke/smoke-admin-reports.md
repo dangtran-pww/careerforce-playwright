@@ -8,6 +8,11 @@ AR-1 currently fails on QA (a real status-report error) — see
 bug in the test.
 Implemented test: `tests/smoke/admin-reports/admin-reports.spec.ts`
 
+A quick check after each deploy, as a logged-in admin, that the site's admin
+reports look healthy: the status report has no errors, its translations
+warning matches the environment, and every search index has a sensible
+number of items. Every case only reads.
+
 **Devices: desktop only.** Admin and editor screens are not tested on a phone (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`).
 
 Split out from [smoke-public-site.md](smoke-public-site.md).

@@ -4,6 +4,10 @@ Status: ready to generate
 Implemented test: —
 Prod: No: edits user profiles.
 
+A quick check after each deploy that profiles can still be edited: a job
+seeker edits a profile section, sets veteran status and saves sections on
+their own, and an admin views and edits another user's profile.
+
 ## Scope
 
 - Edits profile fields on the job seeker test account and

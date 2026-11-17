@@ -3,6 +3,11 @@
 Status: ready to generate
 Implemented test: —
 
+A quick check after each deploy that inactive users are logged out: admin
+and job seeker pages carry the warning and logout settings, the warning
+comes at 11 minutes and Yes keeps the session, No or no answer leads to
+logging out, and visitors get no timer.
+
 Devices: desktop only. The cases check timers and requests, not layout, and each phone run would use the shared sessions again (add `auto-logout` to `DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`).
 
 The team's post-deploy checklist on Confluence ("Prod DEED Smoke Testing

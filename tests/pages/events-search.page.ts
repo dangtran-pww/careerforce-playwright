@@ -106,7 +106,11 @@ export class SimilarEventsBlock {
     this.block = page.locator(
       '.block-views-blockevents-mlt-block-occurrence-mlt',
     );
-    this.links = this.block.locator('a[href*="/events/event-occurrence/"]');
+    // Skip Drupal's contextual links (admins only): their URLs carry
+    // ?destination=/events/event-occurrence/<this event>.
+    this.links = this.block.locator(
+      'a[href*="/events/event-occurrence/"]:not(.contextual-links a)',
+    );
   }
 
   async linkedEventIds(): Promise<string[]> {
@@ -118,5 +122,7 @@ export class SimilarEventsBlock {
 }
 
 export function eventIdFromHref(href: string): string {
-  return href.match(/\/events\/event-occurrence\/(\d+)/)?.[1] ?? '';
+  // Match the path only, never a ?destination= in the query string.
+  const path = new URL(href, 'http://localhost').pathname;
+  return path.match(/^\/events\/event-occurrence\/(\d+)/)?.[1] ?? '';
 }

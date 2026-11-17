@@ -4,6 +4,10 @@ Status: implemented
 Implemented test: tests/smoke/ckeditor/*.spec.ts
 Prod: No: creates and deletes test pages.
 
+A quick check after each deploy that the CKEditor 5 editor still works for
+editors: each text format's toolbar, headings, lists with sub-items, tables,
+media embeds, and bold, italic and links, all on a throwaway page.
+
 Devices: desktop only. Admin and editor screens are not tested on a phone (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`).
 
 From the team's manual checklist on Confluence,

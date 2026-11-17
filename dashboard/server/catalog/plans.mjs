@@ -237,7 +237,7 @@ async function listTests() {
   const report = JSON.parse(stdout);
   const tests = [];
   // `path` is the describe titles then the test title, e.g.
-  // ["AM-5: appointments search …", "default day"].
+  // ["AM-3: searches work after reindex", 'occupations "nurse" returns results'].
   const walk = (suite, path) => {
     for (const spec of suite.specs ?? [])
       for (const t of spec.tests)

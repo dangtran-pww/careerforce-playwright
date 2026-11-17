@@ -3,13 +3,13 @@
 Status: ready to generate
 Implemented test: —
 
-Devices: AP-1 runs on desktop and on a phone. AP-2 is tagged `@desktop-only`: the 8-day window is applied on the server, so checking it once on desktop is enough. Every other case logs in as `admin` or `jobseeker`, changes data, and is tagged `@desktop-only` (and `@no-prod`).
-
 A quick check after each deploy that the main appointments flows still work, one pass each: what visitors see in the appointment search, an admin creating a short appointment session, a job seeker booking and cancelling, an admin adding and cancelling an attendee, attendance with its service record, and an admin cancelling a slot. The cases come from the team's manual post-deploy checklist on Confluence, "Prod DEED Smoke Testing 11/05/2026" (appointments section). The in-depth versions are the functional Appointments plans in [test-suites/appointments/](../appointments/suite.md) (to be written).
+
+Devices: AP-1 runs on desktop and on a phone. AP-2 is tagged `@desktop-only`: the 8-day window is applied on the server, so checking it once on desktop is enough. Every other case logs in as `admin` or `jobseeker`, changes data, and is tagged `@desktop-only` (and `@no-prod`).
 
 Already covered elsewhere, so not repeated here:
 
-- The appointment search's day strip, week navigation, Next Week stopping at the booking window, an empty day beyond it, the Format and Location filters, Reset and the booking link's address: AM-5 and its "Appointments search cases" in [smoke-admin-maintenance.md](smoke-admin-maintenance.md). AM-3 also checks that some day in the strip has a slot after a reindex.
+- After a reindex, some day in the appointment search has a slot and a format filter works: AM-3 in [smoke-admin-maintenance.md](smoke-admin-maintenance.md). The day strip, week navigation, filters, Reset and booking links in depth: [functional-appointments-search.md](../appointments/functional-appointments-search.md).
 - Location pages load: LV-1 in [smoke-public-site.md](smoke-public-site.md).
 
 ## Scope
@@ -85,7 +85,7 @@ cancelling (AB), and staff actions on a slot (AS). The AP cases need no
 login. The others log in as shown in the Required login column; see "Login
 and test data". AA-3 runs last, in `finally`.
 
-AM-5 in [smoke-admin-maintenance.md](smoke-admin-maintenance.md) checks that "Next Week" stops at the window and that one day beyond it is empty; AP-2 checks the date of every time the search offers, and AA-2 checks the window with slots the test created.
+AW-3 and AW-5 in [functional-appointments-search.md](../appointments/functional-appointments-search.md) check that "Next Week" stops at the window and that days beyond it are empty; AP-2 checks the date of every time the search offers, and AA-2 checks the window with slots the test created.
 
 | ID | Test | Page | Steps | Expected result | Required login | Prod |
 |---|---|---|---|---|---|---|
@@ -104,7 +104,7 @@ AM-5 in [smoke-admin-maintenance.md](smoke-admin-maintenance.md) checks that "Ne
 
 In depth, in the functional Appointments plans ([test-suites/appointments/](../appointments/suite.md), all to be written):
 
-- **Search in depth:** filters, distance, the week strip, what the search leaves out (booked, past, cancelled, held slots): functional-appointments-search. The smoke filter checks are AM-5.
+- **Search in depth:** filters, distance, the week strip, what the search leaves out (booked, past, cancelled, held slots): functional-appointments-search. The smoke filter check is in AM-3 in smoke-admin-maintenance.
 - **Scheduling in depth:** form validation, Draft sessions and slots, recurrence and Until, shortening a schedule with bookings, single-slot overrides, Reassign Staff Member, delete vs cancel, Cancel Session, and who can schedule: functional-appointments-scheduling.
 - **Booking in depth:** the Tier 1 hand-off with "Continue Booking" and the 15-minute hold, the full, already booked and reserved messages, partner and staff accounts, phone and topic validation, "Other" topics, the success page for other users, the printable version: functional-appointments-booking.
 - **Staff tools in depth:** Resend Confirmation, late attendees on ended slots, "Cancel Registrations" in bulk, Admin View Registrations, statuses, permissions by role: functional-appointments-attendance.

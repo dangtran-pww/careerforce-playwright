@@ -33,15 +33,15 @@ The other parts (not written yet):
 This plan is the in-depth version of the quick visitor checks in the Smoke
 suite: AP-1 and AP-2 in [smoke-appointments.md](../smoke/smoke-appointments.md)
 (open times are listed; every offered date is from D to D+8 and D+9 to D+14
-are empty), and AM-5 with its "Appointments search cases" in
-[smoke-admin-maintenance.md](../smoke/smoke-admin-maintenance.md) (default
-day, pick a day, week navigation, each format on its own, two formats, the
-format narrowing a day, the last location moving first, the radius hiding a
-far in-person-only time while phone and online times stay, Reset, an empty
-day beyond the window, the booking link's address). Those aren't repeated
-here; the cases below go further (to the minute, every day of the strip,
-weekend dates, suggestions, combined filters, odd values, keyboard and
-screen readers). Some overlap is expected; the case IDs here are its own.
+are empty), and AM-3 in
+[smoke-admin-maintenance.md](../smoke/smoke-admin-maintenance.md) (after a
+reindex, some day has a time, and one format filter works). This plan owns
+the search's filters, week strip and booking links in depth, including the
+cases the smoke plan used to have (default day, pick a day, week
+navigation, each format, two formats, the last location moving first, the
+radius and in-person-only times, Reset, an empty day beyond the window, the
+booking link's address). Some overlap is expected; the case IDs here are
+its own.
 
 Every case runs as a visitor who isn't logged in and changes nothing, so the
 whole plan is safe on QA, Stage and Production. It is **not** marked
@@ -273,8 +273,7 @@ From the app source
   found should give "The location "<text>" could not be resolved and was
   ignored." and no distance filter. Suggestions come from Google Places,
   biased to Minnesota. The radius applies only to in-person-only slots;
-  phone and online slots show at any distance (confirmed by the team, see
-  AM-5).
+  phone and online slots show at any distance (confirmed by the team).
 - After a week arrow is used, `days-in-week-focus.js` puts focus back on
   that arrow, or on the first link of the strip when the arrow is now
   disabled.
@@ -339,7 +338,7 @@ The cases are in one table, one area after another. Their tests are in
 | AF-3 | A format with no time that day | the day with no time in one format | Tick that format and click "Filter" (skipped with a reason if there is no such day). | **1.** The empty message shows, with no card. **2.** The format stays ticked and the day stays selected. **3.** The strip's days are named "No results on this date" by the filtered results (as in AW-9). |
 | AF-4 | Location and distance through the form | the day with 2 or more locations | 1. Type the city of the last card (for example "Aitkin, MN") in Location without picking a suggestion, choose "10 mi" and click "Filter". 2. Choose "100 mi" and click "Filter". | **1.** The address keeps the day and has `location[loc][text]=<city>` and `location[radius]=16.09`; the form shows both; that location's card is now first; every time of the unfiltered day that lists phone or online is still there. **2.** The address has `location[radius]=160.93` and the form shows "100 mi"; the same or more times than step 1, and that card is still first. |
 | AF-5 | Location suggestions | the reference day | 1. Type "Dulu" in Location, one letter at a time. 2. Pick "Duluth, MN". 3. Click "Filter". | **1.** Within a few seconds a list opens under Location; every suggestion contains "Dulu", "Duluth, MN" is among them, and the box says it is expanded (`aria-expanded="true"`). **2.** The box shows "Duluth, MN" and the list closes. **3.** The address has `location[loc][text]=Duluth, MN`; the Duluth card is first if Duluth has a time that day; the page shows times or the empty message. |
-| AF-6 | The radius and an in-person-only time | the day of an in-person-only time | Skipped with a reason if none (none on QA on 2026-11-12). The basic hide-and-show is AM-5. 1. Search that day with a far city and "10 mi". 2. The same city with "100 mi". 3. The time's own city with "10 mi". | **1.** The in-person-only time is gone; every time that lists phone or online is still there. **2.** The time is back when its location is within 100 miles of the far city, and still gone otherwise. **3.** The time is listed and its card is first. |
+| AF-6 | The radius and an in-person-only time | the day of an in-person-only time | Skipped with a reason if none (none on QA on 2026-11-12). 1. Search that day with a far city and "10 mi". 2. The same city with "100 mi". 3. The time's own city with "10 mi". | **1.** The in-person-only time is gone; every time that lists phone or online is still there. **2.** The time is back when its location is within 100 miles of the far city, and still gone otherwise. **3.** The time is listed and its card is first. |
 | AF-7 | "In person" with a far location | the day of a time that lists in person and phone or online | Tick In person, type a far city ("55437" for Duluth), choose "10 mi" and click "Filter" (skipped with a reason if there is no such day; on QA, 2026-11-19 Duluth 1:00 pm). | See Open questions. **1.** No time from a location more than about 10 miles from the city is listed, even when it also offers phone or online: a visitor who asks for in-person times near them isn't offered one far away. **2.** Either the empty message or nearby times show, and In person stays ticked. |
 | AF-8 | The filters, the day and the week stay together | the reference day | 1. Tick In person, type "55437", choose "100 mi" and click "Filter". 2. Click another linked day in the strip. 3. Click "Next Week" (skipped if disabled). 4. Click "Previous Week". | After every step the address and the form hold everything chosen so far, every time lists in person, and the times are the same as opening an address with only those values. **1.** The day, `format[in_person]`, the location and 100 mi. **2.** The new day, with the filters kept. **3.** Next Monday, with the filters kept. **4.** A day of this week, with the filters kept. |
 | AF-9 | Reset clears the filters | `?start=<reference day>&format[in_person]=in_person&location[loc][text]=55437&location[radius]=160.93` | Click "Reset" (on a phone, the "Reset" button below "Filters"). | **1.** The address is `/connect-careerforce/schedule-an-appointment` with nothing after it. **2.** Location is empty, Distance From shows "40 mi", nothing is ticked, and "Reset" is gone. **3.** The page is the same as on first load (AQ-1): today selected and today's times. |
@@ -455,7 +454,7 @@ the page doesn't scroll sideways.
    (functional-appointments-scheduling could create them, but this plan
    doesn't depend on another plan's data).
 6. **No in-person-only time on QA (AF-6).** None was in the window on
-   2026-11-12, so AF-6 (and AM-5's radius case) are skipped. Can QA keep
+   2026-11-12, so AF-6 is skipped. Can QA keep
    one?
 7. **Reset and the day (AF-9).** Reset goes back to today and drops the
    chosen day. Should it keep the day and clear only the filters? AF-9

@@ -41,6 +41,9 @@ Whenever you write or change a plan in `test-suites/`, follow every rule in
    cases share go in a paragraph above the table.
 6. **No site password gate:** plans don't mention QA and Stage's Basic Auth
    pop-up or `BASIC_AUTH_*`; the README's one-time setup covers it.
+7. **Overview first:** after the header lines, the first paragraph says
+   what the plan tests and why (a `## Overview` heading above it is fine).
+   The `Devices: …` note, sources and other notes come after it.
 
 Then run `npm run check:plans` and fix every problem it reports in the
 plans you touched before you finish.

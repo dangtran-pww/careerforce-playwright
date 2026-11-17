@@ -37,14 +37,27 @@ test.describe('AM-2: rebuild tracking and reindex', { tag: '@no-prod' }, () => {
       const index = new SearchApiIndexPage(page, machineName);
 
       const indexNow = page.getByRole('button', { name: 'Index now' });
+
+      // 1. Fully indexed before the run, so "Index now" has nothing to do.
       await index.goto();
       const before = await index.progress();
-      if (before.total > 0 && before.indexed === before.total) {
-        // Nothing left to index, so the button is disabled.
-        await expect(indexNow).toBeDisabled();
-      }
+      expect(
+        before.total,
+        `"${label}" progress before the run: "${before.text}"`,
+      ).toBeGreaterThan(0);
+      expect(before.indexed, before.text).toBe(before.total);
+      await expect(indexNow).toBeDisabled();
 
-      await index.rebuildTracking(BATCH_TIMEOUT);
+      // 2. Rebuild tracking: confirm page, then back on the index page.
+      await index.openRebuildTracker();
+      await expect(
+        page.getByText(
+          `Are you sure you want to rebuild the tracking data for the search index ${label}?`,
+        ),
+      ).toBeVisible();
+      await index.confirmRebuildTracker(BATCH_TIMEOUT);
+      await expect(index.statusMessages).toBeVisible();
+      await expect(index.errorMessages).toHaveCount(0);
       const afterRebuild = await index.progress();
       expect(
         afterRebuild.total,
@@ -53,13 +66,26 @@ test.describe('AM-2: rebuild tracking and reindex', { tag: '@no-prod' }, () => {
       expect(afterRebuild.indexed, afterRebuild.text).toBe(0);
       await expect(indexNow).toBeEnabled();
 
-      await index.indexNow(BATCH_TIMEOUT);
-      await index.goto();
-      const afterIndex = await index.progress();
-      expect(
-        afterIndex.indexed,
-        `"${label}" progress after Index now: "${afterIndex.text}"`,
-      ).toBe(afterIndex.total);
+      // 3. Index now: the batch reports back, and everything is indexed.
+      // While cron indexes, it holds the index's lock, so a batch pass
+      // indexes 0 items and Search API ends the batch early with the warning
+      // "Number of indexed items is less than expected". Click Index now
+      // again, as an admin would, as long as each run makes progress.
+      let afterIndex = afterRebuild;
+      for (let run = 1; afterIndex.indexed < afterIndex.total; run++) {
+        expect(run, `"${label}" still not indexed after 5 runs: "${afterIndex.text}"`).toBeLessThanOrEqual(5);
+        await index.indexNow(BATCH_TIMEOUT);
+        await expect(index.statusMessages).toBeVisible();
+        await expect(index.errorMessages).toHaveCount(0);
+        await index.goto();
+        const previous = afterIndex;
+        afterIndex = await index.progress();
+        expect(
+          afterIndex.indexed,
+          `"${label}" Index now run ${run} made no progress: "${previous.text}" → "${afterIndex.text}"`,
+        ).toBeGreaterThan(previous.indexed);
+      }
+      expect(afterIndex.indexed, afterIndex.text).toBe(afterIndex.total);
       expect(afterIndex.total).toBeGreaterThan(0);
       expect(
         await index.statusRowHasError(),
@@ -87,9 +113,27 @@ test.describe('AM-3: searches work after reindex', { tag: '@no-prod' }, () => {
     });
   }
 
-  test('appointments search has a bookable slot within the date strip', async ({
+  // Filters: only relations to the unfiltered results, never fixed counts.
+  test('events search Format Online returns online events', async ({ page }) => {
+    const events = new EventsSearchPage(page);
+    await events.search();
+    const unfiltered = await events.resultCount();
+
+    await events.search({ 'ff[virtual]': 'virtual' });
+    const online = await events.resultCount();
+    expect(online, 'no online events after reindex').toBeGreaterThan(0);
+    expect(online).toBeLessThanOrEqual(unfiltered);
+    const locations = await events.cardLocationTexts();
+    expect(locations.length).toBeGreaterThan(0);
+    for (const location of locations) {
+      expect(location).toContain('Online');
+    }
+  });
+
+  test('appointments search has a bookable slot, and a format filter keeps it', async ({
     page,
   }) => {
+    test.setTimeout(3 * 60_000);
     const appointments = new AppointmentsSearchPage(page);
     const found = await appointments.findDay(
       siteDate(),
@@ -99,7 +143,18 @@ test.describe('AM-3: searches work after reindex', { tag: '@no-prod' }, () => {
       found,
       'no day in the appointments date strip shows a bookable slot',
     ).not.toBeNull();
-    expect(found!.slots[0].href).toMatch(/\/appointments\/\d+\/booking/);
+    const first = found!.slots[0];
+    expect(first.href).toMatch(/\/appointments\/\d+\/booking/);
+
+    const format = first.formats[0];
+    expect(format, `first slot ${first.href} lists no format`).toBeTruthy();
+    await appointments.search({ start: found!.day, formats: [format] });
+    const filtered = await appointments.slots();
+    expect(filtered.length, `no ${format} slots on ${found!.day}`).toBeGreaterThan(0);
+    expect(filtered.length).toBeLessThanOrEqual(found!.slots.length);
+    for (const slot of filtered) {
+      expect(slot.formats, `${slot.href} shown for ${format}`).toContain(format);
+    }
   });
 
   test('similar events show on at least one of 10 random events', async ({

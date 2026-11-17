@@ -63,6 +63,10 @@ const CASE_ID = /^([A-Z]{2,4})-([1-9]\d*)$/;
 const MARKER = /(?:^|\s)(?:\*\*(\d+)\.\*\*|(\d+)\.)(?=\s)/g;
 const CLEANUP = /\s\*\*Cleanup:\*\*/;
 
+// A header line under a plan's title (see "Status on every plan" and Rule 3
+// in the README).
+const HEADER_LINE = /^(Status|Implemented test|Pending cases|Updated cases|Prod|Parallel|No-prod cases)\b/;
+
 // A cell's numbered items: { count } (0 if it isn't a numbered list), or
 // { error }. Like the dashboard (dashboard/src/lib/numbered.ts), a number
 // that isn't the next one is plain text ("up to 5. 3. Click"); one past the
@@ -253,6 +257,31 @@ const RULES = [
           problems.push({ line: i + 1, message: 'Mentions the site password gate. Remove it: the README\'s one-time setup covers it for every plan.' });
       });
       return problems;
+    },
+  },
+  {
+    id: 7,
+    name: 'Overview first',
+    check(plan) {
+      // Paragraphs after the title: { line, text } of each one's first line.
+      const paragraphs = [];
+      plan.lines.slice(1).forEach((l, i) => {
+        const prev = plan.lines[i]; // the line before l
+        if (l.trim() && (!prev.trim() || i === 0 || /^#/.test(l) || /^#/.test(prev)))
+          paragraphs.push({ line: i + 2, text: l.trim() });
+      });
+      const plain = (t) => t.replace(/\*\*/g, '');
+      const start = paragraphs.findIndex((p) => !HEADER_LINE.test(plain(p.text)));
+      const rest = start < 0 ? [] : paragraphs.slice(start);
+      if (rest[0] && /^## Overview\s*$/.test(rest[0].text)) rest.shift();
+      const first = rest[0];
+      if (!first || /^#/.test(first.text))
+        return [{ line: first?.line ?? 1, message: 'The plan has no overview. After the header lines, start with a paragraph on what the plan tests and why.' }];
+      if (/^devices\b/i.test(plain(first.text)))
+        return [{ line: first.line, message: 'Starts with the Devices note. Put an overview of the plan first, and the Devices note after it.' }];
+      if (/^[-*|>]|^\d+\./.test(first.text))
+        return [{ line: first.line, message: 'Starts with a list or table. Put an overview paragraph of the plan first.' }];
+      return [];
     },
   },
 ];
