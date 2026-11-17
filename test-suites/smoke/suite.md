@@ -24,6 +24,7 @@ yet" and skipped.
 | smoke-ckeditor | smoke-desktop |
 | smoke-content-lifecycle | smoke-desktop |
 | smoke-events | smoke-desktop, smoke-mobile |
+| smoke-external-events | smoke-desktop, smoke-mobile |
 | smoke-alerts | (default) |
 | smoke-appointments | (default) |
 | smoke-auto-logout | (default) |

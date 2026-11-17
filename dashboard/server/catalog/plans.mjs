@@ -26,7 +26,7 @@
 // browser (scripts/lib/prompts.mjs, runs/prompt.mjs). It has kind: 'prompt'
 // and the parsed file in `prompt`.
 
-import { readFile, stat } from 'node:fs/promises';
+import { readdir, readFile, stat } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { join } from 'node:path';
@@ -434,12 +434,38 @@ async function rolesFor(files) {
   return [...roles];
 }
 
+// What Playwright's test list depends on: every spec file under tests/,
+// the config, and the helpers the config imports (tests/helpers/*.mts,
+// e.g. the device and smoke-area lists), each with its modified time. A
+// spec added, removed, renamed or edited changes it.
+const LIST_INPUTS = /(\.spec\.ts|^tests\/helpers\/[^/]+\.mts)$/;
+
+async function listSignature() {
+  const files = (await readdir('tests', { recursive: true }).catch(() => []))
+    .map((f) => join('tests', f))
+    .filter((f) => LIST_INPUTS.test(f));
+  files.push('playwright.config.ts');
+  const stamps = await Promise.all(
+    files.sort().map(async (f) => {
+      const mtime = await stat(f).then((s) => s.mtimeMs, () => 0);
+      return `${f}:${mtime}`;
+    }),
+  );
+  return stamps.join('\n');
+}
+
+let listKey = null;
+
 // All plans, with their tests. Asking Playwright for the list takes a few
-// seconds, so it is kept until `refresh` is set.
+// seconds, so it is kept until a spec file or the config changes (see
+// listSignature), or `refresh` is set.
 export async function loadPlans({ refresh = false } = {}) {
-  if (refresh || !listCache) {
+  const key = await listSignature();
+  if (refresh || !listCache || key !== listKey) {
+    listKey = key;
     listCache = listTests().catch((err) => {
       listCache = null;
+      listKey = null;
       throw err;
     });
   }

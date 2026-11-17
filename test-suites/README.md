@@ -710,6 +710,11 @@ Every plan, by suite folder.
   admin schedules a short session, a job seeker registers and cancels, and
   attendance creates a service record (no-prod cases, `admin` and
   `jobseeker` logins).
+- `smoke/smoke-external-events.md` — Status: implemented. External
+  events, one pass each: the "Submit an Event" form, its link on the Events
+  page and an external event's page as a visitor (prod-safe); a visitor
+  submits an event, and an admin drafts, publishes and deletes it (no-prod
+  cases, `admin` login).
 - `smoke/smoke-appointments.md` — Status: ready to generate. Appointments,
   one pass each: the search lists times and nothing past 8 days as a visitor
   (prod-safe); an admin creates a short session at Aitkin, a job seeker books
