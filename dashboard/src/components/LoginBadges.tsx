@@ -47,13 +47,28 @@ export function PlanLogins({
   );
 }
 
+// Up to this many case IDs are listed inline; more fold behind a count.
+const INLINE_CASES = 3;
+
 // The plan details' "Logins" line: each role with the cases that need it.
+// A long list of cases folds to "jobseeker: 9 cases", which opens to show
+// them.
 export function loginsFact(roleCases: RoleCases[], caseIds: string[]) {
   if (!roleCases.length) return 'none';
   return roleCases.map((rc) => (
     <div key={rc.role}>
-      {rc.role}
-      {forAll(rc, caseIds) ? ' (every case)' : `: ${rc.cases.join(', ')}`}
+      {forAll(rc, caseIds) ? (
+        `${rc.role} (every case)`
+      ) : rc.cases.length <= INLINE_CASES ? (
+        `${rc.role}: ${rc.cases.join(', ')}`
+      ) : (
+        <details className="logins-cases">
+          <summary>
+            {rc.role}: {rc.cases.length} cases
+          </summary>
+          <span className="mono">{rc.cases.join(', ')}</span>
+        </details>
+      )}
     </div>
   ));
 }

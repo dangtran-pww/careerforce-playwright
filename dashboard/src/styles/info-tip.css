@@ -1,5 +1,8 @@
 /* InfoTip: a small round "i" button and the bubble it opens, below it and
-   lined up with its right edge (it sits at the right of a row of buttons). */
+   lined up with its right edge (it sits at the right of a row of buttons),
+   or its left edge (.info-tip-bubble-start). InfoTip.tsx moves a bubble
+   that would be cut off, and sets --arrow-x to point the arrow at the
+   button. */
 .info-tip {
   position: relative;
   display: inline-flex;
@@ -22,7 +25,7 @@ button.info-tip-button {
 
 .info-tip-bubble {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + 8px);
   right: 0;
   z-index: 20;
   width: max-content;
@@ -37,6 +40,26 @@ button.info-tip-button {
   line-height: 1.45;
   text-align: left;
   box-shadow: 0 4px 12px rgb(0 0 0 / 12%);
+}
+
+/* The arrow: a rotated square whose top half pokes out above the bubble,
+   with the bubble's border on its two outer sides. */
+.info-tip-bubble::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: calc(var(--arrow-x, 50%) - 5px);
+  width: 10px;
+  height: 10px;
+  border-top: 1px solid var(--control-border);
+  border-left: 1px solid var(--control-border);
+  background: var(--surface);
+  rotate: 45deg;
+}
+
+.info-tip-bubble-start {
+  right: auto;
+  left: 0;
 }
 
 .info-tip-bubble[hidden] {
@@ -60,6 +83,37 @@ button.info-tip-button {
 .info-tip-list {
   margin: 4px 0 0;
   padding-left: 20px;
+}
+
+/* Plan statuses (PlanStatusTip): a question as the title, then badges in
+   a column on the left with what each means beside it. */
+/* Wider than other bubbles, so the descriptions beside the badges get
+   room for a line or two. */
+.info-tip-bubble:has(.plan-status-list) {
+  max-width: min(520px, calc(100vw - 32px));
+}
+
+.info-tip-bubble .plan-status-intro {
+  font-weight: 600;
+}
+
+.plan-status-list {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 10px;
+  margin: 8px 0 0;
+}
+
+.plan-status-list > div {
+  display: contents;
+}
+
+.plan-status-list dt {
+  justify-self: start;
+}
+
+.plan-status-list dd {
+  margin: 0;
 }
 
 .info-tip-list > li + li {

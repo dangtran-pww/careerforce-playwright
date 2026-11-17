@@ -34,3 +34,19 @@
 .run-refused .command {
   margin-top: 6px;
 }
+
+/* A left-aligned text toggle in a column of left-aligned content (the
+   plan panel's overview and facts). */
+button.toggle-button.toggle-button-inline {
+  margin: 4px 0 0;
+  padding: 2px 0;
+  border-color: transparent;
+  background: none;
+  color: var(--accent);
+}
+
+button.toggle-button.toggle-button-inline:hover {
+  border-color: transparent;
+  background: none;
+  text-decoration: underline;
+}

@@ -11,6 +11,11 @@ export function PlanOverview({ plan }: { plan: Plan }) {
   const id = useId();
   const blocks = plan.overview ?? [];
   const more = blocks.length > 1;
+  const next = blocks[1];
+  const preview =
+    plan.summary?.trimEnd().endsWith(':') && next?.kind === 'ul'
+      ? next.items
+      : null;
   if (!plan.summary && !blocks.length) return null;
 
   return (
@@ -29,11 +34,25 @@ export function PlanOverview({ plan }: { plan: Plan }) {
             ),
           )
         ) : (
-          <p>{plan.summary}</p>
+          <>
+            <p>{plan.summary}</p>
+            {/* A summary that ends "It has four parts:" would stop on a
+                colon, so show the list it leads into, a line per item. */}
+            {preview && (
+              <ul className="plan-overview-preview">
+                {preview.map((item, j) => (
+                  <li key={j}>
+                    <span>{inline(item)}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
         )}
       </div>
       {more && (
         <ToggleButton
+          inline
           open={open}
           controls={id}
           onToggle={() => setOpen((o) => !o)}

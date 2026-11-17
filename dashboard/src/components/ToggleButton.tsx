@@ -2,12 +2,16 @@ import type { ReactNode } from 'react';
 
 // A small centred "show more / show less" button with a chevron, for a
 // section that folds open and closed. `controls` is the id of what it folds.
+// `inline` makes it a left-aligned text toggle, for one that sits in a
+// column of left-aligned content (the plan panel).
 export function ToggleButton({
+  inline = false,
   open,
   controls,
   onToggle,
   children,
 }: {
+  inline?: boolean;
   open: boolean;
   controls: string;
   onToggle: () => void;
@@ -16,7 +20,7 @@ export function ToggleButton({
   return (
     <button
       type="button"
-      className="ghost small toggle-button"
+      className={`ghost small toggle-button${inline ? ' toggle-button-inline' : ''}`}
       aria-expanded={open}
       aria-controls={controls}
       onClick={onToggle}

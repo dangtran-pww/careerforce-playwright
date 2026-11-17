@@ -183,3 +183,62 @@ button.small {
     box-shadow: 0 0 24px rgb(0 0 0 / 0.25);
   }
 }
+
+/* The plan's status, its "i" and the no-prod badge, kept together and all
+   the same size, so they wrap under the plan name as one group. */
+.plan-badges {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plan-badges .badge.small {
+  margin-left: 0;
+  padding: 3px 10px;
+  font-size: var(--fs-sm);
+}
+
+/* Under a case's title: where it runs and how many tests (CaseProjects). */
+.card .case-meta {
+  margin: 2px 0 0;
+  font-size: var(--fs-sm);
+}
+
+/* The test count under the Cases heading. */
+.card .side-panel-subtitle {
+  margin: 0 0 12px;
+}
+
+/* Long project lists wrap here instead of widening the table. */
+.case-meta .mono {
+  white-space: normal;
+}
+
+/* A role's cases in the plan's Logins row, folded behind a count. */
+.logins-cases summary {
+  cursor: pointer;
+}
+
+.logins-cases .mono {
+  display: block;
+  margin-top: 2px;
+  white-space: normal;
+}
+
+/* The plan panel's header: the name and badges on the left, "Read full
+   plan" and the close button on the right, all on one 32px line. */
+.side-panel > .card-head {
+  align-items: flex-start;
+}
+
+.side-panel > .card-head .card-head-title {
+  min-height: 32px;
+}
+
+.side-panel > .card-head .card-head-actions button {
+  height: 32px;
+}
+
+.side-panel > .card-head .card-head-actions .close-button {
+  width: 32px;
+}

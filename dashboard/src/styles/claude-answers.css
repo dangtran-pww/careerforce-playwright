@@ -129,3 +129,13 @@
 .plan-overview li {
   margin: 4px 0;
 }
+
+/* The list a folded overview's summary leads into, a line per item. */
+/* On a span inside each item: overflow on the item itself would clip its
+   bullet. */
+.plan-overview-preview li > span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

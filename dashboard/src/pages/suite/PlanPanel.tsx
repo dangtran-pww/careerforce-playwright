@@ -98,11 +98,12 @@ export function PlanPanel({
         <div className="card-head-title">
           <h2 id="plan-panel-heading">{plan ? plan.name : slug}</h2>
           {plan && (
-            <>
+            // One group, so the badges wrap under the name together.
+            <span className="plan-badges">
               <Badge map={PLAN_STATUS} value={plan.status} />
               <PlanStatusTip />
               <PlanNoProdBadge plan={plan} />
-            </>
+            </span>
           )}
         </div>
         <div className="card-head-actions">
@@ -171,6 +172,7 @@ export function PlanPanel({
           </div>
           {plan.files.length > 0 && (
             <ToggleButton
+              inline
               open={showTests}
               controls={factsId}
               onToggle={() => setShowTests((o) => !o)}

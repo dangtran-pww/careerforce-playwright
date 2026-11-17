@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { Plan, PlanCase } from '../../api/types';
 import { CaseDetails } from '../../components/CaseDetails';
 import { CaseProjects } from '../../components/CaseProjects';
@@ -36,9 +37,7 @@ export function PanelCases({ plan, openCase }: Props) {
   return (
     <>
       <h3 className="side-panel-title">Cases ({testCases.length})</h3>
-      {plan.hasTests && (
-        <TestCountNote caseCount={testCases.length} projects={plan.projects} />
-      )}
+      {plan.hasTests && <TestCountNote projects={plan.projects} />}
       <TestCases plan={plan} cases={testCases} openCase={openCase} />
       {bothKinds && (
         <RunKindButton
@@ -130,16 +129,12 @@ function TestCases({ plan, cases, openCase }: TableProps) {
       expandLabel={(c) => `Details of ${c.id}`}
       columns={[
         idColumn,
-        caseColumn(plan),
-        hasTests && {
-          head: 'Projects',
-          cell: (c) => <CaseProjects testCase={c} only={projects} />,
-        },
-        hasTests && {
-          head: 'Tests',
-          className: (c) => (c.testCount ? undefined : 'note'),
-          cell: (c) => c.testCount || 'none',
-        },
+        caseColumn(
+          plan,
+          hasTests
+            ? (c) => <CaseProjects testCase={c} only={projects} />
+            : undefined,
+        ),
         hasTests && runColumn(plan),
       ]}
     />
@@ -168,24 +163,28 @@ function PromptCases({ plan, cases, openCase }: TableProps) {
       expandLabel={(c) => `Details of ${c.id}`}
       columns={[
         idColumn,
-        caseColumn(plan),
-        {
-          head: 'Viewports',
-          className: 'note',
-          cell: (c) => c.prompt?.viewports.map((v) => v.name).join(', '),
-        },
-        {
-          head: 'Compares with',
-          className: 'note',
-          cell: (c) =>
-            canRun(c)
-              ? comparedWith(c, 'default', currentEnv, envById)
-              : 'Broken prompt file',
-        },
+        caseColumn(plan, (c) => (
+          <div className="case-meta note">
+            {canRun(c)
+              ? promptMeta(c, comparedWith(c, 'default', currentEnv, envById))
+              : 'Broken prompt file'}
+          </div>
+        )),
         runColumn(plan),
       ]}
     />
   );
+}
+
+// "desktop, phone · compares with Stage and Production", from a prompt
+// case's viewports and what comparedWith() says ("—" when it compares with
+// nothing).
+function promptMeta(c: PlanCase, compared: string) {
+  const viewports = c.prompt?.viewports.map((v) => v.name).join(', ');
+  if (compared === '—') return viewports;
+  const sites =
+    compared === 'Its last run here' ? 'its last run here' : compared;
+  return `${viewports} · compares with ${sites}`;
 }
 
 const idColumn: Column<PlanCase> = {
@@ -194,13 +193,19 @@ const idColumn: Column<PlanCase> = {
   cell: (c) => c.id,
 };
 
-const caseColumn = (plan: Plan): Column<PlanCase> => ({
+// The case's title and badges, with `meta` (e.g. where it runs) on a line
+// underneath: it keeps the table narrow enough for the side panel.
+const caseColumn = (
+  plan: Plan,
+  meta?: (c: PlanCase) => ReactNode,
+): Column<PlanCase> => ({
   head: 'Case',
   cell: (c) => (
     <>
-      {c.title}
-      {!plan.noProd && <NoProdBadge testCase={c} />}
+      {/* The spaces let the title and its badges wrap between them. */}
+      {c.title} {!plan.noProd && <NoProdBadge testCase={c} />}{' '}
       <CaseLogins testCase={c} />
+      {meta?.(c)}
     </>
   ),
 });
