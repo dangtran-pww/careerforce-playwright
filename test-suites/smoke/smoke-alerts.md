@@ -1,7 +1,7 @@
 # [Smoke] - Alerts and Notifications - Test Plan
 
-Status: ready to generate
-Implemented test: —
+Status: implemented
+Implemented test: tests/smoke/alerts/alerts.spec.ts
 Prod: No: places an alert and a notification that every visitor sees on every page; the checklist also says not to test this on Production during prime time.
 
 A quick check after each deploy that site-wide alerts and notifications

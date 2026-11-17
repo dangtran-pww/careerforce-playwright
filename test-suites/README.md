@@ -179,6 +179,13 @@ what is covered.
 The status answers one question: does the test file currently match this
 plan? If not, what kind of work is needed to make it match again?
 
+**Verified** is a separate word for each test. A test is verified once it
+has been run against a live site (QA, Stage or Production). It doesn't need
+to have passed: a failing run still counts, and the failure is a result to
+report. A test that was skipped because an earlier case in a serial spec
+failed has not run, so it is not verified. Neither word changes the status:
+a plan can be `implemented` with tests that are not verified yet.
+
 A [prompt case](#rule-2-prompt-cases) has no test code, and is listed under
 `## Prompt cases`, not in the test case table. It matches the plan once its
 prompt file exists, so adding one doesn't change the plan's status.
@@ -221,9 +228,11 @@ prompt file exists, so adding one doesn't change the plan's status.
   results — the test does not need to change, and the status stays
   `implemented`.
 
-- `implemented` — the test script exists, has been verified, and matches
-  every case in the plan. List its path so anyone can find the code from
-  the plan. After pending cases are generated, or updated cases are
+- `implemented` — every case in the plan has been generated: the test
+  script exists and matches every case. It says nothing about whether the
+  tests pass; a failing test is a result to report, not a reason to hold
+  the status back. List its path so anyone can find the code from the
+  plan. After pending cases are generated, or updated cases are
   updated, the status returns to `implemented` (or stays
   `partially implemented` / `needs update` if work still remains).
 
@@ -707,6 +716,11 @@ Every plan, by suite folder.
 - `smoke/smoke-media.md` — Status: ready to generate.
 - `smoke/smoke-block-placement.md` — Status: implemented.
   Implemented test: `tests/smoke/block-placement/*.spec.ts`. No-prod plan.
+- `smoke/smoke-alerts.md` — Status: implemented.
+  Implemented test: `tests/smoke/alerts/alerts.spec.ts`. No-prod plan,
+  desktop only, `admin` login. An alert in Page Pre Top and a notification
+  in Notifications, checked as a visitor, the notification's text box
+  width (MNDEED-7946), then removed.
 - `smoke/smoke-job-search.md` — Status: partially implemented (SS-1 to SS-3 and
   MD-1 to MD-6 generated but not yet verified against a live site). Implemented tests:
   `tests/smoke/job-search/*.spec.ts`. Search and results, filters and sort

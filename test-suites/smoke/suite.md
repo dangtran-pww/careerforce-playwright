@@ -25,7 +25,7 @@ yet" and skipped.
 | smoke-content-lifecycle | smoke-desktop |
 | smoke-events | smoke-desktop, smoke-mobile |
 | smoke-external-events | smoke-desktop, smoke-mobile |
-| smoke-alerts | (default) |
+| smoke-alerts | smoke-desktop |
 | smoke-appointments | (default) |
 | smoke-auto-logout | smoke-desktop |
 | smoke-jobseeker-tools | smoke-desktop, smoke-mobile |

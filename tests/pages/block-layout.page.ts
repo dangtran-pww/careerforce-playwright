@@ -24,6 +24,37 @@ export class BlockLayout {
     await expectNoErrors(this.page);
   }
 
+  /**
+   * AL-1: adds an Alert & Notification block. The Color field is a row of
+   * swatch buttons over a hidden text input; the icon is left as it is.
+   */
+  async createAlertNotificationBlock(block: {
+    description: string;
+    body: string;
+    color: string;
+    type: 'alert' | 'notification';
+  }) {
+    await this.page.goto('/block/add/alert_notification');
+    await this.page
+      .locator('input[name="info[0][value]"]')
+      .fill(block.description);
+    await this.page
+      .locator(`.color-field-widget-box-form button[value="${block.color}"]`)
+      .click();
+    await expect(
+      this.page.locator('input[name="field_color[0][color]"]'),
+    ).toHaveValue(block.color);
+    const editor = this.page.locator(
+      '[data-drupal-selector="edit-body-wrapper"] .ck-editor__editable',
+    );
+    await editor.click();
+    await this.page.keyboard.type(block.body);
+    await this.page.locator('select[name="field_type"]').selectOption(block.type);
+    await this.page.getByRole('button', { name: 'Save', exact: true }).click();
+    await this.page.waitForURL((url) => !url.pathname.startsWith('/block/add'));
+    await expectNoErrors(this.page);
+  }
+
   /** The block's row in the Custom block library, filtered by description. */
   async libraryRow(description: string): Promise<Locator> {
     await this.page.goto(
