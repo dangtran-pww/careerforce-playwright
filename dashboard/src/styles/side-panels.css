@@ -56,29 +56,6 @@ body:has(.split, .page-wide) {
   font-size: var(--fs-md);
 }
 
-.check-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin: 0 -8px;
-  padding: 0 8px;
-  border-radius: 6px;
-}
-
-.check-row > .check {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.check-row > button {
-  flex-shrink: 0;
-  margin-top: 4px;
-}
-
-.check-row-shown {
-  background: var(--neutral-bg);
-}
-
 button.small {
   padding: 2px 8px;
   font-size: var(--fs-sm);

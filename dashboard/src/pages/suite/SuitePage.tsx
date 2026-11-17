@@ -83,10 +83,11 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
             suite={suite}
             shownPlan={shownPlan}
             onShowPlan={setShownPlan}
+            activeRun={activeRun}
           />
           <p className="note small">
-            Open a plan&apos;s details to run it, its test cases or prompt
-            cases, or a single case.
+            Run starts every case of a plan. Open its details to run its test
+            cases or prompt cases, or a single case.
           </p>
         </section>
         <h2 className="section-title">Recent runs</h2>

@@ -4,7 +4,7 @@ import { useStartRun } from '../hooks/useStartRun';
 import { AsyncButton } from './AsyncButton';
 
 interface Props {
-  plan: PlanSummary;
+  plan: Pick<PlanSummary, 'slug'>; // a full plan, or a suite page's list row
   // What to run; leave out for the plan's default projects and all cases.
   body?: {
     projects?: string[];
@@ -15,6 +15,7 @@ interface Props {
   };
   disabled?: boolean;
   title?: string;
+  'aria-label'?: string; // when the visible label alone doesn't name the plan
   className?: string;
   busyLabel?: string; // shown while the server checks logins and starts it
   // A refused start, e.g. a 409 when a login isn't ready. Without it the

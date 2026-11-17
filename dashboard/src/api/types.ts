@@ -254,6 +254,7 @@ export interface SuitePlan {
   found: boolean;
   type?: string;
   name?: string;
+  status?: string; // a key of PLAN_STATUS
   runnable: boolean;
   caseCount?: number;
   testCount: number; // in the projects below

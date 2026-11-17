@@ -1,18 +1,101 @@
 /* ---- suites ------------------------------------------------------------ */
 
-.check-list {
-  margin: 4px 0 12px;
-}
-
-.check-list .check {
-  align-items: flex-start;
-}
-
-/* The suite page's plans: a plain list, one plan per row. */
+/* The suite page's plans: one plan per row, a hairline between rows. Each
+   row is its name and badges over a muted line of counts, with its Run and
+   Details buttons on the right, lined up down the list. */
 .plan-list {
+  margin: 4px 0 12px;
   padding: 0;
   list-style: none;
 }
+
+.plan-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: 'main actions';
+  align-items: start;
+  gap: 4px 12px;
+  margin: 0 -8px;
+  padding: 10px 8px;
+  border-radius: 6px;
+}
+
+.plan-row + .plan-row {
+  border-top: 1px solid var(--border);
+}
+
+/* The plan open in the side panel. Its neighbour's hairline is hidden, so
+   the highlight reads as one block. */
+.plan-row-shown,
+.plan-row-shown + .plan-row {
+  border-top-color: transparent;
+}
+
+.plan-row-shown {
+  background: var(--neutral-bg);
+}
+
+.plan-row-main {
+  grid-area: main;
+  min-width: 0;
+}
+
+.plan-row-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+.plan-row-title .badge.small {
+  margin-left: 0;
+}
+
+/* "21 cases · 69 tests · No login". */
+.plan-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+/* No card paragraph margin on the muted text in a row; the logins keep the
+   line's size. */
+.card .plan-row .note {
+  margin: 0;
+}
+
+.plan-row-meta > * {
+  font-size: inherit;
+}
+
+.plan-row-meta > * + *::before {
+  content: '·';
+  margin: 0 6px;
+}
+
+.plan-row-meta [title] {
+  cursor: help;
+}
+
+/* Details stays last, so the Details buttons line up whether or not the
+   plan has a Run button. */
+.plan-row-actions {
+  grid-area: actions;
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+/* The plans with nothing to run yet, after the others. */
+.plan-group-title {
+  margin: 20px 0 4px;
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 
 .check .detail {
   flex-basis: 100%;
@@ -161,13 +244,6 @@
 /* Inline notes inside a checkbox row: no card paragraph margin. */
 .card .check .note {
   margin: 0;
-}
-
-/* The row's main text takes the space next to its badges, so it wraps
-   beside them instead of dropping below them on a phone. */
-.check-list .check > span:not(.badge, .note, .detail) {
-  flex: 1 1 200px;
-  min-width: 0;
 }
 
 /* The prompt in a run's result, as its paragraphs and lists. */
