@@ -29,6 +29,6 @@ yet" and skipped.
 | smoke-appointments | (default) |
 | smoke-auto-logout | smoke-desktop |
 | smoke-jobseeker-tools | smoke-desktop, smoke-mobile |
-| smoke-media | (default) |
+| smoke-media | smoke-desktop |
 | smoke-profile | smoke-desktop |
 | smoke-resume-builder | (default) |

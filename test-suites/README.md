@@ -713,7 +713,8 @@ Every plan, by suite folder.
   Publish/unpublish, revisions, translation.
 - `smoke/smoke-ckeditor.md` — Status: implemented.
   Implemented tests: `tests/smoke/ckeditor/*.spec.ts`. No-prod plan.
-- `smoke/smoke-media.md` — Status: ready to generate.
+- `smoke/smoke-media.md` — Status: implemented.
+  Implemented test: `tests/smoke/media/media-library.spec.ts`. No-prod plan.
 - `smoke/smoke-block-placement.md` — Status: implemented.
   Implemented test: `tests/smoke/block-placement/*.spec.ts`. No-prod plan.
 - `smoke/smoke-alerts.md` — Status: implemented.
