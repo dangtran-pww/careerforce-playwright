@@ -1,7 +1,7 @@
 # [Smoke] - Profile - Test Plan
 
-Status: ready to generate
-Implemented test: —
+Status: implemented
+Implemented test: tests/smoke/profile/own-profile.spec.ts, tests/smoke/profile/admin-profile.spec.ts
 Prod: No: edits user profiles.
 
 A quick check after each deploy that profiles can still be edited: a job

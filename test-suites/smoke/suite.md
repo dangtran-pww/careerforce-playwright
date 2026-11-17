@@ -30,5 +30,5 @@ yet" and skipped.
 | smoke-auto-logout | (default) |
 | smoke-jobseeker-tools | smoke-desktop, smoke-mobile |
 | smoke-media | (default) |
-| smoke-profile | (default) |
+| smoke-profile | smoke-desktop |
 | smoke-resume-builder | (default) |
