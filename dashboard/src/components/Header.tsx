@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { NavLink } from 'react-router';
-import { useEnv } from '../hooks/useEnv';
+import { PRODUCTION_DISABLED, useEnv } from '../hooks/useEnv';
 import { envLabel } from '../lib/format';
 import { CaseSearch } from './CaseSearch';
 import { LoginsMenu } from './LoginsMenu';
@@ -59,8 +59,13 @@ export function Header() {
           onChange={(e) => setCurrentEnv(e.target.value)}
         >
           {environments.map((e) => (
-            <option key={e.id} value={e.id}>
+            <option
+              key={e.id}
+              value={e.id}
+              disabled={PRODUCTION_DISABLED && e.production}
+            >
               {envLabel(e)}
+              {PRODUCTION_DISABLED && e.production ? ' (disabled for now)' : ''}
             </option>
           ))}
         </select>

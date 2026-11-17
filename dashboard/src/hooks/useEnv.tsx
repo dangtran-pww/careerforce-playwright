@@ -22,6 +22,14 @@ interface EnvState {
   setCurrentEnv: (id: string) => void;
 }
 
+// Temporarily off, so no run creates data on Production by accident:
+// Production shows in the picker but can't be picked, and a pick of it
+// remembered from before falls back to the default. Set to false to
+// turn it back on.
+export const PRODUCTION_DISABLED = true;
+
+const isPickable = (e: Env) => !(PRODUCTION_DISABLED && e.production);
+
 const EnvContext = createContext<EnvState | null>(null);
 
 export function useEnv(): EnvState {
@@ -45,8 +53,15 @@ export function EnvProvider({ children }: { children: ReactNode }) {
     const { environments } = data;
     const envById = (id: string | undefined | null) =>
       environments.find((e) => e.id === id);
+    const pickable = (id: string | null) => {
+      const env = envById(id);
+      return env && isPickable(env) ? env : undefined;
+    };
     const currentEnv =
-      envById(pickedId) ?? envById(data.default) ?? environments[0];
+      pickable(pickedId) ??
+      pickable(data.default) ??
+      environments.find(isPickable) ??
+      environments[0];
     return { environments, currentEnv, envById, setCurrentEnv };
   }, [data, pickedId, setCurrentEnv]);
 
