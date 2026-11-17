@@ -2,8 +2,8 @@
 // site share its accounts and database, so two runs there at once would
 // collide), while runs on different environments go side by side. Within a run, the
 // plans and prompt cases marked Parallel (test-suites/README.md, Rule 3) can
-// have several processes going at once; Stop ends all of them. A run is either one test plan (plan-run.mjs) or a suite of
-// several steps (suite-run.mjs); both go
+// have several processes going at once; Stop ends all of them. A run is one test plan (plan-run.mjs) or an accessibility
+// run (a11y-run.mjs); they go
 //   beginRun → launch( spawnStep / runPlaywright … → endRun )
 //
 // Each run gets a folder, reports/dashboard-runs/<id>/ (gitignored):
@@ -13,7 +13,7 @@
 //   results.json   Playwright's JSON report          (plan runs)
 //   report/        Playwright's HTML report          (plan runs)
 //   test-results/  screenshots, videos and traces    (plan runs)
-//   steps/<n>-<id>/  the same files for each step     (suite runs)
+//   steps/<n>-<id>/  the same files for each step     (old suite runs)
 //
 // history.mjs reads runs back; the runs in progress come from here.
 //

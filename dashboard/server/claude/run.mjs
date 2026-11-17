@@ -7,7 +7,7 @@
 //                 run's failures (summary.mjs). At most CLAUDE_CONCURRENCY run
 //                 at once; the rest wait their turn.
 //   claudeArgs()  the arguments only, for a caller that runs `claude` itself:
-//                 a suite's prompt steps (runs/suite-run.mjs) run it as a step of
+//                 a run's prompt checks (runs/prompt.mjs) run it as part of
 //                 the run, so Stop and the run's log apply to it.
 //
 // Either way Claude gets the tools it is given and is denied every tool that

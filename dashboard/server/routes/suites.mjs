@@ -1,23 +1,14 @@
-// /api/suites: the suites in test-suites/ (plans plus Claude prompts), and
-// running them.
+// /api/suites: the suites in test-suites/ (plans plus Claude prompts). Their
+// plans run through /api/plans; runs of a whole suite from before are still
+// listed.
 
 import { Hono } from 'hono';
-import { z } from 'zod';
 import { loadSuite, loadSuites } from '../catalog/suites.mjs';
-import { compareParam, envParam, publicEnv } from '../environments.mjs';
+import { envParam, publicEnv } from '../environments.mjs';
 import { ApiError } from '../errors.mjs';
 import { listRuns } from '../runs/history.mjs';
 import { activeRunId } from '../runs/lifecycle.mjs';
-import { startSuiteRun } from '../runs/suite-run.mjs';
-import { checkSessionOnce } from '../sessions.mjs';
-import {
-  SLUG,
-  compareField,
-  envField,
-  flag,
-  jsonBody,
-  strings,
-} from './shared.mjs';
+import { SLUG } from './shared.mjs';
 
 export const suiteRoutes = new Hono();
 
@@ -59,32 +50,3 @@ suiteRoutes.get(SUITE, async (c) => {
     runs: await listRuns({ suite: suite.slug, limit: 10 }),
   });
 });
-
-// POST /api/suites/:slug/run — run it, or the plans and prompts picked.
-// `a11y: true` scans every page it reaches for accessibility.
-suiteRoutes.post(
-  `${SUITE}/run`,
-  jsonBody(
-    z.object({
-      env: envField,
-      plans: strings.optional(),
-      headed: flag,
-      // Scan every page the run reaches for accessibility.
-      a11y: flag,
-      compare: compareField,
-    }),
-  ),
-  async (c) => {
-    const suite = await suiteOf(c);
-    const body = c.req.valid('json');
-    const run = await startSuiteRun(suite, {
-      env: envParam(body.env),
-      plans: body.plans,
-      headed: body.headed === true,
-      compare: compareParam(body.compare),
-      checkLogin: checkSessionOnce,
-      a11y: body.a11y === true,
-    });
-    return c.json(run, 201);
-  },
-);

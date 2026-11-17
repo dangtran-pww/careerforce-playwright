@@ -18,9 +18,14 @@ import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 import { loginsFact } from '../../components/LoginBadges';
 import { offProdReason } from '../../lib/prod';
 import { PLAN_STATUS } from '../../lib/status';
-import { PanelCases } from './PanelCases';
+import { PanelCases, runsTestsOnly } from './PanelCases';
 import { RunRefused, useRunRefusal } from './RunRefused';
-import { RunOptionsContext, runBody, useRunOptions } from './runOptions';
+import {
+  HeadedOption,
+  RunOptionsContext,
+  runBody,
+  useRunOptions,
+} from './runOptions';
 
 export const PLAN_PANEL_ID = 'plan-panel';
 
@@ -37,7 +42,6 @@ export function PlanPanel({
   suite,
   onClose,
   projects,
-  headed,
   activeRun,
   openCase = null,
 }: {
@@ -45,7 +49,6 @@ export function PlanPanel({
   suite: string; // the suite page it's on; runs started here link back
   onClose: () => void;
   projects: string[]; // the suite's projects for this plan
-  headed: boolean;
   activeRun: string | null;
   openCase?: string | null; // a case whose row starts opened
 }) {
@@ -61,6 +64,8 @@ export function PlanPanel({
   const factsId = useId();
   // Why the last Run press (the plan's or a case's) didn't start a run.
   const { refusal, onError: onRunError } = useRunRefusal();
+  // Show the browser while the tests run (the tick beside Run test cases).
+  const [headed, setHeaded] = useState(false);
 
   // Move focus into the panel when it opens, so keyboard and screen reader
   // users land on what they asked for. Without scrolling: the panel sticks
@@ -75,7 +80,7 @@ export function PlanPanel({
 
   // How every Run button in the panel runs (runOptions.tsx).
   const runOptions = useMemo(
-    () => ({ suite, projects, headed, activeRun, onRunError }),
+    () => ({ suite, projects, headed, setHeaded, activeRun, onRunError }),
     [suite, projects, headed, activeRun, onRunError],
   );
 
@@ -179,9 +184,13 @@ export function PlanPanel({
             {plan.runnable && <LoginsNote roles={planRoles(plan)} />}
             {refusal && <RunRefused refusal={refusal} />}
             {plan.runnable && (
-              <p className="actions">
-                <RunPlanButton plan={plan} />
-              </p>
+              <>
+                {/* With no Run test cases button, this one runs the tests. */}
+                {runsTestsOnly(plan) && <HeadedOption />}
+                <p className="actions">
+                  <RunPlanButton plan={plan} />
+                </p>
+              </>
             )}
             <PanelCases plan={plan} openCase={openCase} />
           </RunOptionsContext.Provider>

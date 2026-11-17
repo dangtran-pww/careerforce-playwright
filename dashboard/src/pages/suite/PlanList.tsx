@@ -1,70 +1,31 @@
-// The list of plans on the suite page. Each tick calls onToggle(key, on).
+// The list of plans on the suite page. Each plan's Details button opens it
+// in the side panel, where it's run.
 
-import type { ReactNode } from 'react';
 import type { Suite, SuitePlan } from '../../api/types';
 import { PlanLogins } from '../../components/LoginBadges';
 import { plural, testsSummary } from '../../lib/format';
 import { PLAN_PANEL_ID } from './PlanPanel';
 
-type OnToggle = (key: string, on: boolean) => void;
-
-function Checklist({
-  legend,
-  children,
-}: {
-  legend: string;
-  children: ReactNode[];
-}) {
-  return (
-    <fieldset className="check-list">
-      <legend>{legend}</legend>
-      {children.length ? children : <p className="note">None.</p>}
-    </fieldset>
-  );
-}
-
-function Tick({
-  checked,
-  onToggle,
-  disabled,
-}: {
-  checked: boolean;
-  onToggle: (on: boolean) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <input
-      type="checkbox"
-      checked={checked}
-      disabled={disabled}
-      onChange={(e) => onToggle(e.target.checked)}
-    />
-  );
-}
-
-export function PlanChecklist({
+export function PlanList({
   suite,
-  selected,
-  onToggle,
   shownPlan,
   onShowPlan,
 }: {
   suite: Suite;
-  selected: Set<string>;
-  onToggle: OnToggle;
   shownPlan: string | null; // plan whose details are in the side panel
   onShowPlan: (slug: string | null) => void;
 }) {
+  if (!suite.plans.length) return <p className="note">None.</p>;
   return (
-    <Checklist legend="Test plans">
+    <ul className="check-list plan-list">
       {suite.plans.map((p) => (
-        <div
+        <li
           key={p.slug}
           className={
             shownPlan === p.slug ? 'check-row check-row-shown' : 'check-row'
           }
         >
-          <PlanRow plan={p} selected={selected} onToggle={onToggle} />
+          <PlanRow plan={p} />
           {p.found && (
             <button
               type="button"
@@ -76,28 +37,15 @@ export function PlanChecklist({
               {shownPlan === p.slug ? 'Hide details' : 'Details'}
             </button>
           )}
-        </div>
+        </li>
       ))}
-    </Checklist>
+    </ul>
   );
 }
 
-function PlanRow({
-  plan: p,
-  selected,
-  onToggle,
-}: {
-  plan: SuitePlan;
-  selected: Set<string>;
-  onToggle: OnToggle;
-}) {
+function PlanRow({ plan: p }: { plan: SuitePlan }) {
   return (
-    <label className="check">
-      <Tick
-        checked={selected.has(p.slug)}
-        disabled={!p.runnable}
-        onToggle={(on) => onToggle(p.slug, on)}
-      />
+    <div className="check">
       <span>
         <strong>{p.found ? `${p.type} - ${p.name}` : p.slug}</strong>
         {p.runnable &&
@@ -142,6 +90,6 @@ function PlanRow({
           </span>
         )
       )}
-    </label>
+    </div>
   );
 }

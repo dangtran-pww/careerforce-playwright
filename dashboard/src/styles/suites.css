@@ -8,8 +8,10 @@
   align-items: flex-start;
 }
 
-.check-list .check input {
-  margin-top: 4px;
+/* The suite page's plans: a plain list, one plan per row. */
+.plan-list {
+  padding: 0;
+  list-style: none;
 }
 
 .check .detail {
@@ -161,8 +163,8 @@
   margin: 0;
 }
 
-/* The row's main text takes the space next to the checkbox, so it wraps
-   beside it instead of dropping below it on a phone. */
+/* The row's main text takes the space next to its badges, so it wraps
+   beside them instead of dropping below them on a phone. */
 .check-list .check > span:not(.badge, .note, .detail) {
   flex: 1 1 200px;
   min-width: 0;

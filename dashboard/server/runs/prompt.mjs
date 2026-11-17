@@ -3,8 +3,6 @@
 // or unsure), a summary, findings and screenshots. The check is a prompt file
 // (scripts/lib/prompts.mjs), used by:
 //   - plan runs, for the plan's prompt cases (plan-run.mjs);
-//   - suite runs, for the prompt cases of their plans and their own prompt
-//     steps (suite-run.mjs);
 //   - scripts/run-prompt.mjs, outside the dashboard (`npm run prompt`).
 // The caller passes `io`, which runs the `claude` process and logs its
 // actions, so this file doesn't depend on the dashboard's run lifecycle.

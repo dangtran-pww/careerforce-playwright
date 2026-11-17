@@ -256,12 +256,10 @@ A local page for seeing and running the tests:
   inactivity) long before the cookie's expiry date. If the session has
   expired, its card shows the `npm run login:manual -- <role> --env <env>`
   command to fix it. Press "Check again" afterwards.
-- **Suites:** run several plans as one run. Each suite is a folder in
-  `test-suites/` with a `suite.md` and its plans (format in
-  `test-suites/README.md`). On a suite's page,
-  untick any plan and see the logins the chosen plans need. The run page
-  shows each plan as it goes: its test results, then its prompt cases'
-  verdicts, findings and screenshots.
+- **Suites:** each suite is a folder in `test-suites/` with a `suite.md`
+  and its plans (format in `test-suites/README.md`). A suite's page lists
+  its plans; **Details** opens one in the plan panel, where it's run, and
+  the header's Login Sessions panel shows the logins that plan needs.
 - **Plans:** a suite's plan panel shows the plan's status, cases, the roles
   it logs in as and its test files. The dashboard reads the status,
   "Implemented test" and "Pending cases" lines and the case tables from each
@@ -272,8 +270,9 @@ A local page for seeing and running the tests:
 - **Running a plan:** in a suite's plan panel, press **Run plan on
   <environment>** under the cases to run the whole plan, or **Run** on a
   case's row to run just that case. Both run in the projects the suite runs
-  the plan in, and show the browser when the suite's "Show the browser
-  while the tests run" is ticked. A case's details show the exact `npx playwright test` command. On
+  the plan in. "Show the browser while the tests run", above **Run test
+  cases** (or above **Run plan** when the plan has no prompt cases), shows
+  the browser for the test runs started from the panel. A case's details show the exact `npx playwright test` command. On
   Production, a no-prod plan is refused and any other plan runs without its
   no-prod cases; the badges "Not on prod" and "N not on prod" show which.
 - **Runs:** listed on each suite's page (its own runs and the plan runs

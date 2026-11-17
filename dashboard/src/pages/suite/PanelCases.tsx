@@ -17,7 +17,7 @@ import {
   planCommand,
   promptCommand,
 } from './planChoice';
-import { runBody, useRunOptions } from './runOptions';
+import { HeadedOption, runBody, useRunOptions } from './runOptions';
 
 interface Props {
   plan: Plan;
@@ -31,11 +31,8 @@ interface Props {
 // runs just the cases of that table. How they run comes from the panel
 // (useRunOptions).
 export function PanelCases({ plan, openCase }: Props) {
-  const testCases = plan.cases.filter((c) => c.kind !== 'prompt');
-  const promptCases = plan.cases.filter((c) => c.kind === 'prompt');
-  const testIds = testCases.filter((c) => c.testCount > 0).map((c) => c.id);
-  const promptIds = promptCases.filter(isPromptCase).map((c) => c.id);
-  const bothKinds = plan.runnable && testIds.length > 0 && promptIds.length > 0;
+  const { testCases, promptCases, testIds, promptIds, bothKinds } =
+    caseKinds(plan);
   return (
     <>
       <h3 className="side-panel-title">Cases ({testCases.length})</h3>
@@ -49,6 +46,7 @@ export function PanelCases({ plan, openCase }: Props) {
           label="test cases"
           caseIds={testIds}
           specRoles={plan.roles}
+          headedOption
         />
       )}
       {promptCases.length > 0 && (
@@ -71,6 +69,25 @@ export function PanelCases({ plan, openCase }: Props) {
       )}
     </>
   );
+}
+
+// The plan's test cases and prompt cases, the ones of each that can run, and
+// whether it has runnable cases of both kinds (each table then gets its own
+// Run button).
+function caseKinds(plan: Plan) {
+  const testCases = plan.cases.filter((c) => c.kind !== 'prompt');
+  const promptCases = plan.cases.filter((c) => c.kind === 'prompt');
+  const testIds = testCases.filter((c) => c.testCount > 0).map((c) => c.id);
+  const promptIds = promptCases.filter(isPromptCase).map((c) => c.id);
+  const bothKinds = plan.runnable && testIds.length > 0 && promptIds.length > 0;
+  return { testCases, promptCases, testIds, promptIds, bothKinds };
+}
+
+// The plan has tests to run but no Run test cases button (it has no prompt
+// cases), so the Run plan button is where the headed option goes.
+export function runsTestsOnly(plan: Plan) {
+  const { testIds, bothKinds } = caseKinds(plan);
+  return testIds.length > 0 && !bothKinds;
 }
 
 type TableProps = Props & { cases: PlanCase[] };
@@ -230,10 +247,12 @@ function RunKindButton({
   label,
   caseIds,
   specRoles = [],
+  headedOption = false,
 }: {
   plan: Plan;
   label: string;
   caseIds: string[];
+  headedOption?: boolean; // the "Show the browser" tick goes above it
   // Every login the plan's spec files use; the server checks these too
   // when a run covers every test case.
   specRoles?: string[];
@@ -261,6 +280,7 @@ function RunKindButton({
   return (
     <>
       <LoginsNote roles={roles} />
+      {headedOption && <HeadedOption />}
       <p className="actions">
         <PlanRunButton
           plan={plan}
