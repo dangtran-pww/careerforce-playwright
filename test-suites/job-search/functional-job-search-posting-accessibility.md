@@ -1,4 +1,4 @@
-# [Functional] - Job Search - Job Posting and Accessibility - Test Plan
+# [Functional] - Job Posting and Accessibility - Test Plan
 
 Status: implemented
 Implemented test: tests/functional/job-search/posting.spec.ts, tests/functional/job-search/responsive.spec.ts, tests/functional/job-search/accessibility.spec.ts

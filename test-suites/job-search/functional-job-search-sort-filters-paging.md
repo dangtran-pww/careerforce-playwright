@@ -1,4 +1,4 @@
-# [Functional] - Job Search - Sort, Filters and Paging - Test Plan
+# [Functional] - Sort, Filters and Paging - Test Plan
 
 Status: implemented
 Implemented test: tests/functional/job-search/sort-filters.spec.ts, tests/functional/job-search/paging-url-state.spec.ts

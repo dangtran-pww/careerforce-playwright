@@ -117,7 +117,9 @@ Put it in `test-suites/<suite>/<plan>.md`. The file name is the slug; it
 must be unique across all suites (`ls test-suites/*/`). Follow the model
 plans' sections:
 
-- Title (`# [Smoke] - <Area> - Test Plan`), then the header lines:
+- Title (`# [Smoke] - <Area> - Test Plan`; in another suite, its type,
+  e.g. `# [Functional] - Search - Test Plan`, without the suite's name,
+  which the dashboard already shows), then the header lines:
   `Status: ready to generate`, `Implemented test: —`, and when they apply
   `Prod: No: <reason>`, `Parallel: yes`.
 - An overview paragraph (Rule 7): what the plan tests, for whom, and why.

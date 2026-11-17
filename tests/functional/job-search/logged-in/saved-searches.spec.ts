@@ -20,7 +20,7 @@ import {
   waitForNewPage,
 } from './helpers';
 
-// [Functional] - Job Search - Logged-in Job Seeker - Test Plan, SV-1 to SV-9.
+// [Functional] - Logged-in Job Seeker - Test Plan, SV-1 to SV-9.
 // See test-suites/job-search/functional-job-search-logged-in.md.
 //
 // Saves searches on the job seeker account, so QA and Stage only

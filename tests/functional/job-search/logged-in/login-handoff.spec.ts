@@ -20,7 +20,7 @@ import {
   waitForNewPage,
 } from './helpers';
 
-// [Functional] - Job Search - Logged-in Job Seeker - Test Plan, HO-1 to HO-4.
+// [Functional] - Logged-in Job Seeker - Test Plan, HO-1 to HO-4.
 // See test-suites/job-search/functional-job-search-logged-in.md.
 //
 // A visitor who clicks Bookmark or Save search logs in through LoginMN and

@@ -1,4 +1,4 @@
-# [Functional] - Events - Scheduling - Test Plan
+# [Functional] - Scheduling - Test Plan
 
 Status: ready to generate
 Implemented test: —

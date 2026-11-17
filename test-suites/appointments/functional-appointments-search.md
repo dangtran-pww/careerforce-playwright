@@ -1,4 +1,4 @@
-# [Functional] - Appointments - Search - Test Plan
+# [Functional] - Search - Test Plan
 
 Status: ready to generate
 Implemented test: —

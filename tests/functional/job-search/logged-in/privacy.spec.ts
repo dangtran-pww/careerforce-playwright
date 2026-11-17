@@ -18,7 +18,7 @@ import {
   visitorPage,
 } from './helpers';
 
-// [Functional] - Job Search - Logged-in Job Seeker - Test Plan, PV-1 to PV-5.
+// [Functional] - Logged-in Job Seeker - Test Plan, PV-1 to PV-5.
 // See test-suites/job-search/functional-job-search-logged-in.md.
 //
 // PV-1 to PV-3 change the job seeker account (@no-prod). PV-4 only looks,

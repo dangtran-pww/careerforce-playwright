@@ -1,4 +1,4 @@
-# [Functional] - Job Search - Logged-in Job Seeker - Test Plan
+# [Functional] - Logged-in Job Seeker - Test Plan
 
 Status: partially implemented
 Implemented test: tests/functional/job-search/logged-in/*.spec.ts

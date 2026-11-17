@@ -1,4 +1,4 @@
-# [Functional] - Job Search - Search - Test Plan
+# [Functional] - Search - Test Plan
 
 Status: implemented
 Implemented test: tests/functional/job-search/search.spec.ts

@@ -6,7 +6,7 @@ import {
   expectJobSeekerTools,
 } from './helpers';
 
-// [Functional] - Job Search - Logged-in Job Seeker - Test Plan, LI-1.
+// [Functional] - Logged-in Job Seeker - Test Plan, LI-1.
 // See test-suites/job-search/functional-job-search-logged-in.md.
 
 test.describe(

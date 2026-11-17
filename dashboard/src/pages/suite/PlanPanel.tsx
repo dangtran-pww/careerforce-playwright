@@ -16,7 +16,6 @@ import { useApi } from '../../hooks/useApi';
 import { useEnv } from '../../hooks/useEnv';
 import { useEscapeToClose } from '../../hooks/useEscapeToClose';
 import { loginsFact } from '../../components/LoginBadges';
-import { planName } from '../../lib/format';
 import { offProdReason } from '../../lib/prod';
 import { PLAN_STATUS } from '../../lib/status';
 import { PanelCases, runsTestsOnly } from './PanelCases';
@@ -100,7 +99,7 @@ export function PlanPanel({
       <div className="card-head">
         <div className="card-head-title">
           <h2 id="plan-panel-heading">
-            {suiteName}: {plan ? planName(plan.name, suiteName) : slug}
+            {suiteName}: {plan ? plan.name : slug}
           </h2>
           {plan && (
             // One group, so the badges wrap under the name together.

@@ -17,7 +17,7 @@ import {
   testName,
 } from './helpers';
 
-// [Functional] - Job Search - Logged-in Job Seeker - Test Plan, MO-1.
+// [Functional] - Logged-in Job Seeker - Test Plan, MO-1.
 // See test-suites/job-search/functional-job-search-logged-in.md.
 //
 // The phone only (@mobile-only, functional-mobile). Saves a search and

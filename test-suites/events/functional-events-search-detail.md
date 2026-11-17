@@ -1,4 +1,4 @@
-# [Functional] - Events - Search and Detail Pages - Test Plan
+# [Functional] - Search and Detail Pages - Test Plan
 
 Status: ready to generate
 Implemented test: —

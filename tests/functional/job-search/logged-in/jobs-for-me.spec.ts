@@ -27,7 +27,7 @@ import {
   waitForNewPage,
 } from './helpers';
 
-// [Functional] - Job Search - Logged-in Job Seeker - Test Plan, JM-1 to JM-5.
+// [Functional] - Logged-in Job Seeker - Test Plan, JM-1 to JM-5.
 // See test-suites/job-search/functional-job-search-logged-in.md.
 //
 // Changes the job seeker account (bookmarks, saved searches, a career goal,
