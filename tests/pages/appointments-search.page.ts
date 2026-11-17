@@ -22,6 +22,10 @@ export type Slot = {
   href: string;
   location: string;
   formats: Format[];
+  /** The slot's start, e.g. `2026-11-18T07:00:00-06:00` (site timezone). */
+  datetime: string;
+  /** The button's text, e.g. "7:00 am Wednesday, November 18, 2026 phone". */
+  text: string;
 };
 
 export class AppointmentsSearchPage {
@@ -79,10 +83,33 @@ export class AppointmentsSearchPage {
           if (/\bonline\b/.test(text)) formats.push('online');
           if (/\bphone\b/.test(text)) formats.push('phone');
           if (/\bin person\b/.test(text)) formats.push('in_person');
-          return { href: a.getAttribute('href') ?? '', location, formats };
+          return {
+            href: a.getAttribute('href') ?? '',
+            location,
+            formats,
+            datetime: a.querySelector('time')?.getAttribute('datetime') ?? '',
+            text: (a.textContent ?? '').replace(/\s+/g, ' ').trim(),
+          };
         });
       }),
     );
+  }
+
+  /** A location's card, by its full name ("CareerForce in Aitkin"). */
+  card(name: string): Locator {
+    return this.cards.filter({
+      has: this.page.locator('h3', { hasText: new RegExp(`^\\s*${name}\\s*$`) }),
+    });
+  }
+
+  /** The time button that books slot `id` (`/appointments/<id>/booking`). */
+  slotLink(id: string): Locator {
+    return this.slotLinks.and(this.page.locator(`[href="/appointments/${id}/booking"]`));
+  }
+
+  /** Slot `id`'s time button inside the card of location `name`. */
+  cardSlotLink(name: string, id: string): Locator {
+    return this.card(name).locator(`.appt-slots a[href="/appointments/${id}/booking"]`);
   }
 
   // Date strip ---------------------------------------------------------
