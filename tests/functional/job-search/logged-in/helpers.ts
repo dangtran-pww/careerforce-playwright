@@ -138,7 +138,9 @@ export function saveDialogParts(jobs: JobSearchPage) {
     dialog,
     nameBox: dialog.getByLabel('Name job search'),
     save: dialog.getByRole('button', { name: 'Save', exact: true }),
-    close: dialog.getByRole('button', { name: /^close$/i }),
+    // jQuery UI's titlebar button. Its accessible name starts with a spacer
+    // character that an anchored regex doesn't match, so match the word.
+    close: dialog.getByRole('button', { name: 'Close' }),
     limitWarning: dialog.getByText(
       'You have already reached the limit for saved jobs.',
     ),
@@ -234,9 +236,11 @@ export async function pagesLoadedDuring(
   page.on('request', onRequest);
   try {
     await action();
-    await page.evaluate(
-      () => new Promise((resolve) => requestAnimationFrame(resolve)),
-    );
+    // A page that started loading has already been recorded; its context
+    // going away mid-evaluate is the answer, not an error.
+    await page
+      .evaluate(() => new Promise((resolve) => requestAnimationFrame(resolve)))
+      .catch(() => undefined);
   } finally {
     page.off('request', onRequest);
   }
@@ -331,7 +335,9 @@ export async function expectJobSeekerTools(page: Page) {
 // --- Visitor ----------------------------------------------------------------
 
 // A fresh browser that isn't logged in: the project's site and Basic Auth,
-// no saved session. Its pages are watched like the test's own.
+// no saved session. Its pages are watched like the test's own. The empty
+// storageState matters: inside a useRole() describe, the test runner gives
+// browser.newContext() the role's saved login unless told otherwise.
 export async function visitorPage(
   browser: Browser,
   testInfo: TestInfo,
@@ -342,6 +348,7 @@ export async function visitorPage(
     baseURL,
     httpCredentials,
     ignoreHTTPSErrors,
+    storageState: { cookies: [], origins: [] },
   });
   const page = await context.newPage();
   siteHealth.watch(page);

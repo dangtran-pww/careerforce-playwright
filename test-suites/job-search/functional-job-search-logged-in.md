@@ -1,8 +1,7 @@
 # [Functional] - Logged-in Job Seeker - Test Plan
 
-Status: partially implemented
+Status: implemented
 Implemented test: tests/functional/job-search/logged-in/*.spec.ts
-Pending cases: LI-1, BK-1 to BK-5, SV-1 to SV-9, JM-1 to JM-5, HO-1 to HO-4, PV-1 to PV-4, MO-1 — generated but not yet verified against a live site (the QA jobseeker session had expired)
 
 ## Overview
 
@@ -41,8 +40,8 @@ seeker login for Production; PV-5 runs as a visitor).
 | | |
 |---|---|
 | **Role** | `jobseeker`: `playwright/.auth/<env>/jobseeker.json`, from `npm run login:manual -- jobseeker`. Job seekers log in with LoginMN. PV-4 and PV-5 also use a fresh browser that isn't logged in. |
-| **Test account** | A job seeker account used only for testing, never a person's own (see [Open questions](#open-questions)). Before a run it needs: at most 3 saved searches, at most 10 bookmarked jobs, at most 5 career goals, and "My Region" set to a Minnesota city (the cases note it and put it back). |
-| **Accounts touched** | The job seeker account: saved searches, bookmarked jobs, career goals and My Region. Every case removes or puts back only what it added or changed, matched by name (`Playwright test <timestamp>`), job ID or occupation code. It never removes anything it didn't add. |
+| **Test account** | A job seeker account used only for testing, never a person's own (see [Open questions](#open-questions)). Before a run it needs: at most 3 saved searches, at most 10 bookmarked jobs, at most 5 career goals, and any "My Location" (Statewide or a Minnesota city; JM-4 notes it and puts it back). |
+| **Accounts touched** | The job seeker account: saved searches, bookmarked jobs, career goals and My Location. Every case removes or puts back only what it added or changed, matched by name (`Playwright test <timestamp>`), job ID or occupation code. It never removes anything it didn't add. |
 
 ## Checked in every case
 
@@ -51,7 +50,7 @@ seeker login for Production; PV-5 runs as a visitor).
   CareerForce host), except where a case expects one.
 - **No raw error on the page**, and no browser `alert()` with an error.
 - **Clean up:** after the case, the account's saved searches, bookmarks,
-  career goals and My Region are what they were before it.
+  career goals and My Location are what they were before it.
 
 ## Test cases
 
@@ -96,8 +95,8 @@ The cases are in one table, one area after another. Their tests are in
 | SV-9 | Save a search with nothing searched | `/job-search` | 1. With nothing after `/job-search`, save a search. 2. Open it from Jobs for me. **Cleanup:** remove it. | **1.** It saves. **2.** Opening it shows Job Search with no keyword, location, sort or filters set, and jobs listed, the same as `/job-search` with nothing after it. | `jobseeker` | No: saves and removes searches on the job seeker account |
 | JM-1 | Jobs for me matches the account | `/job-search` | 1. Bookmark one job and save one search, so both groups have items. Open the dashboard and note its saved searches and bookmarked jobs. Open Job Search. 2. Pick each group in Jobs for me in turn. **Cleanup:** remove the bookmark and the search. | **1.** The group dropdown is labelled and lists only groups with items. **2.** After picking a group, the item dropdown shows the placeholder "Select <group>" and lists that group's items. "Saved searches" lists the same names as the dashboard, in the same order; "Bookmarked jobs" lists the same jobs. Picking a group alone doesn't leave the page; picking an item does. | `jobseeker` | No: bookmarks and saves on the job seeker account |
 | JM-2 | Career goals lead to their jobs | `/explore/careers/29-1141.00` | 1. If "Registered Nurses" isn't already a career goal, click "Add to career goals". Open `/job-search` and pick Jobs for me → "Career goals". 2. Pick "Registered Nurses". **Cleanup:** if the case added the goal, click "Remove from career goals". | **1.** Jobs for me → "Career goals" lists "Registered Nurses" (and every other goal on the account's Goals & Experience page). **2.** Picking it opens Job Search with `title=Registered Nurses (29-1141.00)`, the Keyword box shows it, at least 1 job is listed, and at least half of the first page's titles contain "nurs" or "RN". | `jobseeker` | No: adds and removes a career goal on the job seeker account |
-| JM-3 | In-demand jobs lead to their jobs | `/job-search` | 1. Pick Jobs for me → "In demand jobs" and note the list. 2. Pick the first one. | **1.** The list has 1 to 10 occupations. **2.** Picking one opens Job Search with `title=<occupation> (<code>)` and the Keyword box showing it. Jobs are listed, or the friendly empty state shows with no error. | `jobseeker` | No: logs in as the job seeker |
-| JM-4 | In-demand jobs follow My Region | `/user` | Note the account's My Region and the In demand jobs list (JM-3), then on the dashboard set My Region to "Duluth, MN" (Northeast) and note the list, and then set it to "Saint Paul, MN" (Metro). **Cleanup:** set My Region back to what it was (or clear it, if it was Statewide). | **1.** The In demand jobs list for Duluth is not the same as the list for Saint Paul (different occupations or a different order). **2.** After the cleanup, the list is the same as at the start. | `jobseeker` | No: changes My Region on the job seeker account |
+| JM-3 | In-demand jobs lead to their jobs | `/job-search` | 1. Pick Jobs for me → "In demand jobs" and note the list. 2. Pick the first one. | **1.** The list has 1 to 10 occupations. **2.** Picking one opens Job Search with `title=<occupation> (<code>)` (the code without punctuation, e.g. `(31112100)`) and the Keyword box showing it. Jobs are listed, or the friendly empty state shows with no error. | `jobseeker` | No: logs in as the job seeker |
+| JM-4 | In-demand jobs follow My Location | `/user` | Note the account's My Location and the In demand jobs list (JM-3), then in the dashboard's "My Location" block type `55802`, pick "Duluth, MN" from the suggestions and click Select (Northeast), and note the list, and then do the same with `55101` (Saint Paul, Metro). **Cleanup:** set My Location back to what it was (for Statewide, the "State Wide" county choice, which clears the region). | **1.** The In demand jobs list for Duluth is not the same as the list for Saint Paul (different occupations or a different order). **2.** After the cleanup, the list is the same as at the start. | `jobseeker` | No: changes My Location on the job seeker account |
 | JM-5 | Browsing the items with the keyboard doesn't leave the page | `/job-search` | With "Saved searches" (at least 2 items) picked, Tab to the item dropdown and press Down once, without opening it. | **1.** The page doesn't navigate just because the highlighted item changed. **2.** It goes to the search only when the choice is confirmed (Enter, or a "Go" button). | `jobseeker` | No: logs in as the job seeker |
 | HO-1 | Coming back from login to save a search | `/job-search?title=nurse#save-search` | 1. Open the address. 2. Name the search and save. **Cleanup:** remove it. | **1.** The "Save this search to your dashboard" dialog opens by itself. **2.** After saving, it's listed in Jobs for me and on the dashboard, and opening it gives `title=nurse` (without `#save-search`). | `jobseeker` | No: saves and removes a search on the job seeker account |
 | HO-2 | Coming back from login to bookmark a job | `/job-search?title=nurse#bookmark[<ID of a job that isn't bookmarked>]` | Open the address, and finish the bookmark if a dialog asks. **Cleanup:** remove the bookmark. | **1.** The job gets bookmarked: the page reloads without the `#bookmark[…]` part, and that job's icon is in its "remove bookmark" state. **2.** The dashboard lists it once. | `jobseeker` | No: bookmarks and removes on the job seeker account |
@@ -126,7 +125,7 @@ The cases are in one table, one area after another. Their tests are in
   checking it.
 - **Career goals and in-demand jobs** come from the account (Goals &
   Experience, `/user/<ID>/skills-experience`) and from DEED's labour-market
-  data for the account's region (My Region on the dashboard; Statewide when
+  data for the account's region (My Location on the dashboard; Statewide when
   it isn't set). The jobs themselves come from the outside job feed, so no
   case checks an exact count.
 - **The log-in hand-off can't be done end to end:** LoginMN can't be driven

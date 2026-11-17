@@ -106,8 +106,13 @@ export class SiteHealth {
     );
   }
 
+  // A body that hasn't arrived after a few seconds (a page closed or left
+  // mid-load, whose text() never settles) isn't waited for.
   async results(): Promise<SiteProblem[]> {
-    await Promise.all(this.pending);
+    await Promise.race([
+      Promise.all(this.pending),
+      new Promise((resolve) => setTimeout(resolve, 5_000)),
+    ]);
     return this.problems;
   }
 }

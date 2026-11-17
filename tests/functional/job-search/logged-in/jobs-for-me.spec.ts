@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 
 import { test, expect } from '../fixtures';
 import { useRole } from '../../../helpers/roles';
@@ -31,7 +31,7 @@ import {
 // See test-suites/job-search/functional-job-search-logged-in.md.
 //
 // Changes the job seeker account (bookmarks, saved searches, a career goal,
-// My Region), so QA and Stage only (@no-prod), desktop only. Each test puts
+// My Location), so QA and Stage only (@no-prod), desktop only. Each test puts
 // back, in `finally`, only what it changed.
 
 const NURSES_SOC = '29-1141.00';
@@ -49,6 +49,23 @@ function goalButton(page: Page, name: RegExp) {
 const ADD_GOAL = /^\s*Add to career goals\s*$/i;
 const REMOVE_GOAL = /^\s*Remove from career goals\s*$/i;
 
+// Clicks Add/Remove on the career page and waits for the answer: the other
+// button in its place, or Goals & Experience (/user/<ID>/skills-experience)
+// opening. Ends on a freshly loaded career page either way, so a navigation
+// the click started can't cut short the next page.goto().
+async function clickGoalButton(page: Page, button: Locator, then: Locator) {
+  await button.click();
+  await expect
+    .poll(
+      async () =>
+        page.url().includes('/skills-experience') || (await then.isVisible()),
+      { message: 'the career goal changed' },
+    )
+    .toBe(true);
+  await page.waitForLoadState('load');
+  await page.goto(`/explore/careers/${NURSES_SOC}`);
+}
+
 async function userId(page: Page): Promise<string> {
   await page.goto('/user');
   const id = new URL(page.url()).pathname.match(/^\/user\/(\d+)/)?.[1];
@@ -56,43 +73,53 @@ async function userId(page: Page): Promise<string> {
   return id ?? '';
 }
 
-// --- My Region (JM-4) ---
+// --- My Location (JM-4) ---
 
-// The dashboard's "My Region" block: its text without the heading, e.g.
-// "Saint Paul, MN 55101" or "Statewide".
-async function myRegionText(page: Page): Promise<string> {
+// The dashboard's "My Location" block (the page has it twice, one inside
+// the other; the inner one holds the form). It shows "Current location:
+// Statewide" or e.g. "Duluth, MN 55802", and a city/ZIP box with Google
+// Places suggestions that fill the hidden region fields.
+async function myLocation(page: Page) {
   await new DashboardPage(page).goto();
-  const heading = page
-    .getByRole('main')
-    .getByRole('heading', { name: /^\s*My Region\s*$/i })
-    .first();
-  await expect(heading, 'the dashboard has a "My Region" block').toBeVisible();
-  const block = heading.locator('xpath=..');
-  const all = ((await block.innerText()) ?? '').trim();
-  const title = ((await heading.innerText()) ?? '').trim();
-  return all.replace(title, '').replace(/\s+/g, ' ').trim();
-}
-
-// The My Region form, also at /careerforce/forms/my_region_form.
-async function myRegionForm(page: Page) {
-  await page.goto('/careerforce/forms/my_region_form');
-  const form = page
-    .getByRole('main')
-    .locator('form')
-    .filter({ has: page.locator('[type="submit"]') })
-    .first();
+  const block = page.locator('.block-my-region').last();
+  await expect(
+    block.getByRole('heading', { name: /^\s*My Location\s*$/i }),
+    'the dashboard has a "My Location" block',
+  ).toBeVisible();
   return {
-    input: form
-      .locator('input[type="text"], input[type="search"], input:not([type])')
-      .first(),
-    submit: form.locator('[type="submit"]').first(),
+    shown: block.locator('.my-region-display-location'),
+    box: block.getByRole('textbox', { name: 'Use city or ZIP code' }),
+    county: block.locator('select.cf-edr-selector__county'),
+    // Filled in by the suggestion's place lookup, a moment after the pick.
+    postalCode: block.locator('input[name="select_edr[postal_code]"]'),
+    select: block.getByRole('button', { name: 'Select', exact: true }),
   };
 }
 
-async function setMyRegion(page: Page, value: string) {
-  const { input, submit } = await myRegionForm(page);
-  await input.fill(value);
-  await waitForNewPage(page, () => submit.click());
+async function myLocationText(page: Page): Promise<string> {
+  const { shown } = await myLocation(page);
+  return ((await shown.textContent()) ?? '').trim();
+}
+
+// Types a ZIP code, picks the suggestion and saves.
+async function setMyLocation(page: Page, zip: string) {
+  const { box, select, postalCode } = await myLocation(page);
+  await box.pressSequentially(zip, { delay: 50 });
+  const suggestion = page.locator('.pac-item').filter({ hasText: zip }).first();
+  await expect(suggestion, `a suggestion for ${zip}`).toBeVisible();
+  await suggestion.click();
+  await expect(postalCode, 'the suggestion filled in the region').toHaveValue(
+    zip,
+  );
+  await waitForNewPage(page, () => select.click());
+}
+
+// Back to Statewide: the (hidden) county select's "State Wide" option
+// clears the region fields; saving with only the box empty would keep them.
+async function setStatewide(page: Page) {
+  const { county, select } = await myLocation(page);
+  await county.selectOption('', { force: true });
+  await waitForNewPage(page, () => select.click());
 }
 
 async function inDemandList(jobs: JobSearchPage): Promise<string[]> {
@@ -190,7 +217,7 @@ test.describe('Jobs for me', { tag: ['@no-prod', '@desktop-only'] }, () => {
       await expect(add.or(remove).first()).toBeVisible();
       if (await add.isVisible()) {
         addedGoal = true;
-        await add.click();
+        await clickGoalButton(page, add, remove);
         await expect(remove).toBeVisible();
       }
 
@@ -214,7 +241,8 @@ test.describe('Jobs for me', { tag: ['@no-prod', '@desktop-only'] }, () => {
 
       await page.goto('/job-search');
       await pickJobsForMe(jobs, CAREER_GOALS, nurses?.value ?? '');
-      const title = `${NURSES} (${NURSES_SOC})`;
+      // The code without punctuation, e.g. "Registered Nurses (29114100)".
+      const title = `${NURSES} (${NURSES_SOC.replace(/\D/g, '')})`;
       expect(jobs.params().get('title')).toBe(title);
       await expect(jobs.keywordInput).toHaveValue(title);
       await expect(jobs.cards.first(), 'at least 1 job').toBeVisible();
@@ -230,9 +258,12 @@ test.describe('Jobs for me', { tag: ['@no-prod', '@desktop-only'] }, () => {
       if (addedGoal) {
         await page.goto(`/explore/careers/${NURSES_SOC}`);
         const remove = goalButton(page, REMOVE_GOAL);
+        const add = goalButton(page, ADD_GOAL);
+        // The page fills in after loading ("Loading..."), so wait for one.
+        await expect(add.or(remove).first()).toBeVisible();
         if (await remove.isVisible()) {
-          await remove.click();
-          await expect(goalButton(page, ADD_GOAL)).toBeVisible();
+          await clickGoalButton(page, remove, add);
+          await expect(add, 'the goal is removed').toBeVisible();
         }
       }
     }
@@ -248,7 +279,9 @@ test.describe('Jobs for me', { tag: ['@no-prod', '@desktop-only'] }, () => {
     const [first] = options;
     await pickJobsForMe(jobs, IN_DEMAND, first.value);
     const title = jobs.params().get('title') ?? '';
-    expect(title).toMatch(/^.+ \(\d{2}-\d{4}\.\d{2}\)$/);
+    // In-demand codes come without punctuation, e.g. "(31112100)"; career
+    // goals use "(29-1141.00)".
+    expect(title).toMatch(/^.+ \([\d.-]+\)$/);
     expect(
       title.startsWith(first.text),
       `the title is "${first.text} (<code>)"`,
@@ -260,28 +293,26 @@ test.describe('Jobs for me', { tag: ['@no-prod', '@desktop-only'] }, () => {
     ).toBeVisible();
   });
 
-  test('JM-4: in-demand jobs follow My Region', async ({ page }) => {
+  test('JM-4: in-demand jobs follow My Location', async ({ page }) => {
     test.setTimeout(120_000);
     const jobs = new JobSearchPage(page);
 
-    const originalText = await myRegionText(page);
-    const { input } = await myRegionForm(page);
-    const originalInput = await input.inputValue();
-    const statewide = /statewide/i.test(originalText);
-    const restoreTo = statewide ? '' : originalInput || originalText;
+    const originalText = await myLocationText(page);
+    // e.g. "Duluth, MN 55802"; Statewide has no ZIP code.
+    const originalZip = originalText.match(/\b(\d{5})\b/)?.[1];
     const start = await inDemandList(jobs);
     let changed = false;
 
     try {
       changed = true;
-      await setMyRegion(page, 'Duluth, MN');
-      expect(await myRegionText(page), 'My Region is Duluth').toMatch(
+      await setMyLocation(page, '55802');
+      expect(await myLocationText(page), 'My Location is Duluth').toMatch(
         /Duluth/i,
       );
       const duluth = await inDemandList(jobs);
 
-      await setMyRegion(page, 'Saint Paul, MN');
-      expect(await myRegionText(page), 'My Region is Saint Paul').toMatch(
+      await setMyLocation(page, '55101');
+      expect(await myLocationText(page), 'My Location is Saint Paul').toMatch(
         /(Saint|St\.?) Paul/i,
       );
       const saintPaul = await inDemandList(jobs);
@@ -293,10 +324,13 @@ test.describe('Jobs for me', { tag: ['@no-prod', '@desktop-only'] }, () => {
         'Duluth (Northeast) and Saint Paul (Metro) have different lists',
       ).not.toEqual(saintPaul);
     } finally {
-      if (changed) await setMyRegion(page, restoreTo);
+      if (changed) {
+        if (originalZip) await setMyLocation(page, originalZip);
+        else await setStatewide(page);
+      }
     }
 
-    expect(await myRegionText(page), 'My Region is back as it was').toBe(
+    expect(await myLocationText(page), 'My Location is back as it was').toBe(
       originalText,
     );
     expect(
