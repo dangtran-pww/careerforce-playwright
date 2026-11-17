@@ -738,7 +738,8 @@ Every plan, by suite folder.
   and cancels, an admin adds and cancels an attendee, marks one attended
   (service record) and cancels a slot (no-prod cases, `admin` and
   `jobseeker` logins).
-- `smoke/smoke-auto-logout.md` — Status: ready to generate. The
+- `smoke/smoke-auto-logout.md` — Status: implemented.
+  Implemented tests: `tests/smoke/auto-logout/*.spec.ts`. The
   inactivity logout (MNDEED-8448): the 11-minute warning and 15-minute
   logout settings as `admin` and `jobseeker`, the warning via the page
   clock with the logout requests blocked, and the visitor's inactivity

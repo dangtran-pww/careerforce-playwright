@@ -27,6 +27,7 @@ export const SKIP_TAG: Record<DeviceName, RegExp> = {
 export const DESKTOP_ONLY_SMOKE_AREAS = [
   'admin-reports',
   'admin-maintenance',
+  'auto-logout',
   'block-placement',
   'ckeditor',
   'content-lifecycle',
