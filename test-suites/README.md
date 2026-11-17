@@ -727,11 +727,11 @@ Every plan, by suite folder.
   (read-only, in the smoke run), plus saved searches and My Job Search on the
   dashboard as a job seeker (no-prod cases: tagged `@no-prod`, QA and Stage
   only).
-- `smoke/smoke-jobseeker-tools.md` — Status: partially implemented.
-  Implemented test: `tests/smoke/jobseeker-tools/visitor.spec.ts` (JT-6 to
-  JT-8, the visitor checks moved from smoke-public-site). Skills Matcher /
-  Interest Profiler / Employment Readiness as a job seeker are pending
-  (no-prod cases, QA and Stage only).
+- `smoke/smoke-jobseeker-tools.md` — Status: implemented.
+  Implemented tests: `tests/smoke/jobseeker-tools/*.spec.ts`. The visitor
+  checks (JT-6 to JT-8, moved from smoke-public-site), plus Skills Matcher,
+  Interest Profiler, Employment Readiness and career goals as a job seeker
+  (JT-1 to JT-5: no-prod cases, QA and Stage only, desktop only).
 - `smoke/smoke-resume-builder.md` — Status: ready to generate.
 - `smoke/smoke-profile.md` — Status: implemented. Implemented tests:
   `tests/smoke/profile/*.spec.ts`. Job seeker and admin profile edits.
