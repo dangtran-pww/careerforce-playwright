@@ -104,6 +104,7 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
           slug={shownPlan}
           openCase={shownPlan === linkedPlan ? openCase : null}
           suite={suite.slug}
+          suiteName={suite.name}
           onClose={closePanel}
           projects={shown?.projects ?? []}
           activeRun={activeRun}
