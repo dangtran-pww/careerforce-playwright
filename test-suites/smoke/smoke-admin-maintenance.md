@@ -1,11 +1,8 @@
 # [Smoke] - Admin Maintenance - Test Plan
 
-Status: partially implemented
+Status: implemented
 Implemented test: tests/smoke/admin-maintenance/*.spec.ts
 Prod: No: rebuilds permissions and reindexes the search indexes.
-Pending cases: AM-2 — Occupations only: re-run with the repeated "Index
-now" runs (step 3). AM-1, AM-3 and AM-2's other three indexes passed on QA on
-2026-11-16.
 
 A quick check after each deploy that an admin can still run the site's
 maintenance: rebuild content permissions, rebuild tracking and reindex each
@@ -244,6 +241,8 @@ Notes from verification:
   contextual links in the block (their URLs end in
   `?destination=/events/event-occurrence/<this event>`); it now skips them,
   and passed on a re-run.
+- AM-2 for Occupations, with the repeated "Index now" runs, passed on QA on
+  2026-11-17 (4.3 min).
 - Every date-strip link does a full page load, so the page object waits
   for the URL to change before reading the page.
 - AM-1 and AM-2's pages and buttons were checked on QA with the admin

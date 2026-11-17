@@ -693,8 +693,7 @@ Every plan, by suite folder.
   Implemented tests: `tests/smoke/anonymous/*.spec.ts`.
 - `smoke/smoke-admin-reports.md` — Status: implemented.
   Implemented test: `tests/smoke/admin-reports/admin-reports.spec.ts`.
-- `smoke/smoke-admin-maintenance.md` — Status: partially implemented (AM-2
-  for Occupations needs a re-run with the repeated "Index now").
+- `smoke/smoke-admin-maintenance.md` — Status: implemented.
   Implemented tests:
   `tests/smoke/admin-maintenance/*.spec.ts`. No-prod plan.
   Permissions rebuild, search-api rebuild tracking and reindex, search
