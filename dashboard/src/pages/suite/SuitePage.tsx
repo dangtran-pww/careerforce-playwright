@@ -27,7 +27,12 @@ import { PlanChecklist } from './StepChecklists';
 // chosen plans need show in the header's Login Sessions panel.
 export function SuitePage() {
   const { slug } = useParams();
-  const { data, error } = useApi<SuiteResponse>(`/api/suites/${slug}`);
+  const { currentEnv } = useEnv();
+  // Asks again when the header's environment changes: the run in progress
+  // (activeRun) is the one on that environment.
+  const { data, error } = useApi<SuiteResponse>(
+    `/api/suites/${slug}?env=${currentEnv.id}`,
+  );
 
   if (error)
     return (
@@ -189,7 +194,7 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
               }}
             >
               {activeRun
-                ? 'Another run is in progress'
+                ? `Another run is in progress on ${env.name}`
                 : blocked
                   ? 'Not on Production'
                   : `Run ${plural(total, 'plan')} on ${env.name}`}

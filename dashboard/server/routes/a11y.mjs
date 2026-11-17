@@ -20,7 +20,7 @@ export const a11yRoutes = new Hono();
 a11yRoutes.get('/runs', async (c) => {
   const env = envParam(c.req.query('env'));
   return c.json({
-    activeRun: activeRunId(),
+    activeRun: activeRunId(env.id),
     runs: await listRuns({ env: env.id, a11y: true, limit: 20 }),
   });
 });

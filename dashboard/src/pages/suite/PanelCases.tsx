@@ -210,7 +210,7 @@ function RunCase({ plan, testCase: c }: { plan: Plan; testCase: PlanCase }) {
       disabled={Boolean(options.activeRun) || Boolean(offProd)}
       title={
         options.activeRun
-          ? 'Another run is in progress'
+          ? `Another run is in progress on ${currentEnv.name}`
           : offProd
             ? `${c.id} is no-prod, so it never runs on Production`
             : `Run ${c.id} on ${currentEnv.name}`
@@ -245,7 +245,7 @@ function RunKindButton({
     : caseIds;
   const planBlocked = currentEnv.production ? offProdReason(plan) : null;
   const reason = options.activeRun
-    ? 'Another run is in progress'
+    ? `Another run is in progress on ${currentEnv.name}`
     : (planBlocked ??
       (ids.length
         ? null

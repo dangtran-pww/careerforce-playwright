@@ -72,7 +72,15 @@ export default defineConfig({
   fullyParallel: false,
   workers: 1,
   retries: process.env.CI ? 1 : 0,
-  reporter: process.env.CI ? 'github' : 'html',
+  // One folder per environment (test-results/qa/, playwright-report/stage/),
+  // so terminal runs on two environments at once don't empty or overwrite
+  // each other's screenshots, traces and report. Open a report with
+  // `npx playwright show-report playwright-report/<env>`. The dashboard
+  // passes its own --output and --reporter, which override these.
+  outputDir: `test-results/${env.id}`,
+  reporter: process.env.CI
+    ? 'github'
+    : [['html', { outputFolder: `playwright-report/${env.id}` }]],
   use: {
     baseURL: env.baseURL,
     httpCredentials,

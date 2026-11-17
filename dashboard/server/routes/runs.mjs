@@ -11,7 +11,7 @@ import {
 import { savedRunSummary, summarizeRun } from '../claude/summary.mjs';
 import { ApiError } from '../errors.mjs';
 import { getRun, listRuns } from '../runs/history.mjs';
-import { activeRunId, stopRun } from '../runs/lifecycle.mjs';
+import { activeRunIds, stopRun } from '../runs/lifecycle.mjs';
 import { SLUG, flag, jsonBody } from './shared.mjs';
 
 export const runRoutes = new Hono();
@@ -20,7 +20,7 @@ const RUN = `/:id{${SLUG}}`;
 
 // GET /api/runs — run history, newest first.
 runRoutes.get('/', async (c) =>
-  c.json({ activeRun: activeRunId(), runs: await listRuns() }),
+  c.json({ activeRuns: activeRunIds(), runs: await listRuns() }),
 );
 
 // GET /api/runs/:id?logFrom=N — one run, and its output from character N.

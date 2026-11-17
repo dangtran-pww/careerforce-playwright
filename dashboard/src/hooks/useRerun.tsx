@@ -70,7 +70,7 @@ export function RerunProvider({
 // For a button that runs `cases` of a plan again (all of them when left
 // out): the plan, and why the button is disabled, if it is. Null when there
 // is nothing to run again from (outside a <RerunProvider>, or the plan
-// can't run). Disabled while any run is going, and on production when
+// can't run). Disabled while a run is going on the picked environment, and on production when
 // everything it would run is no-prod.
 //
 //   const gate = useRunGate(planSlug, body.cases);
@@ -82,7 +82,7 @@ export function useRunGate(planSlug: string | undefined, cases?: string[]) {
   const plan = rerun?.planBySlug(planSlug);
   if (!rerun || !plan?.runnable) return null;
   const blocked = rerun.activeRun
-    ? 'Another run is in progress'
+    ? `Another run is in progress on ${currentEnv.name}`
     : currentEnv.production
       ? offProdReason(plan, cases)
       : null;

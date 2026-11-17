@@ -1,5 +1,6 @@
-// The run lifecycle: one run at a time (the tests share accounts and a
-// staging database, so two runs at once would collide). Within a run, the
+// The run lifecycle: one run at a time on each environment (tests on one
+// site share its accounts and database, so two runs there at once would
+// collide), while runs on different environments go side by side. Within a run, the
 // plans and prompt cases marked Parallel (test-suites/README.md, Rule 3) can
 // have several processes going at once; Stop ends all of them. A run is either one test plan (plan-run.mjs) or a suite of
 // several steps (suite-run.mjs); both go
@@ -14,8 +15,13 @@
 //   test-results/  screenshots, videos and traces    (plan runs)
 //   steps/<n>-<id>/  the same files for each step     (suite runs)
 //
-// history.mjs reads runs back; the run in progress comes from here.
+// history.mjs reads runs back; the runs in progress come from here.
+//
+// log, isStopped and spawnStep act on the run whose work calls them: launch
+// starts that work inside an AsyncLocalStorage holding the run, so code
+// running on one environment never writes to or stops another's run.
 
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { spawn } from 'node:child_process';
 import { createWriteStream } from 'node:fs';
 import { mkdir, writeFile } from 'node:fs/promises';
@@ -24,9 +30,16 @@ import { ApiError } from '../errors.mjs';
 import { killGroup, quote } from '../lib/processes.mjs';
 import { RUNS_DIR } from '../paths.mjs';
 
-// { meta, children, log, logFile, stopped }: the run in progress, if any.
-// `children` are the processes it has going (Playwright, `claude`).
-let active = null;
+// Environment id → { meta, children, log, logFile, stopped }: the run in
+// progress there. `children` are the processes it has going (Playwright,
+// `claude`).
+const active = new Map();
+
+// The run whose work is calling (see launch).
+const current = new AsyncLocalStorage();
+
+const envOf = (meta) => meta.env.id;
+const byId = (id) => [...active.values()].find((r) => r.meta.id === id);
 
 // run.json writes, one after another: prompt cases that run at the same
 // time all save the run, and two writes at once can mix their contents.
@@ -50,32 +63,38 @@ export function save(meta) {
   return next;
 }
 
-/** Take the one-run lock, create the run's folder and save its run.json. */
+/**
+ * Take the lock on the run's environment, create the run's folder and save
+ * its run.json.
+ */
 export async function beginRun(meta) {
-  if (active) {
+  const envId = envOf(meta);
+  const busy = active.get(envId);
+  if (busy) {
     throw new ApiError(
       409,
-      `A run is already in progress (${active.meta.planName}). Wait for it or stop it first.`,
+      `A run is already in progress on ${meta.env.name} (${busy.meta.planName}). Wait for it or stop it first.`,
     );
   }
   const dir = join(RUNS_DIR, meta.id);
   // Claim the lock before the first await, so two quick clicks can't both
   // start.
-  active = {
+  const run = {
     meta,
     children: new Set(),
     log: '',
     logFile: null,
     stopped: false,
   };
+  active.set(envId, run);
   try {
     await mkdir(dir, { recursive: true });
     await save(meta);
   } catch (err) {
-    active = null;
+    active.delete(envId);
     throw err;
   }
-  active.logFile = createWriteStream(join(dir, 'output.log'));
+  run.logFile = createWriteStream(join(dir, 'output.log'));
   return dir;
 }
 
@@ -85,7 +104,8 @@ export async function beginRun(meta) {
  * run ends as an error, with the stack in its output.
  */
 export function launch(meta, work) {
-  work()
+  current
+    .run(byId(meta.id), work)
     .catch(async (err) => {
       log(`\n[dashboard] ${err.stack}\n`);
       meta.status = 'error';
@@ -96,20 +116,21 @@ export function launch(meta, work) {
 
 /** Add text to the run's output (the page shows it live). */
 export function log(text) {
-  if (!active) return;
-  active.logFile?.write(text);
-  active.log += text;
+  const run = current.getStore();
+  if (!run) return;
+  run.logFile?.write(text);
+  run.log += text;
 }
 
-export const isStopped = () => Boolean(active?.stopped);
+export const isStopped = () => Boolean(current.getStore()?.stopped);
 
-/** Release the lock and save the final run.json. */
+/** Release the environment's lock and save the final run.json. */
 export async function endRun(meta) {
   meta.finishedAt = new Date().toISOString();
-  const run = active;
+  const run = byId(meta.id);
   await save(meta);
   await new Promise((done) => (run?.logFile ? run.logFile.end(done) : done()));
-  if (active === run) active = null;
+  if (run && active.get(envOf(meta)) === run) active.delete(envOf(meta));
 }
 
 /**
@@ -124,7 +145,8 @@ export function spawnStep(
   { env = {}, onStdout, onChild, logTo = log } = {},
 ) {
   return new Promise((done) => {
-    if (!active || active.stopped) return done({ code: null, error: null });
+    const run = current.getStore();
+    if (!run || run.stopped) return done({ code: null, error: null });
     logTo(`\n$ ${[command, ...args].map(quote).join(' ')}\n`);
     const child = spawn(command, args, {
       // Own process group, so Stop can end it and the browsers it starts.
@@ -132,7 +154,6 @@ export function spawnStep(
       env: { ...process.env, FORCE_COLOR: '0', ...env },
       stdio: ['ignore', 'pipe', 'pipe'],
     });
-    const run = active;
     run.children.add(child);
     onChild?.(child);
     child.stdout.on('data', (chunk) =>
@@ -153,27 +174,29 @@ export function spawnStep(
   });
 }
 
-/** Kill every process the run has going. */
-function killChildren() {
-  for (const child of active?.children ?? []) killGroup(child);
-}
-
-/** Stop the run `id` if it's the one in progress; false if it isn't. */
+/** Stop the run `id` if it's in progress; false if it isn't. */
 export function stopRun(id) {
-  if (!active || active.meta.id !== id) return false;
-  active.stopped = true;
-  killChildren();
+  const run = byId(id);
+  if (!run) return false;
+  run.stopped = true;
+  for (const child of run.children) killGroup(child);
   return true;
 }
 
-// Stop a run in progress when the dashboard exits, so no browser is left
-// behind.
-export function stopActiveRun() {
-  if (active) stopRun(active.meta.id);
+// Stop every run in progress when the dashboard exits, so no browser is
+// left behind.
+export function stopActiveRuns() {
+  for (const run of active.values()) stopRun(run.meta.id);
 }
 
-export const activeRunId = () => active?.meta.id ?? null;
+/** The id of the run in progress on environment `envId`, if any. */
+export const activeRunId = (envId) => active.get(envId)?.meta.id ?? null;
+
+/** The ids of every run in progress, on any environment. */
+export const activeRunIds = () => [...active.values()].map((r) => r.meta.id);
 
 /** The run in progress, if it is `id`: { meta, log } (its output so far). */
-export const activeRun = (id) =>
-  active?.meta.id === id ? { meta: active.meta, log: active.log } : null;
+export const activeRun = (id) => {
+  const run = byId(id);
+  return run ? { meta: run.meta, log: run.log } : null;
+};

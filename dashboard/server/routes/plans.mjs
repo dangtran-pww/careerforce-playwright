@@ -48,7 +48,7 @@ planRoutes.get('/', async (c) => {
   return c.json({
     env: publicEnv(env),
     site: env.baseURL,
-    activeRun: activeRunId(),
+    activeRun: activeRunId(env.id),
     listErrors,
     plans: plans.map((p) => ({ ...p, lastRun: lastRun(p.slug) })),
   });
@@ -61,7 +61,7 @@ planRoutes.get(PLAN, async (c) => {
   return c.json({
     env: publicEnv(env),
     site: env.baseURL,
-    activeRun: activeRunId(),
+    activeRun: activeRunId(env.id),
     plan,
     runs: await listRuns({ plan: plan.slug, limit: 10 }),
   });

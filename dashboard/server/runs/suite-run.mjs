@@ -3,7 +3,7 @@
 // cases marked Parallel go on in the background while the next steps run,
 // as long as those steps' plans are marked Parallel too
 // (test-suites/README.md, Rule 3; see prompt-step.mjs). Uses the run lifecycle in lifecycle.mjs,
-// so a suite takes the same one-run-at-a-time lock and can be stopped the
+// so a suite takes the same one-run-per-environment lock and can be stopped the
 // same way (Stop ends the current step and skips the rest).
 //
 // reports/dashboard-runs/<id>/

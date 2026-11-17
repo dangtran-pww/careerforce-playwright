@@ -211,7 +211,7 @@ function RunPlanButton({ plan }: { plan: Plan }) {
       disabled={Boolean(options.activeRun) || Boolean(blocked)}
       title={
         options.activeRun
-          ? 'Another run is in progress'
+          ? `Another run is in progress on ${currentEnv.name}`
           : (blocked ?? `Run every case of ${plan.name} on ${currentEnv.name}`)
       }
     >

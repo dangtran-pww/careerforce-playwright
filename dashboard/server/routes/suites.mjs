@@ -38,7 +38,7 @@ suiteRoutes.get('/', async (c) => {
   const runs = await listRuns({ env: env.id, limit: 500 });
   return c.json({
     env: publicEnv(env),
-    activeRun: activeRunId(),
+    activeRun: activeRunId(env.id),
     suites: suites.map((s) => ({
       ...s,
       lastRun:
@@ -47,12 +47,14 @@ suiteRoutes.get('/', async (c) => {
   });
 });
 
-// GET /api/suites/:slug — one suite, its steps and recent runs (its own
-// runs and the plan runs started from its page).
+// GET /api/suites/:slug?env=<id> — one suite, its steps and recent runs
+// (its own runs and the plan runs started from its page), and the run in
+// progress on that environment.
 suiteRoutes.get(SUITE, async (c) => {
+  const env = envParam(c.req.query('env'));
   const suite = await suiteOf(c);
   return c.json({
-    activeRun: activeRunId(),
+    activeRun: activeRunId(env.id),
     suite,
     runs: await listRuns({ suite: suite.slug, limit: 10 }),
   });

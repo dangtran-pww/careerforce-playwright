@@ -4,7 +4,7 @@
 // reaches with axe (tests/helpers/a11y-journey.ts), and Claude checks
 // keyboard use and focus (runs/prompt.mjs). It is one prompt check built
 // here instead of read from a prompt file, run like a plan's prompt case:
-// one run at a time, a folder in reports/dashboard-runs/, shown on the run
+// one run at a time on each environment, a folder in reports/dashboard-runs/, shown on the run
 // page (run kind "a11y-journey", its check in `prompts`).
 
 import { hostOf } from '../../../scripts/lib/site.mjs';

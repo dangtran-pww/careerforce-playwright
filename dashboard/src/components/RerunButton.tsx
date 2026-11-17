@@ -19,7 +19,7 @@ interface Props {
 }
 
 // Runs a plan, or some of its cases, again on the environment picked in the
-// header. Disabled while any run is going, and on production when everything
+// header. Disabled while a run is going on that environment, and on production when everything
 // it would run is no-prod (useRunGate).
 export function RerunButton({ planSlug, body, className, children }: Props) {
   const { currentEnv } = useEnv();

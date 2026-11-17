@@ -1,5 +1,5 @@
 // A plan run: one test plan, or some of its projects and cases, on one
-// environment. See lifecycle.mjs for the run folder and the one-run lock.
+// environment. See lifecycle.mjs for the run folder and the one-run-per-environment lock.
 
 import { hostOf } from '../../../scripts/lib/site.mjs';
 import { publicEnv } from '../environments.mjs';

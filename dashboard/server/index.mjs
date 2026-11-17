@@ -7,7 +7,7 @@
 // one lives (routes/), and how requests are checked and errors answered.
 // The work is done by:
 //   catalog/   reading test-suites/ (suites, their plans and prompts)
-//   runs/      running plans and suites, one run at a time, and run history
+//   runs/      running plans and suites, one run at a time on each environment, and run history
 //   claude/    asking Claude Code (explaining a case or a failure, reviewing
 //              a case)
 //   sessions.mjs, ui-mode.mjs, environments.mjs
@@ -35,7 +35,7 @@ import { defaultEnv } from '../../scripts/lib/site.mjs';
 import { createApp } from './app.mjs';
 import { stopClaudes } from './claude/run.mjs';
 import { ROOT, VITE_CONFIG } from './paths.mjs';
-import { stopActiveRun } from './runs/lifecycle.mjs';
+import { stopActiveRuns } from './runs/lifecycle.mjs';
 import { closeUiMode } from './ui-mode.mjs';
 
 // Every path the server uses is relative to the repository; see paths.mjs.
@@ -76,7 +76,7 @@ async function openWindow(url) {
 // A test run, a UI mode window, or a question to Claude started from the
 // dashboard ends with it.
 function shutdown() {
-  stopActiveRun();
+  stopActiveRuns();
   closeUiMode();
   stopClaudes();
   server.close();

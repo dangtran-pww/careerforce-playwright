@@ -230,7 +230,7 @@ export interface Plan extends PlanSummary {
 export interface PlansResponse {
   plans: PlanSummary[];
   site: string;
-  activeRun: string | null;
+  activeRun: string | null; // the run in progress on the ?env= environment
   listErrors: string[];
 }
 
@@ -244,7 +244,7 @@ export interface PlanResponse {
   plan: Plan;
   site: string;
   runs: Run[];
-  activeRun: string | null;
+  activeRun: string | null; // the run in progress on the ?env= environment
 }
 
 // ---- suites ----------------------------------------------------------------
@@ -282,13 +282,13 @@ export interface Suite extends SuiteSummary {
 
 export interface SuitesResponse {
   suites: SuiteSummary[];
-  activeRun: string | null;
+  activeRun: string | null; // the run in progress on the ?env= environment
 }
 
 export interface SuiteResponse {
   suite: Suite;
   runs: Run[];
-  activeRun: string | null;
+  activeRun: string | null; // the run in progress on the ?env= environment
 }
 
 // ---- runs ------------------------------------------------------------------
@@ -540,7 +540,7 @@ export interface A11yCounts {
 
 // GET /api/a11y/runs?env=<id>
 export interface A11yRunsResponse {
-  activeRun: string | null;
+  activeRun: string | null; // the run in progress on the ?env= environment
   runs: Run[];
 }
 

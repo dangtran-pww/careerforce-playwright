@@ -150,18 +150,19 @@ front of any run command:
 SCREENSHOT=on BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke/anonymous
 ```
 
-Then open the report with `npx playwright show-report` and click a test to see
-its screenshot under Attachments. The image files are also saved in the
-`test-results/` folder. Full-page screenshots make the run slightly slower.
+Then open the report with `npx playwright show-report playwright-report/qa`
+and click a test to see its screenshot under Attachments. The image files are
+also saved in the `test-results/qa/` folder (one folder per environment:
+`qa`, `stage`, …). Full-page screenshots make the run slightly slower.
 
 ### When something fails
 
 The terminal lists which test failed by its ID (for example, `HP-1`). Match
 the ID to the plan's test cases table to see what it checks, then open the
-visual report:
+visual report for that environment:
 
 ```bash
-npx playwright show-report
+npx playwright show-report playwright-report/qa
 ```
 
 The report opens in your browser. For each failed test it shows a screenshot

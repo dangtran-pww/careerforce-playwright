@@ -277,8 +277,9 @@ A local page for seeing and running the tests:
   Production, a no-prod plan is refused and any other plan runs without its
   no-prod cases; the badges "Not on prod" and "N not on prod" show which.
 - **Runs:** listed on each suite's page (its own runs and the plan runs
-  started from its plan panel). One run at a time (the tests share accounts and a staging
-  database). A run's page shows the output live, a **Stop run** button, then
+  started from its plan panel). One run at a time on each environment (the
+  tests on one site share its accounts and database); runs on different
+  environments, e.g. QA and Stage, go side by side. A run's page shows the output live, a **Stop run** button, then
   the passed/failed/flaky/skipped counts, each test's result and error, and
   a link to its Playwright HTML report. Each run keeps its output, JSON and
   HTML reports, and screenshots/videos/traces in
@@ -306,5 +307,5 @@ the app is laid out and how to add a page, see the comment at the top of
 - **CKEditor step fails:** click the `.ck-editor__editable` area before
   typing; do not try to fill a hidden textarea.
 - **A test passes locally but flakes in CI:** look at the trace
-  (`npx playwright show-report`), not just the error — it shows exactly
+  (`npx playwright show-report playwright-report/<env>`), not just the error — it shows exactly
   what was on screen when it failed.
