@@ -39,21 +39,33 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
   // empty (the column is always there, so the page never changes width).
   // ?plan=<slug> opens it (a plan run's page links back that way), and
   // &case=<id> opens that case's row (the header's case search links that
-  // way). The page stays mounted when only the query changes, so a new
-  // search on this page opens its plan and case here.
+  // way), and &read opens its whole text (a link from another plan's). The
+  // page stays mounted when only the query changes, so a new search on this
+  // page opens its plan and case here.
   const [params] = useSearchParams();
   const planParam = params.get('plan');
   const openCase = params.get('case');
   const linkedPlan = suite.plans.some((x) => x.slug === planParam)
     ? planParam
     : null;
+  const read = params.has('read');
   const [shownPlan, setShownPlan] = useState<string | null>(linkedPlan);
+  // The plan &read asked to open in full; only until another plan is shown,
+  // so reopening it from the list later shows just its details.
+  const [readPlan, setReadPlan] = useState(read ? linkedPlan : null);
   const [linked, setLinked] = useState({ plan: planParam, case: openCase });
   if (linked.plan !== planParam || linked.case !== openCase) {
     setLinked({ plan: planParam, case: openCase });
-    if (linkedPlan) setShownPlan(linkedPlan);
+    if (linkedPlan) {
+      setShownPlan(linkedPlan);
+      setReadPlan(read ? linkedPlan : null);
+    }
   }
-  const closePanel = useCallback(() => setShownPlan(null), []);
+  const showPlan = useCallback((slug: string | null) => {
+    setReadPlan(null);
+    setShownPlan(slug);
+  }, []);
+  const closePanel = useCallback(() => showPlan(null), [showPlan]);
 
   const shown = suite.plans.find((p) => p.slug === shownPlan);
   useNeededLogins(shown?.roles ?? []);
@@ -82,7 +94,7 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
           <PlanList
             suite={suite}
             shownPlan={shownPlan}
-            onShowPlan={setShownPlan}
+            onShowPlan={showPlan}
             activeRun={activeRun}
           />
           <p className="note small">
@@ -99,10 +111,13 @@ function SuiteDetails({ suite, runs, activeRun }: SuiteResponse) {
           // A new case link remounts it, so that case opens and scrolls into
           // view.
           key={
-            shownPlan === linkedPlan ? `${shownPlan}:${openCase}` : shownPlan
+            shownPlan === linkedPlan
+              ? `${shownPlan}:${openCase}:${readPlan === shownPlan}`
+              : shownPlan
           }
           slug={shownPlan}
           openCase={shownPlan === linkedPlan ? openCase : null}
+          openFull={readPlan === shownPlan}
           suite={suite.slug}
           suiteName={suite.name}
           onClose={closePanel}

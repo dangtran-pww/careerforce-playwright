@@ -18,7 +18,14 @@ const LABEL: Record<CopyState, string> = {
   failed: 'Copy failed',
 };
 
-export function CopyButton({ text }: { text: string }) {
+// `label` names what it copies ("Copy plan file path"); "Copy" by default.
+export function CopyButton({
+  text,
+  label: idle,
+}: {
+  text: string;
+  label?: string;
+}) {
   const [state, setState] = useState<CopyState>('idle');
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
@@ -34,7 +41,7 @@ export function CopyButton({ text }: { text: string }) {
     timer.current = setTimeout(() => setState('idle'), 2000);
   }
 
-  const label = LABEL[state];
+  const label = state === 'idle' && idle ? idle : LABEL[state];
   return (
     <button
       type="button"

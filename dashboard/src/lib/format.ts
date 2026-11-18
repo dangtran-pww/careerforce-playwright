@@ -69,10 +69,6 @@ export function testsSummary(
 
 export const hostOf = (url: string) => new URL(url).host;
 
-// "Stage (stage.example.com)", for <option>s.
-export const envLabel = (env: { name: string; baseURL: string }) =>
-  `${env.name} (${hostOf(env.baseURL)})`;
-
 // "claude-sonnet-4-6" → "Claude Sonnet 4.6", "claude-haiku-4-5-20251001" →
 // "Claude Haiku 4.5", "opus" → "Claude Opus". Anything else is returned as is.
 export function modelName(id: string): string {

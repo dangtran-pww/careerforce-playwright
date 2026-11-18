@@ -19,6 +19,11 @@ dialog.modal::backdrop {
   max-height: calc(100dvh - 48px);
 }
 
+/* A whole plan: wide enough for its case table's seven columns. */
+dialog.plan-modal {
+  width: min(100% - 32px, 1440px);
+}
+
 .modal-head {
   padding: 16px 20px;
   border-bottom: 1px solid var(--border);
@@ -30,6 +35,25 @@ dialog.modal::backdrop {
 }
 
 .modal-body {
-  padding: 16px 20px 24px;
+  /* Sticky content (a plan's case table header) offsets by this to sit
+     flush with the top of the scrolling area. */
+  --modal-pad-top: 16px;
+  padding: var(--modal-pad-top) 20px 24px;
   overflow: auto;
+}
+
+/* The whole plan's last run and file path, in its title bar. */
+.modal-last-run,
+.modal-file {
+  color: var(--muted);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+
+.modal-file {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding-left: 12px;
+  border-left: 1px solid var(--border);
 }

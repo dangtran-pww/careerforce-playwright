@@ -1,4 +1,11 @@
-import { useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from 'react';
 import { useNavigate } from 'react-router';
 import { api } from '../api/client';
 import type { PlansResponse } from '../api/types';
@@ -11,7 +18,7 @@ import {
 } from '../lib/caseSearch';
 
 // The top bar's "Find case" box: type a case ID (SS-1, or just SS) and pick
-// a match to open that case on its suite page. The plans load the first time
+// a match to open that case on its suite page. "/" focuses it. The plans load the first time
 // the box gets focus (the first load can take a few seconds).
 export function CaseSearch() {
   const { currentEnv } = useEnv();
@@ -22,7 +29,27 @@ export function CaseSearch() {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const loading = useRef(false);
+  const inputRef = useRef<HTMLInputElement>(null);
   const listId = useId();
+
+  // "/" anywhere but a text field or a dialog jumps to the box, as on
+  // GitHub and MDN.
+  useEffect(() => {
+    const onKey = (e: globalThis.KeyboardEvent) => {
+      if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+      const t = e.target as HTMLElement | null;
+      if (
+        t?.closest(
+          'input, textarea, select, [contenteditable=""], [contenteditable="true"], dialog, [popover]',
+        )
+      )
+        return;
+      e.preventDefault();
+      inputRef.current?.focus();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
   const optionId = (i: number) => `${listId}-${i}`;
 
   const load = () => {
@@ -68,10 +95,26 @@ export function CaseSearch() {
       <label htmlFor={`${listId}-input`} className="visually-hidden">
         Find a case by ID
       </label>
+      <svg
+        className="case-search-icon"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        aria-hidden="true"
+      >
+        <circle cx="11" cy="11" r="7" />
+        <path d="m20 20-4-4" />
+      </svg>
       <input
+        ref={inputRef}
         id={`${listId}-input`}
         type="search"
         role="combobox"
+        aria-keyshortcuts="/"
         placeholder="Find case, e.g. SS-1"
         autoComplete="off"
         spellCheck={false}
@@ -94,6 +137,11 @@ export function CaseSearch() {
         }}
         onKeyDown={onKeyDown}
       />
+      {/* The shortcut, shown while the box is empty and not focused
+          (case-search.css). */}
+      <kbd className="case-search-key" aria-hidden="true">
+        /
+      </kbd>
       <ul
         id={listId}
         role="listbox"

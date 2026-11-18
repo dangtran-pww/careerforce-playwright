@@ -199,7 +199,6 @@
   letter-spacing: 0.04em;
 }
 
-
 .check .detail {
   flex-basis: 100%;
   margin-left: 24px;
@@ -336,12 +335,6 @@
   background: var(--neutral-bg);
   color: var(--text);
   box-shadow: inset 0 -2px 0 var(--accent);
-}
-
-@media (max-width: 560px) {
-  .env-picker {
-    margin-left: 0;
-  }
 }
 
 /* Inline notes inside a checkbox row: no card paragraph margin. */

@@ -3,6 +3,12 @@
   line-height: 1.55;
 }
 
+/* Prose stays at a comfortable line length; tables and headings' rules
+   still use the full width. */
+.markdown > :is(p, ul, ol, blockquote, dl) {
+  max-width: 80ch;
+}
+
 .markdown > :first-child {
   margin-top: 0;
 }
@@ -28,15 +34,63 @@
   scroll-margin-top: 8px;
 }
 
-.markdown table {
+/* The plan's header lines (Status, Implemented test) as label: value. */
+.markdown-meta {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  margin: 12px 0 16px;
+}
+
+.markdown-meta dt {
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.markdown-meta dd {
+  margin: 0;
+}
+
+/* Small tables (logins, environments) scroll sideways if they must. */
+.markdown table:not(.plan-cases) {
   display: block;
   overflow-x: auto;
   margin: 12px 0;
 }
 
-.markdown td:first-child,
-.markdown td code {
+.markdown table:not(.plan-cases) :is(td:first-child, td code) {
   white-space: nowrap;
+}
+
+/* Case tables fit the width: the columns' shares are set in PlanMarkdown,
+   long addresses wrap, and the header row sticks to the top of the
+   scrolling modal so each column stays named. */
+.markdown .plan-cases {
+  table-layout: fixed;
+  margin: 12px 0;
+}
+
+.markdown .plan-cases :is(td, th) {
+  overflow-wrap: break-word;
+}
+
+.markdown .plan-cases thead th {
+  position: sticky;
+  top: calc(-1 * var(--modal-pad-top, 0px));
+  z-index: 1;
+  padding-block: 8px;
+  background: var(--surface);
+  /* Collapsed borders don't move with a sticky cell; this line does. */
+  box-shadow: inset 0 -1px var(--border);
+}
+
+/* One numbered step (or Cleanup) of a case cell per line. */
+.markdown .cell-line {
+  display: block;
+}
+
+.markdown .cell-line + .cell-line {
+  margin-top: 6px;
 }
 
 .markdown pre {
@@ -56,4 +110,56 @@
   padding: 4px 12px;
   border-left: 3px solid var(--border);
   color: var(--muted);
+}
+
+/* A whole plan: its sections listed beside it, the list sticking at the
+   top of the scrolling modal. Hidden when there's no room for it. */
+.plan-doc {
+  display: grid;
+  grid-template-columns: 176px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.plan-toc {
+  position: sticky;
+  top: 0;
+  font-size: var(--fs-sm);
+}
+
+.plan-toc ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-left: 1px solid var(--border);
+}
+
+.plan-toc a {
+  display: block;
+  margin-left: -1px;
+  padding: 4px 0 4px 12px;
+  border-left: 2px solid transparent;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.plan-toc a:hover {
+  color: var(--text);
+  text-decoration: underline;
+}
+
+.plan-toc a[aria-current] {
+  border-left-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .plan-doc {
+    display: block;
+  }
+
+  .plan-toc {
+    display: none;
+  }
 }

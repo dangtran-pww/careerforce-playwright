@@ -1,7 +1,9 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import type { Plan, PlanResponse } from '../../api/types';
+import type { Plan, PlanResponse, Run } from '../../api/types';
 import { Badge } from '../../components/Badge';
 import { CloseButton } from '../../components/CloseButton';
+import { CopyButton } from '../../components/Command';
+import { LastRunLink } from '../../components/LastRunLink';
 import { PlanNoProdBadge } from '../../components/NoProdBadge';
 import { ErrorBox, Loading } from '../../components/Callouts';
 import { Facts } from '../../components/Facts';
@@ -45,6 +47,7 @@ export function PlanPanel({
   projects,
   activeRun,
   openCase = null,
+  openFull = false,
 }: {
   slug: string;
   suite: string; // the suite page it's on; runs started here link back
@@ -53,6 +56,7 @@ export function PlanPanel({
   projects: string[]; // the suite's projects for this plan
   activeRun: string | null;
   openCase?: string | null; // a case whose row starts opened
+  openFull?: boolean; // start with the whole plan open (a link from another plan)
 }) {
   const { currentEnv } = useEnv();
   const { data, error } = useApi<PlanResponse>(
@@ -62,7 +66,10 @@ export function PlanPanel({
   // The Test files row stays folded until asked for.
   const [showTests, setShowTests] = useState(false);
   // The whole plan file, read in a modal.
-  const [showPlan, setShowPlan] = useState(false);
+  const [showPlan, setShowPlan] = useState(openFull);
+  // How far the whole plan was scrolled, so closing it by mistake (a click
+  // outside) doesn't lose the reader's place.
+  const fullPlanScroll = useRef(0);
   const factsId = useId();
   // Why the last Run press (the plan's or a case's) didn't start a run.
   const { refusal, onError: onRunError } = useRunRefusal();
@@ -133,14 +140,23 @@ export function PlanPanel({
           <PlanOverview plan={plan} />
           {showPlan && (
             <Modal
-              title={plan.name}
+              title={`${suiteName}: ${plan.name}`}
               className="plan-modal"
+              actions={
+                <>
+                  <PlanLastRun runs={data.runs} />
+                  <span className="modal-file">
+                    <code>{plan.file}</code>
+                    <CopyButton text={plan.file} label="Copy plan file path" />
+                  </span>
+                </>
+              }
               onClose={() => {
                 setShowPlan(false);
                 ref.current?.focus({ preventScroll: true });
               }}
             >
-              <PlanMarkdown slug={plan.slug} />
+              <PlanMarkdown slug={plan.slug} scrollMemory={fullPlanScroll} />
             </Modal>
           )}
           {plan.notes.map((n) => (
@@ -203,6 +219,24 @@ export function PlanPanel({
         </>
       )}
     </aside>
+  );
+}
+
+// The plan's last run on the environment picked in the header, for the
+// whole-plan modal's title bar. Runs come newest first.
+function PlanLastRun({ runs }: { runs: Run[] }) {
+  const { currentEnv } = useEnv();
+  const run = runs.find((r) => r.env?.id === currentEnv.id);
+  return (
+    <span className="modal-last-run">
+      {run ? (
+        <>
+          Last run on {currentEnv.name}: <LastRunLink run={run} />
+        </>
+      ) : (
+        `No runs on ${currentEnv.name} yet`
+      )}
+    </span>
   );
 }
 

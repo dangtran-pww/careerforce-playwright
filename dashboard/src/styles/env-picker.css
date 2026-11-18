@@ -21,9 +21,19 @@ select {
   font: inherit;
 }
 
-/* A red line under the bar while Production is picked. */
+/* While Production is picked the whole bar warns: red-tinted, with red
+   rules above and below, beside the "Production" badge. --muted text keeps
+   4.5:1 on --bad-bg. */
 body.env-production .topbar {
+  border-top-color: var(--bad-fg);
+  background: var(--bad-bg);
   box-shadow: inset 0 -3px 0 var(--bad-fg);
+}
+
+/* Red pills (the Production badge, the Login Sessions count) would vanish
+   into the red-tinted bar: white behind them. */
+body.env-production .topbar .badge-bad {
+  background: var(--surface);
 }
 
 .env-tag {

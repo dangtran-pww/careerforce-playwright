@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { useEnv } from '../hooks/useEnv';
 import { useSessionCheck } from '../hooks/useSessionCheck';
 import { SESSION_STATUS } from '../lib/status';
@@ -6,7 +6,8 @@ import { Command } from './Command';
 import { Facts } from './Facts';
 import { TimeAgo } from './TimeAgo';
 
-const NEEDS_LOGIN = ['expired', 'missing', 'no-access', 'invalid'];
+// Statuses that need `npm run login:manual` again.
+export const NEEDS_LOGIN = ['expired', 'missing', 'no-access', 'invalid'];
 
 // One role's saved login session on the current environment, as a compact
 // row in the header's Login Sessions panel (LoginsMenu.tsx):
@@ -18,16 +19,27 @@ const NEEDS_LOGIN = ['expired', 'missing', 'no-access', 'invalid'];
 // to log in when it doesn't. ▸ opens the rest: the site's message, profile
 // type, roles, and when it was checked and saved. Its cells sit in the
 // panel's grid (subgrid), so the columns line up from row to row.
-export function SessionRow({ role }: { role: string }) {
+//
+// `onStatus` hears the row's status ('checking' while it checks), for the
+// count on the Login Sessions button.
+export function SessionRow({
+  role,
+  onStatus,
+}: {
+  role: string;
+  onStatus?: (envId: string, role: string, status: string) => void;
+}) {
   const { currentEnv } = useEnv();
   const { session, checking, check } = useSessionCheck(role, currentEnv);
   const [open, setOpen] = useState(false);
   const detailsId = useId();
   const label = roleLabel(role);
 
-  const status =
-    SESSION_STATUS[checking ? 'checking' : session!.status] ??
-    SESSION_STATUS.error;
+  const statusId = checking ? 'checking' : session!.status;
+  const status = SESSION_STATUS[statusId] ?? SESSION_STATUS.error;
+  useEffect(() => {
+    onStatus?.(currentEnv.id, role, statusId);
+  }, [onStatus, currentEnv.id, role, statusId]);
   const needsLogin =
     session && NEEDS_LOGIN.includes(session.status) && session.loginCommand;
 

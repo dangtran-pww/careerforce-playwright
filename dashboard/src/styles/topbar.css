@@ -20,7 +20,7 @@
    takes main's side padding, so its first link starts where the page content
    does and the Logins button ends where it ends. The brand and the picker
    span the whole row and sit at its two ends, in the gutters beside the
-   middle column. 1920px leaves the picker (about 365px) room in the right
+   middle column. 1920px leaves the picker (about 215px) room in the right
    gutter at the normal page width (1100px). */
 @media (min-width: 1920px) {
   .topbar {
@@ -64,7 +64,12 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-weight: 600;
+  border-radius: 6px;
+}
+
+.brand:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 4px;
 }
 
 /* The site logo, sized to the bar's controls. */
@@ -74,9 +79,36 @@
   height: 36px;
 }
 
+/* Below 1200px the bar fits on one line only without the picker's
+   "Environment" label (and with a narrower case search, case-search.css),
+   so the label is for screen readers only. The picker's tooltip has the
+   site's address. */
+@media (max-width: 1199px) {
+  .env-picker label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+/* Phone: the bar wraps onto three lines (logo and picker, links, search),
+   too tall to keep on screen, so it scrolls away with the page. Header.tsx
+   then publishes --topbar-height as 0. The picker moves up beside the
+   logo. */
 @media (max-width: 560px) {
   .brand-logo {
     height: 30px;
+  }
+
+  .topbar {
+    position: static;
+  }
+
+  .topbar .nav {
+    order: 1;
   }
 }
 
@@ -86,6 +118,13 @@
      on the right, next to the environment picker. Not `flex: 1`: a zero
      basis squeezes the nav onto the brand's line on a phone. */
   flex: 1 1 auto;
+  align-items: center;
+  gap: 4px;
+}
+
+/* The page links: the <nav> landmark inside .nav. */
+.nav-links {
+  display: flex;
   gap: 4px;
 }
 
@@ -104,10 +143,12 @@
   color: var(--text);
 }
 
+/* The current page: a tab-style bar under the link, in the colour the
+   dashboard's segmented pickers use for the picked option. Inset, so the
+   link doesn't grow or shift. Not a box: that reads as a button or a focus
+   ring. */
 .nav a[aria-current='page'] {
-  background: var(--neutral-bg);
+  border-radius: 0;
   color: var(--text);
-  /* The grey fill is too faint to mark the current page on its own, so
-     outline the whole link. Inset, so the link doesn't grow or shift. */
-  box-shadow: inset 0 0 0 1px var(--accent);
+  box-shadow: inset 0 -3px 0 var(--accent);
 }

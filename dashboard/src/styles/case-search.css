@@ -17,13 +17,58 @@
 
 .case-search input {
   width: 100%;
-  padding: 5px 8px;
+  /* Room for the magnifier on the left and the "/" key on the right. */
+  padding: 5px 28px 5px 30px;
   border: 1px solid var(--control-border);
   border-radius: 6px;
   background: var(--surface);
   color: var(--text);
   font: inherit;
   font-size: var(--fs-md);
+}
+
+.case-search-icon {
+  position: absolute;
+  top: 50%;
+  left: 9px;
+  color: var(--muted);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* The "/" shortcut, as a key cap at the box's right end. Hidden once the
+   box has focus or text (the browser's clear button sits there then), and
+   on a phone, which has no keyboard shortcuts. */
+.case-search-key {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  min-width: 18px;
+  padding: 0 4px;
+  border: 1px solid var(--control-border);
+  border-radius: 4px;
+  color: var(--muted);
+  font: inherit;
+  font-size: var(--fs-xs);
+  line-height: 16px;
+  text-align: center;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.case-search:focus-within .case-search-key,
+.case-search input:not(:placeholder-shown) ~ .case-search-key {
+  display: none;
+}
+
+@media (max-width: 560px) {
+  .case-search-key {
+    display: none;
+  }
+
+  .case-search input {
+    padding-right: 8px;
+  }
 }
 
 .case-search-list {
@@ -66,6 +111,13 @@
 .case-search-note {
   padding: 6px 8px;
   color: var(--muted);
+}
+
+/* Narrower, so the bar stays on one line down to 1024px (topbar.css). */
+@media (max-width: 1199px) {
+  .case-search {
+    flex-basis: 216px;
+  }
 }
 
 /* Phone: the box takes its own line under the links. */
