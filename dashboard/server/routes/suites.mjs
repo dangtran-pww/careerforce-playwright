@@ -1,6 +1,6 @@
 // /api/suites: the suites in test-suites/ (plans plus Claude prompts). Their
 // plans run through /api/plans; runs of a whole suite from before are still
-// listed.
+// listed on a suite's page.
 
 import { Hono } from 'hono';
 import { loadSuite, loadSuites } from '../catalog/suites.mjs';
@@ -20,21 +20,35 @@ async function suiteOf(c) {
 
 const SUITE = `/:slug{${SLUG}}`;
 
-// GET /api/suites?env=<id> — every suite, with its last run there.
+// GET /api/suites?env=<id> — every suite, with the latest results of its
+// plans there: each plan's latest full run (all its cases; a run of a few
+// cases is a spot check), plus any run of its plans going on now.
 suiteRoutes.get('/', async (c) => {
   const env = envParam(c.req.query('env'));
   const suites = await loadSuites({
     refresh: c.req.query('refresh') !== undefined,
   });
-  const runs = await listRuns({ env: env.id, limit: 500 });
+  // Plan runs; old ones have no kind.
+  const runs = (await listRuns({ env: env.id, limit: 500 })).filter(
+    (r) => r.plan && (r.kind ?? 'plan') === 'plan',
+  );
   return c.json({
     env: publicEnv(env),
     activeRun: activeRunId(env.id),
-    suites: suites.map((s) => ({
-      ...s,
-      lastRun:
-        runs.find((r) => r.kind === 'suite' && r.suite === s.slug) ?? null,
-    })),
+    suites: suites.map((s) => {
+      const slugs = new Set(s.plans.map((p) => p.slug));
+      const own = runs.filter((r) => slugs.has(r.plan));
+      // Newest first, so the first full run of each plan is its latest.
+      const latest = new Map();
+      for (const r of own)
+        if (r.status !== 'running' && !r.cases?.length && !latest.has(r.plan))
+          latest.set(r.plan, r);
+      return {
+        ...s,
+        planRuns: [...latest.values()],
+        runningRun: own.find((r) => r.status === 'running')?.id ?? null,
+      };
+    }),
   });
 });
 

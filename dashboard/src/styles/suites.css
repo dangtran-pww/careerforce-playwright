@@ -1,5 +1,108 @@
 /* ---- suites ------------------------------------------------------------ */
 
+/* The Suites page. Each row of the table opens its suite (Table rowLink):
+   a tint on hover, and the name's underline only then, so six names don't
+   shout. The name is still the real link for the keyboard. */
+.row-link {
+  cursor: pointer;
+}
+
+.row-link:hover > td {
+  background: var(--neutral-bg);
+}
+
+.suite-name {
+  text-decoration: none;
+}
+
+.suite-name:hover,
+.row-link:hover .suite-name {
+  text-decoration: underline;
+}
+
+.suite-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+/* Two lines at most, and no wider than reads well; the whole text is in
+   its title and on the suite's page. */
+.suite-summary {
+  display: -webkit-box;
+  max-width: 75ch;
+  margin: 2px 0 0;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.suite-table .cell-results {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.suite-results-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+.suite-results .badge.small {
+  margin-left: 0;
+}
+
+.suite-counts > * + *::before {
+  content: '·';
+  margin: 0 6px;
+  color: var(--muted);
+}
+
+.count-bad {
+  color: var(--bad-fg);
+  font-weight: 600;
+}
+
+.count-warn {
+  color: var(--warn-fg);
+  font-weight: 600;
+}
+
+.suite-running {
+  white-space: nowrap;
+}
+
+/* Phones: plans and results under the summary. */
+.suite-narrow {
+  margin-top: 8px;
+}
+
+.suite-narrow .suite-results {
+  margin-top: 4px;
+}
+
+/* The suites with no plans yet: a plain list under a quiet heading. */
+.planned-suites {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.planned-suites li {
+  padding: 10px 12px;
+}
+
+.planned-suites li + li {
+  border-top: 1px solid var(--border);
+}
+
+.planned-suites .suite-name {
+  font-weight: 600;
+}
+
 /* The suite page's plans: one plan per row, a hairline between rows. Each
    row is its name and badges over a muted line of counts, with its Run and
    Details buttons on the right, lined up down the list. */

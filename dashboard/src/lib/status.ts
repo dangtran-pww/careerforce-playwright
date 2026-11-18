@@ -31,7 +31,9 @@ export const RUN_STATUS: StatusMap = {
   attention: { label: 'Needs a look', tone: 'warn' },
   stopped: { label: 'Stopped', tone: 'warn' },
   interrupted: { label: 'Interrupted', tone: 'warn' },
-  error: { label: "Didn't run", tone: 'bad' },
+  // It couldn't start or broke down; "Didn't run" next to a time read as
+  // "didn't run 6 days ago".
+  error: { label: 'Run error', tone: 'bad' },
 };
 
 // A finding in a prompt check's result: a problem fails the check, a warning

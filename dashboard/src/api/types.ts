@@ -273,7 +273,11 @@ export interface SuiteSummary {
   name: string;
   summary?: string;
   plans: SuitePlan[];
-  lastRun?: Run | null;
+  // GET /api/suites only: the latest full run of each of its plans on the
+  // ?env= environment (plans never run fully there are left out), and the
+  // run of one of its plans going on now.
+  planRuns?: Run[];
+  runningRun?: string | null;
 }
 
 export interface Suite extends SuiteSummary {

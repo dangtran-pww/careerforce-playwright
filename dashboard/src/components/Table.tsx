@@ -6,6 +6,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { useNavigate } from 'react-router';
 
 export interface Column<T> {
   head: ReactNode;
@@ -41,6 +42,11 @@ export interface Column<T> {
 // shown, in a row underneath. It starts at column `belowFrom` (0 = the first
 // column) and spans the rest, so it can line up under, e.g., the Test column.
 //
+// With `rowLink`, a click anywhere on a row (not an expandable one) goes to
+// its page, except on its own controls or when the click ends a text
+// selection. The row still needs a real link to that page in a cell, for
+// the keyboard, screen readers and opening in a new tab.
+//
 // `rowId` gives a row an id, so a link elsewhere on the page can find it.
 //
 // `initialOpen` lists the keys of rows that start opened. `highlight` is the
@@ -51,6 +57,7 @@ export function Table<T>({
   rows,
   rowKey,
   rowId,
+  rowLink,
   expand,
   expandLabel = () => 'Details',
   below,
@@ -62,6 +69,7 @@ export function Table<T>({
   rows: T[];
   rowKey: (row: T) => string;
   rowId?: (row: T) => string;
+  rowLink?: (row: T) => string;
   expand?: (row: T) => ReactNode;
   expandLabel?: (row: T) => string;
   below?: (row: T) => ReactNode;
@@ -72,6 +80,7 @@ export function Table<T>({
   const [open, setOpen] = useState<ReadonlySet<string>>(
     () => new Set(initialOpen),
   );
+  const navigate = useNavigate();
   const highlightRef = useRef<HTMLTableRowElement>(null);
   // Prefixes the details rows' ids, so two tables on one page with the
   // same row keys (a suite run's steps) don't share ids.
@@ -148,8 +157,10 @@ export function Table<T>({
             const extra = below?.(row);
             // Columns before `belowFrom`, counting the expand toggle.
             const lead = belowFrom + (expand ? 1 : 0);
+            const link = !expandable && rowLink?.(row);
             const rowClass = [
               expandable && 'row-expandable',
+              link && 'row-link',
               (details || extra) && 'row-open',
               key === highlight && 'row-highlight',
             ]
@@ -162,11 +173,12 @@ export function Table<T>({
                   ref={key === highlight ? highlightRef : undefined}
                   className={rowClass || undefined}
                   onClick={
-                    expandable
+                    expandable || link
                       ? (e) => {
                           if (isOwnControl(e.target, e.currentTarget)) return;
                           if (window.getSelection()?.toString()) return;
-                          toggle(key);
+                          if (link) navigate(link);
+                          else toggle(key);
                         }
                       : undefined
                   }
