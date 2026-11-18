@@ -64,6 +64,7 @@ legend {
   align-items: baseline;
   gap: 4px 8px;
   margin: 6px 0;
+  font-size: var(--fs-md);
 }
 
 .card .note {
