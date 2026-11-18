@@ -34,6 +34,7 @@ import {
   resolveCompare,
 } from './lib/prompts.mjs';
 import { planFiles } from './lib/layout.mjs';
+import { tableCells } from './lib/markdown.mjs';
 import {
   authFile,
   environmentById,
@@ -68,11 +69,7 @@ async function findCase(id) {
         header = null;
         continue;
       }
-      const cells = line
-        .trim()
-        .split('|')
-        .slice(1, -1)
-        .map((c) => c.trim());
+      const cells = tableCells(line);
       if (!header) {
         header = cells;
         continue;

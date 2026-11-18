@@ -1,12 +1,9 @@
-/* A rendered Markdown file, e.g. a whole test plan. */
+/* A rendered Markdown file, e.g. a whole test plan. 15px at 1.5, like the
+   plan panel and its case tables, so prose, header lines and tables all
+   read at one size. */
 .markdown {
-  line-height: 1.55;
-}
-
-/* Prose stays at a comfortable line length; tables and headings' rules
-   still use the full width. */
-.markdown > :is(p, ul, ol, blockquote, dl) {
-  max-width: 80ch;
+  font-size: var(--fs-md);
+  line-height: 1.5;
 }
 
 .markdown > :first-child {
