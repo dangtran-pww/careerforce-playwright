@@ -22,7 +22,10 @@ export {
   envFor,
   isActive,
   loginCommand,
+  ROLE_DRUPAL_ROLES,
+  ROLE_PROFILE_TYPES,
   ROLES,
+  ROLES_CHECKED_ON_ACCOUNT_SETTINGS,
   roleAvailableOn,
   roleEnvironments,
 } from '../../tests/helpers/environments.mts';

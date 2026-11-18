@@ -1,13 +1,19 @@
 import { existsSync } from 'node:fs';
 
+import { request } from '@playwright/test';
+
 import { test, expect } from './fixtures';
 import {
   authFile,
   currentEnv,
   loginCommand,
+  ROLE_DRUPAL_ROLES,
+  ROLE_PROFILE_TYPES,
+  ROLES_CHECKED_ON_ACCOUNT_SETTINGS,
   roleAvailableOn,
   roleEnvironments,
 } from './environments.mjs';
+import { accountInfo, accountRoles } from '../../scripts/lib/account.mjs';
 
 // Runs the tests of the current file (or describe block) logged in as
 // `role`, with that role's saved session for this environment
@@ -25,6 +31,14 @@ import {
 // Looking at the cookie's expiry date isn't enough. Drupal also ends a
 // session server-side, e.g. when the same account logs in somewhere else, so
 // this asks the site: a logged-out visit to /user goes to /user/login.
+// Roles with a profile type (ROLE_PROFILE_TYPES: jobseeker, partner) also
+// check drupalSettings.user.profile_type, and admin checks that it can open
+// the status report, so a session saved with the wrong account fails too.
+// Manager roles (ROLE_DRUPAL_ROLES) must have their Drupal role. Platform
+// managers can see theirs, checked, on their own /user/<uid>/account-settings
+// (ROLES_CHECKED_ON_ACCOUNT_SETTINGS). The others can't see their own roles,
+// so that check reads the People list with the saved admin or platform
+// manager login, and fails if neither works.
 
 const checked = new Set<string>();
 
@@ -70,6 +84,50 @@ export function useRole(role: string): void {
         `The saved ${role} session has expired or was logged out. ${hint}`,
       ).not.toBe('/user/login');
 
+      const profileType = ROLE_PROFILE_TYPES[role];
+      if (profileType) {
+        const actual = await page.evaluate(
+          () =>
+            (
+              window as unknown as {
+                drupalSettings?: { user?: { profile_type?: string | null } };
+              }
+            ).drupalSettings?.user?.profile_type,
+        );
+        expect(
+          actual,
+          `Logged in, but not as ${role === 'jobseeker' ? 'a job seeker' : `a ${role}`} (drupalSettings.user.profile_type is ${JSON.stringify(actual)}). ${hint}`,
+        ).toBe(profileType);
+      }
+
+      const drupalRole = ROLE_DRUPAL_ROLES[role];
+      if (drupalRole && ROLES_CHECKED_ON_ACCOUNT_SETTINGS.includes(role)) {
+        // The account's own settings page shows its roles as checkboxes.
+        const uid = await page.evaluate(
+          () =>
+            (
+              window as unknown as {
+                drupalSettings?: { user?: { uid?: string | number } };
+              }
+            ).drupalSettings?.user?.uid,
+        );
+        const settingsPage = `/user/${uid}/account-settings`;
+        const response = await page.goto(settingsPage);
+        expect(
+          response?.ok(),
+          `Logged in as ${role}, but ${settingsPage} isn't available (HTTP ${response?.status()}). ${hint}`,
+        ).toBe(true);
+        await expect(
+          page.getByRole('checkbox', { name: drupalRole, exact: true }),
+          `Logged in, but the ${drupalRole} role isn't checked on ${settingsPage}. ${hint}`,
+        ).toBeChecked();
+      } else if (drupalRole)
+        await expectDrupalRole(role, drupalRole, file, hint, {
+          baseURL,
+          httpCredentials,
+          ignoreHTTPSErrors,
+        });
+
       if (role === 'admin') {
         await page.goto('/admin/reports/status');
         await expect(
@@ -82,4 +140,39 @@ export function useRole(role: string): void {
     }
     checked.add(role);
   });
+}
+
+// Fails unless the account behind `file` (a saved session) has the Drupal
+// role `drupalRole`, as the People list shows it to the saved admin or
+// platform manager login (accountRoles).
+async function expectDrupalRole(
+  role: string,
+  drupalRole: string,
+  file: string,
+  hint: string,
+  site: Pick<
+    Parameters<typeof request.newContext>[0] & {},
+    'baseURL' | 'httpCredentials' | 'ignoreHTTPSErrors'
+  >,
+): Promise<void> {
+  const env = currentEnv();
+  const ctx = await request.newContext({ ...site, storageState: file });
+  try {
+    const { email = '' } = await accountInfo(ctx);
+    expect(
+      email,
+      `Logged in as ${role}, but couldn't read the account's email to check its roles.`,
+    ).toBeTruthy();
+    const { roles, detailsNote } = await accountRoles(email, role, env, ctx);
+    expect(
+      roles,
+      `Can't check that the ${role} account (${email}) has the ${drupalRole} role: ${detailsNote} Run \`${loginCommand('admin', env)}\` or \`${loginCommand('platform-manager', env)}\` and try again.`,
+    ).toBeDefined();
+    expect(
+      roles,
+      `Logged in, but ${email} doesn't have the ${drupalRole} role. ${hint}`,
+    ).toContain(drupalRole);
+  } finally {
+    await ctx.dispose();
+  }
 }

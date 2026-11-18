@@ -109,8 +109,17 @@ and `codegen` don't read the config, so they don't block anything: use
 spec, or a whole `describe` block, that needs a role calls `useRole`
 (tests/helpers/roles.ts). It loads that role's saved login for the current
 environment and, before the first test, checks with the site that the session
-still works. If it doesn't, the tests fail with the `npm run login:manual`
-command to fix it. See `tests/smoke/admin-reports/admin-reports.spec.ts` for
+still works and belongs to the right kind of account: `jobseeker` and
+`partner` must have `drupalSettings.user.profile_type` of `career_seeker` and
+`partner` (`ROLE_PROFILE_TYPES` in `tests/helpers/environments.mts`),
+`admin` must be able to open the status report, and `platform-manager`,
+`event-manager` and `content-manager` must have the Drupal role of that name
+(`ROLE_DRUPAL_ROLES`). A platform manager's role is checked on its own
+`/user/<uid>/account-settings`, which must open with "Platform Manager"
+checked. Event and content managers can't see their own roles, so their check
+reads the People list with the saved admin or platform manager login for the
+same environment: it needs one of those sessions to work too. If it doesn't, the tests fail
+with the `npm run login:manual` command to fix it. See `tests/smoke/admin-reports/admin-reports.spec.ts` for
 a real example:
 
 ```ts
@@ -253,7 +262,12 @@ A local page for seeing and running the tests:
 - **Login Sessions** (header menu): whether the saved session of each role for
   the picked environment (`playwright/.auth/<env>/<role>.json`) still logs in. It asks the site, the same way `useRole`
   (`tests/helpers/roles.ts`) does, because Drupal can end a session (autologout after
-  inactivity) long before the cookie's expiry date. If the session has
+  inactivity) long before the cookie's expiry date. It also checks the
+  account's profile type (jobseeker, partner), admin access, or Drupal role
+  (the manager roles; event and content managers need a working admin or
+  platform manager session for it), and shows
+  "Wrong account" when it doesn't match, or "Invalid" when a platform
+  manager's account settings page doesn't open or show its roles. If the session has
   expired, its card shows the `npm run login:manual -- <role> --env <env>`
   command to fix it. Press "Check again" afterwards.
 - **Suites:** each suite is a folder in `test-suites/` with a `suite.md`

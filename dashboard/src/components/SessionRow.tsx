@@ -6,7 +6,7 @@ import { Command } from './Command';
 import { Facts } from './Facts';
 import { TimeAgo } from './TimeAgo';
 
-const NEEDS_LOGIN = ['expired', 'missing', 'no-access'];
+const NEEDS_LOGIN = ['expired', 'missing', 'no-access', 'invalid'];
 
 // One role's saved login session on the current environment, as a compact
 // row in the header's Login Sessions panel (LoginsMenu.tsx):
@@ -58,7 +58,10 @@ export function SessionRow({ role }: { role: string }) {
         {needsLogin ? (
           <Command text={session.loginCommand!} />
         ) : (
-          <span className="note" title={session?.message}>
+          <span
+            className="note"
+            title={session?.status === 'valid' ? undefined : session?.message}
+          >
             {session?.email ?? session?.message}
           </span>
         )}
@@ -75,7 +78,10 @@ export function SessionRow({ role }: { role: string }) {
       </button>
       {open && session && (
         <div id={detailsId} className="session-details">
-          {session.message && <p>{session.message}</p>}
+          {/* "Logged in as …" only repeats the Valid badge. */}
+          {session.message && session.status !== 'valid' && (
+            <p>{session.message}</p>
+          )}
           {session.detailsNote && (
             <p className="note small">{session.detailsNote}</p>
           )}

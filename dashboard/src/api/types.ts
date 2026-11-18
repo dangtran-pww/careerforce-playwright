@@ -20,7 +20,7 @@ export interface EnvironmentsResponse {
 }
 
 export type SessionStatus =
-  'valid' | 'expired' | 'missing' | 'no-access' | 'error';
+  'valid' | 'expired' | 'missing' | 'no-access' | 'invalid' | 'error';
 
 // GET /api/sessions/:role
 // GET /api/roles?env=<id>: in ROLES order (tests/helpers/environments.mts),

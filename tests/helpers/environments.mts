@@ -146,7 +146,11 @@ export function envFor(baseURL: string): Environment {
   );
   if (known) return known;
   const production = PROD_HOSTS.some((h) => host.endsWith(h));
-  if (production) return { ...KNOWN.find((e) => e.production)!, baseURL: baseURL.replace(/\/$/, '') };
+  if (production)
+    return {
+      ...KNOWN.find((e) => e.production)!,
+      baseURL: baseURL.replace(/\/$/, ''),
+    };
   return {
     id: host.replace(/[^a-z0-9-]/gi, '-').toLowerCase(),
     name: host,
@@ -207,6 +211,40 @@ export const ROLES = [
   'event-manager',
   'content-manager',
 ] as const;
+
+/**
+ * The profile type each role's account must have, as CareerForce puts it in
+ * every page's `drupalSettings.user.profile_type` for the logged-in account.
+ * A role not listed here isn't checked for one.
+ */
+export const ROLE_PROFILE_TYPES: Record<string, string> = {
+  jobseeker: 'career_seeker',
+  partner: 'partner',
+};
+
+/**
+ * The Drupal role each role's account must have, as the People list
+ * (/admin/people) shows it. An account can't see its own roles, so checking
+ * one needs the saved admin or platform manager login for the same
+ * environment (PEOPLE_LIST_ROLES in scripts/lib/account.mjs). Machine names:
+ * site_admin, event_manager, content_moderator. A role not listed here isn't
+ * checked for one.
+ */
+export const ROLE_DRUPAL_ROLES: Record<string, string> = {
+  'platform-manager': 'Platform Manager',
+  'event-manager': 'Event Manager',
+  'content-manager': 'Content Manager',
+};
+
+/**
+ * Roles (from ROLE_DRUPAL_ROLES) whose accounts can open their own
+ * /user/<uid>/account-settings, whose form shows their roles as checkboxes.
+ * Their Drupal role is checked there, with no other login. The others are
+ * looked up in the People list with the admin or platform manager login.
+ */
+export const ROLES_CHECKED_ON_ACCOUNT_SETTINGS: readonly string[] = [
+  'platform-manager',
+];
 
 /**
  * Roles that can only log in on some environments, by environment id. A role

@@ -10,7 +10,8 @@ export const SESSION_STATUS: StatusMap = {
   valid: { label: 'Valid', tone: 'good' },
   expired: { label: 'Expired', tone: 'bad' },
   missing: { label: 'Not saved', tone: 'bad' },
-  'no-access': { label: 'Not an admin', tone: 'bad' },
+  'no-access': { label: 'Wrong account', tone: 'bad' },
+  invalid: { label: 'Invalid', tone: 'bad' },
   error: { label: "Couldn't check", tone: 'warn' },
   checking: { label: 'Checking…', tone: 'neutral' },
 };
