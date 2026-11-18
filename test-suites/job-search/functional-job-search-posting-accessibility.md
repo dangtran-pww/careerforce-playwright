@@ -95,8 +95,8 @@ The cases are in one table, one area after another:
 
 ## Mobile
 
-PO-1 to PO-9 and AX-5, AX-6 run on desktop (`functional-desktop`) and on an
-emulated phone (`functional-mobile`, Pixel 7); on the phone, PO-7 opens
+PO-1 to PO-9 and AX-5, AX-6 run on desktop (project `desktop`) and on an
+emulated phone (Pixel 7, project `mobile`); on the phone, PO-7 opens
 "Filters" first. RS-1 to RS-3 set their own 390 × 844 size, so they run on
 desktop only (`@desktop-only`). AX-1 to AX-4 are keyboard cases, so they are
 desktop only too.

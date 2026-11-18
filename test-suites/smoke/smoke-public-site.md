@@ -213,7 +213,7 @@ are never checked.
 
 The same plan also runs on an emulated Android phone (Pixel 7, in Chrome), to
 check that the public pages work and fit a small screen. Its project is
-`smoke-mobile`.
+`mobile`.
 
 On the phone:
 

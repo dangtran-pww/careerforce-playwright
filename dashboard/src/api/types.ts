@@ -70,7 +70,7 @@ export interface PlanCase {
   prompt?: PromptCheck | null; // its prompt file; null when it's missing
   promptProblems?: string[]; // what's wrong with that file
   testCount: number;
-  // The projects that run its tests (by default), e.g. smoke-desktop.
+  // The projects that run its tests (by default), e.g. desktop.
   projects: ProjectTests[];
   // Playwright tags on its tests, without the "@", e.g. "desktop-only".
   tags?: string[];

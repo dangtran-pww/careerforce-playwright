@@ -20,7 +20,7 @@ import {
 // [Functional] - Logged-in Job Seeker - Test Plan, MO-1.
 // See test-suites/job-search/functional-job-search-logged-in.md.
 //
-// The phone only (@mobile-only, functional-mobile). Saves a search and
+// The phone only (@mobile-only, the mobile project). Saves a search and
 // bookmarks a job on the job seeker account (@no-prod), and removes both in
 // `finally`. The fixture also fails the test if the page it ends on scrolls
 // sideways.

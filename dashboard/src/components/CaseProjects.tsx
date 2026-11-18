@@ -2,7 +2,7 @@ import type { PlanCase } from '../api/types';
 import { plural } from '../lib/format';
 
 // Where a case runs, as one short line under its title: its projects and
-// how many tests, e.g. "smoke-desktop, smoke-mobile · 2 tests", so a glance
+// how many tests, e.g. "desktop, mobile · 2 tests", so a glance
 // shows whether it is tested on desktop, mobile or both. `only` limits them
 // to the projects a run uses, e.g. a suite's.
 export function CaseProjects({

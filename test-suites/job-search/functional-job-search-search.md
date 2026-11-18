@@ -101,8 +101,8 @@ clicking "Search", not editing the address, unless the case says otherwise.
 
 ## Mobile
 
-Every case runs on desktop (`functional-desktop`) and on an emulated phone
-(`functional-mobile`, Pixel 7), and on the phone each case also checks that
+Every case runs on desktop (project `desktop`) and on an emulated phone
+(Pixel 7, project `mobile`), and on the phone each case also checks that
 the page doesn't scroll sideways. SE-4, SE-5 and SE-9 to SE-11 are desktop
 only (`@desktop-only`): what they check happens on the server, so once is
 enough.

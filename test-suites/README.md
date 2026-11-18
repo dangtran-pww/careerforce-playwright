@@ -59,7 +59,7 @@ One paragraph saying what the suite is for. The dashboard shows it.
 
 | Plan | Projects |
 |---|---|
-| smoke-public-site | smoke-desktop, smoke-mobile |
+| smoke-public-site | desktop, mobile |
 | smoke-admin-reports | (default) |
 ```
 
@@ -545,8 +545,8 @@ plan also reports two plans, or two prompts, with the same file name.
 
 Every plan in `smoke/` (`smoke-*.md`) is a smoke plan: quick checks to run
 after each deploy.
-Its tests live in `tests/smoke/<area>/`, and the `smoke-desktop` and
-`smoke-mobile` Playwright projects run that folder. Most of them also run on Production after a deploy; the plans and cases
+Its tests live in `tests/smoke/<area>/`, and the `desktop` and `mobile`
+Playwright projects run that folder. Most of them also run on Production after a deploy; the plans and cases
 that must not are marked no-prod (see
 [Keeping tests off Production](#keeping-tests-off-production)).
 
@@ -556,14 +556,14 @@ On QA and Stage, `--grep-invert @no-prod` leaves out every test tagged
 `@no-prod`:
 
 ```bash
-npx playwright test --project=smoke-desktop --project=smoke-mobile  # desktop and phone
-npx playwright test --project=smoke-desktop --project=smoke-mobile --grep-invert @no-prod  # prod-safe only
-npx playwright test tests/smoke/admin-reports   # one plan
-npx playwright test --project=smoke-mobile      # phone only
+npx playwright test tests/smoke                              # desktop and phone
+npx playwright test tests/smoke --grep-invert @no-prod       # prod-safe only
+npx playwright test tests/smoke/admin-reports                # one plan
+npx playwright test tests/smoke --project=mobile             # phone only
 ```
 
-Every smoke plan runs on desktop (`smoke-desktop`) and on a phone
-(`smoke-mobile`), except the admin and editor areas, which are desktop only
+Every smoke plan runs on desktop (`desktop`) and on a phone
+(`mobile`), except the admin and editor areas, which are desktop only
 (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`). See
 [smoke-public-site.md → Mobile](smoke/smoke-public-site.md#mobile) and the README's
 "Desktop and mobile" section.
@@ -641,8 +641,8 @@ On Production the dashboard refuses a no-prod plan, and runs any other plan
 without its no-prod cases. A suite run there skips no-prod plans.
 
 ```bash
-BASE_URL=https://qa.careerforce.link npx playwright test --project=smoke-desktop --grep @no-prod         # only the no-prod tests
-BASE_URL=https://careerforce.mn.gov npx playwright test --project=smoke-desktop                       # Production: @no-prod left out
+BASE_URL=https://qa.careerforce.link npx playwright test tests/smoke --project=desktop --grep @no-prod         # only the no-prod tests
+BASE_URL=https://careerforce.mn.gov npx playwright test tests/smoke --project=desktop                       # Production: @no-prod left out
 ```
 
 Conventions for tests that create, edit or delete data, on any environment:
@@ -671,8 +671,8 @@ Job Seeker Registration: many more cases than its smoke plan. Too long for the
 post-deploy run, so they run on their own.
 
 ```bash
-npx playwright test --project=functional-desktop --project=functional-mobile   # all functional plans
-npx playwright test tests/functional/job-search --project=functional-desktop   # one feature, desktop
+npx playwright test tests/functional                                # all functional plans
+npx playwright test tests/functional/job-search --project=desktop   # one feature, desktop
 ```
 
 Conventions:
@@ -684,8 +684,8 @@ Conventions:
   `test-suites/<feature>/functional-<feature>-<part>.md`, all sharing
   `tests/functional/<feature>/`; each part names its own spec files under
   `Implemented test:` so no two parts claim the same tests.
-- **Projects:** `functional-desktop` and `functional-mobile` run
-  `tests/functional/`.
+- **Projects:** the `desktop` and `mobile` projects run
+  `tests/functional/`, like every other folder under `tests/`.
 - **Production:** the same rules as smoke, see
   [Keeping tests off Production](#keeping-tests-off-production): a
   `Prod: No` line or Prod column, the `@no-prod` tag, and cleanup in

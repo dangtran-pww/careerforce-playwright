@@ -298,9 +298,8 @@ function attachTests(plan, all) {
     if (!byProject.has(t.project)) byProject.set(t.project, []);
     byProject.get(t.project).push(t.path.join(' › '));
   }
-  // One project per suite and device (smoke-desktop, smoke-mobile, ...; see
-  // playwright.config.ts), so no two projects run the same tests: all are on
-  // by default. `seed` is the agents' browser, never a plan's test run.
+  // One project per device (desktop, mobile; see playwright.config.ts), so
+  // no two projects run the same tests: all are on by default. `seed` is the agents' browser, never a plan's test run.
   const projects = [...byProject].map(([name, titles]) => ({
     name,
     testCount: titles.length,
@@ -319,7 +318,7 @@ function attachTests(plan, all) {
     }
     const caseTests = runTests.filter((t) => hasCase(t, c.id));
     c.testCount = caseTests.length;
-    // The projects that run it, e.g. smoke-desktop and smoke-mobile, so the
+    // The projects that run it, e.g. desktop and mobile, so the
     // dashboard can show which devices a case is tested on.
     c.projects = projects
       .filter((p) => p.selected)

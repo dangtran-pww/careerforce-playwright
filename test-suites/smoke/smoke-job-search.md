@@ -148,7 +148,7 @@ A prompt case has no test code: Claude follows its prompt file in a browser and 
 ## Mobile
 
 The JS and JF cases also run on an emulated Android phone (Pixel 7, in
-Chrome), project `smoke-mobile`:
+Chrome), project `mobile`:
 
 - **JS-1 to JS-5, JF-4 and JF-5 run on the phone.** JF-4 and JF-5 use the
   filters drawer.

@@ -543,7 +543,7 @@ The cases are in one table, one area after another. Their tests are in
 ## Mobile
 
 None. Every case changes data and uses admin screens, so all are
-`@desktop-only` and run only in `functional-desktop`.
+`@desktop-only` and run only in the `desktop` project.
 
 ## Not covered
 

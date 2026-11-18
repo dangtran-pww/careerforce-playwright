@@ -100,8 +100,8 @@ and the address (UR) in `tests/functional/job-search/paging-url-state.spec.ts`.
 
 ## Mobile
 
-Every case runs on desktop (`functional-desktop`). On the phone
-(`functional-mobile`, Pixel 7) only the cases that use the page's controls in
+Every case runs on desktop (project `desktop`). On the phone
+(Pixel 7, project `mobile`) only the cases that use the page's controls in
 a different way run: SO-5, FI-1, FI-5, PG-2 and UR-1, through the Filters
 drawer. The others are `@desktop-only`, because sorting, filtering and paging
 happen on the server and checking them once is enough. On the phone each case

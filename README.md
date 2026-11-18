@@ -5,7 +5,7 @@ A small, working starter for end-to-end tests on CareerForce site.
 ## What is inside
 
 ```
-playwright.config.ts        # one project per suite and device (smoke-desktop, smoke-mobile, ...)
+playwright.config.ts        # one project per device (desktop, mobile); a path picks the suite
 eslint.config.mjs           # minimal linting: Playwright rules + TypeScript
 .prettierrc.json            # formatting (single quotes, trailing commas)
 scripts/
@@ -48,8 +48,8 @@ npx playwright install chromium
 cp .env.example .env   # fill in BASIC_AUTH_USER/PASSWORD for QA's Basic Auth gate
 npm run login:manual -- admin   # once per session expiry; admin-reports needs it
                                 # (logs in to BASE_URL's environment; add --env stage for Stage)
-npx playwright test --project=smoke-desktop --project=smoke-mobile  # desktop and phone
-npx playwright test --project=smoke-desktop      # desktop only
+npx playwright test tests/smoke                     # desktop and phone
+npx playwright test tests/smoke --project=desktop   # desktop only
 # On QA/Stage these also run the @no-prod tests; add --grep-invert @no-prod to skip them.
 
 # Logged-in tests: log in by hand once per role (auth is SSO, so this step
@@ -139,14 +139,22 @@ for more on this pattern.
 
 ## Desktop and mobile
 
-Each suite runs once per device. `playwright.config.ts` builds the projects
-from the suite list and the devices in `tests/helpers/devices.mts`, and names
-them `<suite>-<device>`:
+`playwright.config.ts` makes one project per device in
+`tests/helpers/devices.mts`, named after it. Each project runs every suite
+under `tests/`; a path picks the suite:
 
-| Project | Tests | Devices |
+| Project | Device |
+|---|---|
+| `desktop` | Desktop Chrome |
+| `mobile` | Pixel 7 (Chromium) |
+
+| Suite | Tests | Run it |
 |---|---|---|
-| `smoke-desktop`, `smoke-mobile` | `tests/smoke/` | desktop + Pixel 7 (Chromium) |
-| `functional-desktop`, `functional-mobile` | `tests/functional/` | desktop + Pixel 7 |
+| Smoke | `tests/smoke/<area>/` | `npx playwright test tests/smoke` |
+| Functional | `tests/functional/<feature>/` | `npx playwright test tests/functional` |
+
+`npx playwright test` with no path runs both suites. Add `--project=desktop`
+or `--project=mobile` for one device.
 
 - **Tests that must not run on production** are tagged `@no-prod`, in
   either suite: every test of a no-prod plan (`Prod: No` in its header), or
@@ -160,7 +168,7 @@ them `<suite>-<device>`:
 - **Whole areas on desktop only:** admin and editor smoke areas
   (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`: admin-reports,
   admin-maintenance, block-placement, ckeditor, content-lifecycle, media).
-  `smoke-mobile` skips their folders. A new area runs on both devices unless
+  The `mobile` project skips their folders. A new area runs on both devices unless
   you add it to that list.
 - **Single tests:** tag a test `@desktop-only` or `@mobile-only` to keep it
   off the other device.

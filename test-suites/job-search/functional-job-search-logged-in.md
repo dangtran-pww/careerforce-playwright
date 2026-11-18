@@ -137,7 +137,7 @@ The cases are in one table, one area after another. Their tests are in
 
 Every case except MO-1 runs on desktop only (`@desktop-only`), like every
 data-changing test. MO-1 runs on the phone only (`@mobile-only`,
-`functional-mobile`, Pixel 7).
+`mobile`, Pixel 7).
 
 ## Not covered
 

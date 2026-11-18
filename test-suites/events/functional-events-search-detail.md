@@ -457,7 +457,7 @@ The cases are in one table, one area after another. Their tests are in
 
 ## Mobile
 
-On the phone (`functional-mobile`, Pixel 7) these run too: EV-1, EV-3, EV-4,
+On the phone (Pixel 7, project `mobile`) these run too: EV-1, EV-3, EV-4,
 EF-3 and EU-4 (through the "Filters" drawer and the phone's "Reset"
 button), ED-1, ED-4, ED-6, EH-1, EH-5 and EH-7. Every other case is
 `@desktop-only`: what it checks happens on the server, so once is enough.

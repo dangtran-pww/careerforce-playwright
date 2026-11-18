@@ -117,7 +117,7 @@ export function planArgs(
 
   // With cases picked (or no-prod ones left out), only the projects that run
   // at least one of them: a @desktop-only case such as HP-3 has no tests in
-  // smoke-mobile, and Playwright fails a project/grep pair that matches
+  // mobile, and Playwright fails a project/grep pair that matches
   // nothing.
   const projectsForCases = runnableCases.length
     ? chosen.filter((p) => runsAnyCase(plan, p, runnableCases))
@@ -148,7 +148,7 @@ export const shownCommand = (env, args) =>
 // ---- running it ------------------------------------------------------------
 
 // The list reporter's lines: "Running 12 tests using 1 worker" once, then
-// "  ✓   3 [smoke-desktop] › …" as each test ends ("(retry #1)" on a retry).
+// "  ✓   3 [desktop] › …" as each test ends ("(retry #1)" on a retry).
 const runningLine = /^Running (\d+) tests? using (\d+) workers?/;
 const endedLine = /^\s+[✓✘-]\s+\d+ \[/;
 

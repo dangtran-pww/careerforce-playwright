@@ -16,19 +16,19 @@ yet" and skipped.
 
 | Plan | Projects |
 |---|---|
-| smoke-public-site | smoke-desktop, smoke-mobile |
-| smoke-job-search | smoke-desktop, smoke-mobile |
-| smoke-admin-reports | smoke-desktop |
-| smoke-admin-maintenance | smoke-desktop |
-| smoke-block-placement | smoke-desktop |
-| smoke-ckeditor | smoke-desktop |
-| smoke-content-lifecycle | smoke-desktop |
-| smoke-events | smoke-desktop, smoke-mobile |
-| smoke-external-events | smoke-desktop, smoke-mobile |
-| smoke-alerts | smoke-desktop |
+| smoke-public-site | desktop, mobile |
+| smoke-job-search | desktop, mobile |
+| smoke-admin-reports | desktop |
+| smoke-admin-maintenance | desktop |
+| smoke-block-placement | desktop |
+| smoke-ckeditor | desktop |
+| smoke-content-lifecycle | desktop |
+| smoke-events | desktop, mobile |
+| smoke-external-events | desktop, mobile |
+| smoke-alerts | desktop |
 | smoke-appointments | (default) |
-| smoke-auto-logout | smoke-desktop |
-| smoke-jobseeker-tools | smoke-desktop, smoke-mobile |
-| smoke-media | smoke-desktop |
-| smoke-profile | smoke-desktop |
+| smoke-auto-logout | desktop |
+| smoke-jobseeker-tools | desktop, mobile |
+| smoke-media | desktop |
+| smoke-profile | desktop |
 | smoke-resume-builder | (default) |

@@ -44,7 +44,7 @@ export const elapsed = (startedAt: string, finishedAt?: string) =>
 export const plural = (n: number, word: string) =>
   `${n} ${word}${n === 1 ? '' : 's'}`;
 
-// "48 on smoke and 40 on smoke-mobile", or "21 on job-search".
+// "48 on desktop and 40 on mobile", or "21 on desktop".
 export function testsPerProject(
   projects: { name: string; testCount: number }[],
 ): string {
@@ -54,7 +54,7 @@ export function testsPerProject(
     : (parts[0] ?? '');
 }
 
-// "88 tests (48 on smoke and 40 on smoke-mobile)", or "21 tests on job-search".
+// "88 tests (48 on desktop and 40 on mobile)", or "21 tests on desktop".
 export function testsSummary(
   projects: { name: string; testCount: number }[],
 ): string {

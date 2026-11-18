@@ -395,7 +395,7 @@ The cases are in one table, one area after another. Their tests are in
 
 ## Mobile
 
-On the phone (`functional-mobile`, Pixel 7) these run too: AQ-1, AQ-2,
+On the phone (Pixel 7, project `mobile`) these run too: AQ-1, AQ-2,
 AW-1, AW-2, AF-1, AF-4, AF-9 (through the "Filters" drawer and its "Reset"
 button) and AE-1, AE-4. Every other case is `@desktop-only`: what it checks
 happens on the server, so once is enough. APW-1 to APW-3 set their own 390 ×

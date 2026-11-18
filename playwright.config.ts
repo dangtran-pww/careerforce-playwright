@@ -33,32 +33,30 @@ const env = currentEnv();
 const httpCredentials = credentialsFor(env);
 const NO_PROD_TAG = /@no-prod/;
 
-// One project per suite and device, named `<suite>-<device>`, e.g.
-// smoke-desktop and smoke-mobile. Each device skips the tests tagged for the
-// other (`@desktop-only` / `@mobile-only`, see tests/helpers/devices.mts),
-// and on production every project also skips `@no-prod` tests.
-// `perDevice` adds settings for one device only.
-function suite(
-  name: string,
-  {
-    testDir,
-    devices = ['desktop', 'mobile'],
-    perDevice = {},
-  }: {
-    testDir: string;
-    devices?: DeviceName[];
-    perDevice?: Partial<Record<DeviceName, Project>>;
-  },
-): Project[] {
-  return devices.map((device) => ({
-    name: `${name}-${device}`,
-    testDir,
+// One project per device (`desktop`, `mobile`), each running every suite
+// under tests/: the smoke suite in tests/smoke/<area>/ and the functional
+// suites in tests/functional/<feature>/. A path picks the suite
+// (`npx playwright test tests/smoke`). Each device skips the tests tagged
+// for the other (`@desktop-only` / `@mobile-only`, see
+// tests/helpers/devices.mts), and on production every project also skips
+// `@no-prod` tests. The agents' seed specs are never part of a run.
+// The phone also skips the desktop-only smoke areas (admin and editor
+// screens, DESKTOP_ONLY_SMOKE_AREAS).
+function device(name: DeviceName): Project {
+  return {
+    name,
+    testDir: './tests',
+    testIgnore: [
+      '**/seed.spec.ts',
+      ...(name === 'mobile'
+        ? DESKTOP_ONLY_SMOKE_AREAS.map((a) => `**/smoke/${a}/**`)
+        : []),
+    ],
     grepInvert: env.production
-      ? [SKIP_TAG[device], NO_PROD_TAG]
-      : SKIP_TAG[device],
-    ...perDevice[device],
-    use: { ...DEVICES[device], ...perDevice[device]?.use },
-  }));
+      ? [SKIP_TAG[name], NO_PROD_TAG]
+      : SKIP_TAG[name],
+    use: DEVICES[name],
+  };
 }
 
 export default defineConfig({
@@ -126,28 +124,19 @@ export default defineConfig({
         storageState: process.env.SEED_STORAGE_STATE || undefined,
       }))(DEVICES.desktop),
     },
-    // Smoke suite: every spec from a test-suites/smoke/smoke-*.md, one folder per
-    // plan (tests/smoke/<area>/): quick checks to run after each deploy.
-    // Most are prod-safe. The ones that aren't are tagged `@no-prod` and are
-    // left out on production (see the top of this file). No default login: a spec that
-    // needs a role calls `useRole('<role>')` (tests/helpers/roles.ts), which
-    // needs `npm run login:manual -- <role> --env <env>` to have been run
-    // first. Admin and editor areas run on desktop only
-    // (DESKTOP_ONLY_SMOKE_AREAS); on mobile, every test also fails if the
-    // page scrolls sideways (`noHorizontalScroll` in tests/helpers/fixtures.ts).
-    ...suite('smoke', {
-      testDir: './tests/smoke',
-      perDevice: {
-        mobile: {
-          testIgnore: DESKTOP_ONLY_SMOKE_AREAS.map((a) => `**/smoke/${a}/**`),
-        },
-      },
-    }),
-    // Functional suites (test-suites/README.md → Functional plans): in-depth
-    // tests of one big feature area, one folder per feature
-    // (tests/functional/<feature>/), e.g. job-search, resume-builder,
-    // jobseeker-registration. Too long for a post-deploy run. Like smoke,
-    // tests that must stay off production are tagged `@no-prod`.
-    ...suite('functional', { testDir: './tests/functional' }),
+    // The device projects. Both run both suites, picked by path:
+    // - tests/smoke/<area>/: every spec from a test-suites/smoke/smoke-*.md,
+    //   one folder per plan: quick checks to run after each deploy
+    //   (`npx playwright test tests/smoke`).
+    // - tests/functional/<feature>/: in-depth tests of one big feature area
+    //   (test-suites/README.md → Functional plans), e.g. job-search. Too long
+    //   for a post-deploy run.
+    // No default login: a spec that needs a role calls `useRole('<role>')`
+    // (tests/helpers/roles.ts), which needs
+    // `npm run login:manual -- <role> --env <env>` to have been run first. On
+    // mobile, every test also fails if the page scrolls sideways
+    // (`noHorizontalScroll` in tests/helpers/fixtures.ts).
+    device('desktop'),
+    device('mobile'),
   ],
 });
