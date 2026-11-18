@@ -43,10 +43,3 @@ export function suiteResults(suite: SuiteSummary): SuiteResults | null {
     latestAt: runs.map((r) => r.startedAt).reduce((a, b) => (a > b ? a : b)),
   };
 }
-
-// The kind its plans share ("Smoke", "Functional"), or null when they
-// differ or it has none.
-export function suiteKind(suite: SuiteSummary): string | null {
-  const types = new Set(suite.plans.map((p) => p.type).filter(Boolean));
-  return types.size === 1 ? [...types][0]! : null;
-}

@@ -7,7 +7,6 @@ import { useApi } from '../hooks/useApi';
 import { useEnv } from '../hooks/useEnv';
 import { plural } from '../lib/format';
 import { inline } from '../lib/inline';
-import { suiteKind } from '../lib/suiteResults';
 
 // #/suites — every suite in test-suites/: the ones with plans in a table
 // with their latest results here, then the planned ones (no plans yet).
@@ -137,13 +136,11 @@ function PlannedSuites({ suites }: { suites: SuiteSummary[] }) {
 }
 
 function SuiteName({ suite }: { suite: SuiteSummary }) {
-  const kind = suiteKind(suite);
   return (
     <div className="suite-title">
       <Link to={`/suites/${suite.slug}`} className="suite-name strong">
         {suite.name}
       </Link>
-      {kind && <span className="kind-label">{kind}</span>}
     </div>
   );
 }
