@@ -36,7 +36,13 @@ import {
   parallelValue,
   promptSlugInCell,
 } from '../../../scripts/lib/prompts.mjs';
-import { PROMPTS_FOLDER, planFiles } from '../../../scripts/lib/layout.mjs';
+import {
+  PROMPTS_FOLDER,
+  SUITE_FILE,
+  SUITES_DIR,
+  planFiles,
+} from '../../../scripts/lib/layout.mjs';
+import { tableCells } from '../../../scripts/lib/markdown.mjs';
 
 const run = promisify(execFile);
 const caseId = /^[A-Z][A-Z0-9]*-\d+$/;
@@ -58,6 +64,48 @@ function splitTitle(heading) {
   const [type, ...rest] = m[1].split(/\s+-\s+/);
   const name = [...rest, m[2]].filter(Boolean).join(' - ');
   return { type: type.trim(), name: name || type.trim() };
+}
+
+// The text after "# " on a file's first heading line, or null.
+const headingOf = (text) =>
+  text.split('\n').find((l) => l.startsWith('# '))?.slice(2).trim() || null;
+
+// A plan's title as a link to it shows it: its suite's name and its own,
+// "Smoke - Admin Reports", "Events - Scheduling". The suite's name is its
+// suite.md heading without "[Suite] - " (as in suites.mjs), else the folder.
+function planTitle(suiteName, text) {
+  const heading = headingOf(text);
+  return heading ? `${suiteName} - ${splitTitle(heading).name}` : null;
+}
+
+// A link to another plan is written with no text, "[](smoke-ckeditor.md)" or
+// "[](../events/functional-events-scheduling.md#login)" (Rule 9 in
+// test-suites/README.md); this gives it the plan's title. `titles` maps a
+// plan's slug to its title. A link to a file that isn't a plan is left alone.
+const EMPTY_PLAN_LINK = /\[\]\(((?:[^)\s]*\/)?([\w-]+)\.md(?:#[^)\s]*)?)\)/g;
+export function fillPlanLinks(text, titles) {
+  return text.replace(EMPTY_PLAN_LINK, (link, href, slug) =>
+    titles.has(slug) ? `[${titles.get(slug)}](${href})` : link,
+  );
+}
+
+// slug → title of every plan.
+export async function planTitles() {
+  const entries = await planFiles();
+  const suites = new Map();
+  for (const suite of new Set(entries.map((e) => e.suite))) {
+    const heading = headingOf(
+      await fromFile(join(SUITES_DIR, suite, SUITE_FILE), (t) => t),
+    );
+    suites.set(suite, heading?.replace(/^\[Suite\]\s*-?\s*/i, '').trim() || suite);
+  }
+  const texts = await Promise.all(entries.map((e) => fromFile(e.file, (t) => t)));
+  return new Map(
+    entries.map((e, i) => [
+      e.slug,
+      planTitle(suites.get(e.suite), texts[i]) ?? e.slug,
+    ]),
+  );
 }
 
 function parsePlan({ slug, suite, file }, text) {
@@ -215,13 +263,7 @@ function parsePlan({ slug, suite, file }, text) {
 export function tableRows(lines) {
   return lines
     .filter((l) => l.trim().startsWith('|'))
-    .map((l) =>
-      l
-        .trim()
-        .split('|')
-        .slice(1, -1)
-        .map((c) => c.trim()),
-    );
+    .map(tableCells);
 }
 
 // ---- Playwright's own list of tests ----------------------------------------
@@ -473,10 +515,11 @@ export async function loadPlans({ refresh = false } = {}) {
     planFiles(),
     loadPrompts(),
   ]);
+  const titles = await planTitles();
   const plans = await Promise.all(
     entries.map(async (entry) => {
       // Parsed again each time (cheap): attachTests fills in its cases.
-      const text = await fromFile(entry.file, (t) => t);
+      const text = fillPlanLinks(await fromFile(entry.file, (t) => t), titles);
       const plan = attachPrompts(
         attachTests(parsePlan(entry, text), tests),
         prompts,

@@ -4,36 +4,45 @@ Status: implemented
 Implemented test: tests/smoke/block-placement/*.spec.ts
 Prod: No: places a block that every visitor sees.
 
+## Overview
+
 A quick check after each deploy that editors can still place block content:
 create a custom content block, place it on every page, restrict it to one
-page, and remove it.
+page, and remove it, with a throwaway block.
 
-Devices: desktop only. Admin and editor screens are not tested on a phone (`DESKTOP_ONLY_SMOKE_AREAS` in `tests/helpers/devices.mts`).
+While it is placed, the block shows in the footer of every page for every
+visitor, so the plan runs on QA and Stage only.
 
-The team's manual checklist on Confluence,
-[DEED Smoke Testing Template](https://portland-webworks.atlassian.net/wiki/spaces/MNDEED/pages/1540882433),
-asks to "review the process of placing existing block content: custom
-blocks, page restricted block". These cases do that with a throwaway block.
+## Login
 
-## Scope
+| **Every case** | Admin role |
+|---|---|
+| **Visitor checks in BP-2 to BP-4** | Visitor, not logged in |
 
-- Creates one content block, places it, restricts it to one page, then
-  removes the placement and deletes the block. The test does the removal in
-  `finally` as well: a block left behind shows in the footer of every page
-  for every visitor.
-- What visitors see is checked in a second, logged-out browser context.
-- The cases share one block and run in order (BP-1 to BP-4), in one spec.
+## Test cases
 
-## Login and test data
+Every case is in `block-placement.spec.ts`. The cases share one block and
+run in order, BP-1 to BP-4. What visitors see is checked in a second,
+logged-out browser.
 
-- **Admin** (`admin`): `playwright/.auth/<env>/admin.json`. See
-  [smoke-admin-maintenance.md → Login](smoke-admin-maintenance.md#login).
-- **Visitor**: a logged-out context, for the visibility checks.
-- Block description `Playwright test <timestamp>`; body text
+| ID | Test | Page | Steps | Expected result |
+|---|---|---|---|---|
+| BP-1 | Create a content block | `/block/add/generic_text_block` | 1. Enter the block description and body text (see [Test data](#test-data)) and click "Save". 2. Open `/admin/content/block` and filter by the block description. | 1. A status message confirms the block was created, with no error message. 2. The block is listed once, with the type "Generic text block". |
+| BP-2 | Place the block on every page | `/admin/structure/block` | Use the block from BP-1. 1. Click "Place block" for the Footer Content region, find the block by its description, and click its "Place block". 2. Untick "Display title", leave the visibility settings and "Block Visibility Groups" as they are, and click "Save block". 3. As a visitor, open `/` and `/education-and-training/events`. | 1. The "Configure block" form opens with the Footer Content region chosen. 2. Block layout shows no error message, and the block is listed under Footer Content. 3. Both pages show the body text in the footer (`.region--footer`). |
+| BP-3 | Restrict the block to one page | `/admin/structure/block` | Use the placement from BP-2. 1. Open its "Configure", go to the Pages tab, enter `/education-and-training/events`, keep "Show for the listed pages", and click "Save block". 2. As a visitor, open `/education-and-training/events` and `/`. | 1. A status message confirms the save. 2. The events page shows the body text, and `/` doesn't. |
+| BP-4 | Remove the block | `/admin/structure/block` | Use the block from BP-1 and its placement. 1. Remove the placement: in the block's operations, click "Remove" and confirm. 2. Delete the block: in `/admin/content/block`, click its "Delete" and confirm. 3. As a visitor, open `/education-and-training/events` and `/`. | 1. A status message confirms the removal, and the block is no longer under Footer Content. 2. A status message confirms the deletion, and filtering the library by the description lists nothing. 3. Neither page shows the body text. |
+
+## Test data
+
+- **Block:** description `Playwright test <timestamp>`, body text
   `Playwright block body <timestamp>`, so a visibility check matches only
   this run's block.
+- **Cleanup:** BP-4 is also the test's cleanup. After the last case, even
+  when one failed, the spec removes the placement and deletes the block if
+  they still exist: a block left behind shows in the footer of every page
+  for every visitor.
 
-## What the site has
+## Good to know
 
 Checked on QA with the admin session on 2026-11-12, without saving anything.
 
@@ -54,9 +63,9 @@ Checked on QA with the admin session on 2026-11-12, without saving anything.
   link to `/admin/structure/block/library/careerforce_skin?region=<region>`,
   where each block has its own "Place block" link to the "Configure block"
   form.
-- **Region.** Use **Footer Content** (`footer`). It is on every page (the
-  footer's contact block is in it), so the block shows on `/` and on the
-  events page. Sub-content is not used: it isn't on the homepage.
+- **Region.** The cases use **Footer Content** (`footer`). It is on every
+  page (the footer's contact block is in it), so the block shows on `/` and
+  on the events page. Sub-content is not used: it isn't on the homepage.
 - **Configure block form.** "Title" and "Display title" (ticked by
   default), "Block Visibility Groups" (default "No Block Visibility Group";
   the site has one group, for the blue page-title banner), a long list of
@@ -70,42 +79,19 @@ Checked on QA with the admin session on 2026-11-12, without saving anything.
   (`x-drupal-cache: HIT`, `cache-control: max-age=300, public`), with no CDN
   in front, on QA and on Stage. Saving or removing a block clears the cached
   pages that show it, so the visitor checks need no cache-busting query. A
-  new logged-out context has no browser cache. If a visitor still sees the
+  new logged-out browser has no browser cache. If a visitor still sees the
   old page after a save, that is a bug to report.
 
-## Test cases
+## Mobile
 
-| ID | Test | Page | Steps | Expected result |
-|---|---|---|---|---|
-| BP-1 | Create a content block | `/block/add/generic_text_block` | 1. Enter the block description and body text (see "Login and test data") and click "Save". 2. Open `/admin/content/block` and filter by the block description. | **1.** A status message confirms the block was created, with no error message. **2.** The block is listed once, with the type "Generic text block". |
-| BP-2 | Place the block on every page | `/admin/structure/block` | Use the block from BP-1. 1. Click "Place block" for the Footer Content region, find the block by its description, and click its "Place block". 2. Untick "Display title", leave the visibility settings and "Block Visibility Groups" as they are, and click "Save block". 3. As a visitor, open `/` and `/education-and-training/events`. | **1.** The "Configure block" form opens with the Footer Content region chosen. **2.** Block layout shows a status message confirming the save, and the block is listed under Footer Content. **3.** Both pages show the body text in the footer (`.region--footer`). |
-| BP-3 | Restrict the block to one page | `/admin/structure/block` | Use the placement from BP-2. 1. Open its "Configure", go to the Pages tab, enter `/education-and-training/events`, keep "Show for the listed pages", and click "Save block". 2. As a visitor, open `/education-and-training/events` and `/`. | **1.** A status message confirms the save. **2.** The events page shows the body text, and `/` doesn't. |
-| BP-4 | Remove the block | `/admin/structure/block` | Use the block from BP-1 and its placement. 1. Remove the placement: in the block's operations, click "Remove" and confirm. 2. Delete the block: in `/admin/content/block`, click its "Delete" and confirm. 3. As a visitor, open `/education-and-training/events` and `/`. | **1.** A status message confirms the removal, and the block is no longer under Footer Content. **2.** A status message confirms the deletion, and filtering the library by the description lists nothing. **3.** Neither page shows the body text. |
+Desktop only. Admin and editor screens are not tested on a phone
+(`block-placement` is in `DESKTOP_ONLY_SMOKE_AREAS` in
+`tests/helpers/devices.mts`).
 
-BP-4 is also the test's cleanup: the spec runs its steps in `finally`,
-skipping a step whose item doesn't exist.
+## Not covered
 
-## Non-goals
-
-- Notifications and alerts (the Alert & Notification block type, placed in
-  Page Pre Top or Notifications), from the checklist's "Notifications/alerts
-  as applicable" item. They show on every page, so they're tested off-peak
-  only; add them as their own plan later.
-  [MNDEED-7946](https://portland-webworks.atlassian.net/browse/MNDEED-7946)
-  (notification border box shrinking) is Done.
-- Layout Builder: not used on this site.
-- Block Visibility Groups and the other visibility tabs beyond Pages.
-
-## Open questions
-
-None at the moment.
-
-## Suggested files
-
-```
-tests/
-  smoke/block-placement/
-    block-placement.spec.ts   # BP-1 .. BP-4, in order, with cleanup in finally
-  pages/
-    block-layout.page.ts      # create block, place, set Pages visibility, remove, delete
-```
+- **Alerts and notifications** (the Alert & Notification block type, placed
+  in Page Pre Top or Notifications), from the checklist's
+  "Notifications/alerts as applicable" item: [](smoke-alerts.md).
+- **Layout Builder:** not used on this site.
+- **Block Visibility Groups and the other visibility tabs** beyond Pages.

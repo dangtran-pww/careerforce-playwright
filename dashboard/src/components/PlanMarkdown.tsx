@@ -43,14 +43,10 @@ const META_LINE = /^[A-Z][A-Za-z ]{0,30}: \S/;
 const COLUMN_WEIGHTS: Record<string, number> = {
   ID: 5,
   Test: 11,
-  Title: 11,
   Page: 12,
-  Persona: 10,
   Steps: 26,
   'Expected result': 26,
-  Assertions: 26,
   Prompt: 40,
-  Notes: 14,
   'Required login': 11,
   Prod: 10,
 };
@@ -110,8 +106,20 @@ const marked = new Marked({
       const cells = (row: typeof token.header) =>
         this.tablerow({ text: row.map((c) => this.tablecell(c)).join('') });
       const body = token.rows.map(cells).join('');
-      if (!isCaseTable(headers))
-        return `<table>\n<thead>\n${cells(token.header)}</thead>\n<tbody>${body}</tbody></table>\n`;
+      if (!isCaseTable(headers)) {
+        // A Login table is a list of labels and values, with no real header:
+        // its first row starts with a bold label ("| **Every case** | … |"),
+        // so that row is shown like the others. An empty header row
+        // ("| | |", in older plans) is left out.
+        if (/^\*\*/.test(headers[0] ?? '')) {
+          const first = cells(token.header.map((c) => ({ ...c, header: false })));
+          return `<table>\n<tbody>${first}${body}</tbody></table>\n`;
+        }
+        const head = headers.some(Boolean)
+          ? `<thead>\n${cells(token.header)}</thead>\n`
+          : '';
+        return `<table>\n${head}<tbody>${body}</tbody></table>\n`;
+      }
       const weights = headers.map((h) => COLUMN_WEIGHTS[h] ?? UNKNOWN_COLUMN);
       const total = weights.reduce((a, b) => a + b, 0);
       const cols = weights

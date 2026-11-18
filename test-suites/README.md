@@ -242,10 +242,9 @@ Put the plan in its suite's folder, `test-suites/<suite>/<plan>.md`, and add
 it to that suite's Plans table in `suite.md`. The file name is the plan's
 slug: it must be unique across all suites.
 
-Use the plain-language case form: one journey per plan, the role, the
-starting URL, GIVEN / WHEN / THEN with a visible result, any unique test
-data needed, and cleanup. Keep it in plain language — no code is needed
-here.
+Use the sections in [Rule 8](#rule-8-plan-sections), and write the cases
+in plain language: the role, the starting page, the steps, a visible
+result, any unique test data needed, and cleanup. No code is needed here.
 
 ## Plan writing rules
 
@@ -264,6 +263,8 @@ the script if it can be checked automatically.
 | 5 | [One test case table](#rule-5-one-test-case-table) | Yes |
 | 6 | [No site password gate](#rule-6-no-site-password-gate) | Yes |
 | 7 | [Overview first](#rule-7-overview-first) | Yes |
+| 8 | [Plan sections](#rule-8-plan-sections) | Yes |
+| 9 | [Links to other plans](#rule-9-links-to-other-plans) | Yes |
 
 ### Rule 1: Steps and Expected result cells
 
@@ -276,17 +277,18 @@ shows them as numbered lists. [smoke-job-search.md](smoke/smoke-job-search.md) a
   in SS-1 first.", "Don't log in."). End with `**Cleanup:** …` if needed; it
   shows below the list.
 - **Expected result:** one check is plain text. Two or more are numbered
-  `**1.** … **2.** …`. When the steps are numbered, expected item N is the
-  result of step N. When one step has several checks, number the checks
-  instead and say which step they follow ("After step 2, …"). Put anything
-  that holds for every step, or a link such as "See [Filters](#filters).",
-  before `**1.**`.
+  `1. … 2. …`, like the steps, with no bold on the numbers. When the steps
+  are numbered, expected item N is the result of step N. When one step has
+  several checks, number the checks instead and say which step they follow
+  ("After step 2, …"). Put anything that holds for every step, or a link
+  such as "See [Filters](#filters).", before `1.`.
 - **Numbers run 1, 2, 3 with no gaps.** A skipped or repeated number stops
   the cell showing as a list. Merge a step that has nothing to check into the
   next one.
 
 The script reports number gaps, cells with several sentences and no
-numbers, and numbered Steps and Expected results whose counts differ.
+numbers, numbered Steps and Expected results whose counts differ, and bold
+numbers (`**1.**`).
 
 ### Rule 2: Prompt cases
 
@@ -520,16 +522,111 @@ The script reports a plan that mentions "password gate", "Basic Auth" or
 After the header lines (`Status`, `Implemented test`, `Pending cases`,
 `Updated cases`, `Prod`, `Parallel`), the first paragraph of a plan is its
 overview: what the plan tests, for whom, and why, in a few sentences, so a
-reader knows what the plan is about before any detail. A `## Overview`
-heading above it is fine.
+reader knows what the plan is about before any detail. It sits under the
+`## Overview` heading ([Rule 8](#rule-8-plan-sections)).
 
-Everything else comes after the overview: the `Devices: …` note, where the
-cases come from, which cases moved from or to other plans, and notes on
-logins, tags or Production.
+Everything else comes after that first paragraph: where the cases come
+from, which cases moved from or to other plans, and notes on logins, tags
+or Production. Which devices the plan runs on goes in `## Mobile`.
 
 The script reports a plan whose first paragraph after the header lines is
-the Devices note, a list or table, or a `##` heading other than
-`## Overview` (no overview at all).
+a list or table, or a `##` heading other than `## Overview` (no overview
+at all).
+
+### Rule 8: Plan sections
+
+Every plan has the same sections, with the same names, in the same order,
+so a reader (and the dashboard) finds the same thing in the same place in
+any plan. Leave out an optional section that would be empty; don't write
+"None".
+
+```md
+# [Smoke] - <Area> - Test Plan
+
+Status: implemented
+Implemented test: tests/smoke/<area>/*.spec.ts
+Prod: No: <reason>
+
+## Overview
+## Login
+## Checked in every case
+## Test cases
+## Prompt cases
+## Test data
+## Good to know
+## Mobile
+## Not covered
+## Open questions
+## Files
+```
+
+- **Header lines:** plain `Name: value`, one per line, no bold: `Status`,
+  `Implemented test`, then when they apply `Pending cases`,
+  `Updated cases`, `No-prod cases`, `Prod`, `Parallel`. `Status` is only
+  the status ([Status on every plan](#status-on-every-plan)); anything
+  more about it goes in the Overview.
+- **`## Overview`** (required): what the plan tests, for whom and why
+  ([Rule 7](#rule-7-overview-first)); whether it is safe on Production;
+  where the cases come from (checklist, ticket); cases that moved from or
+  to other plans.
+- **`## Login`** (required): a two-column table, with no empty header row
+  (`| | |`): its first row is the header row. It has a row per role the
+  plan uses (by case prefix, e.g. "**SS and MD cases**", or "**Every
+  case**"), and an **Accounts touched** row saying what the plan changes on
+  those accounts and that it undoes it. Leave the Accounts touched row out
+  when the plan changes no account. A role row just names the role
+  ("Admin role", "Job seeker role"), with no session path. A visitor-only
+  plan says "Visitor, not logged in". Don't
+  explain how to log in: that is in
+  [Logging in](#logging-in-only-for-plans-that-say-so).
+- **`## Checked in every case`** (optional): checks that every case makes
+  besides its own, e.g. no JavaScript errors, no sideways scroll.
+- **`## Test cases`** (required): one table ([Rule 5](#rule-5-one-test-case-table))
+  with the columns `ID | Test | Page | Steps | Expected result`, plus
+  `Required login` and `Prod` when needed (see [Smoke plans](#smoke-plans)).
+  No other columns: a note for one case goes in its Steps cell before `1.`,
+  or in Good to know. A short paragraph above the table says which spec
+  file holds which prefix, the run order and shared tags.
+- **`## Prompt cases`** (optional): [Rule 2](#rule-2-prompt-cases).
+- **`## Test data`** (optional): what the cases create or depend on: the
+  synthetic values, `Playwright test <timestamp>` names, cleanup, and
+  lists the cases go through, each under its own `###` (`### Location
+  pages for LV-1`).
+- **`## Good to know`** (optional): how the site behaves, and why a case
+  checks what it checks, as bullets that start with a bold point. What
+  the planner saw on the site goes here, starting with a line like
+  "Checked on QA with the admin session on 2026-11-12, without saving
+  anything."; a long snapshot can have `###` subsections.
+- **`## Mobile`** (required): which cases run on a phone and why, and
+  which are desktop only (`@desktop-only`, or the area is in
+  `DESKTOP_ONLY_SMOKE_AREAS`). A desktop-only plan says so in a line or
+  two.
+- **`## Not covered`** (optional): what is left out on purpose, with links
+  to the plans that cover it.
+- **`## Open questions`** (optional): a numbered list. Remove a question
+  once it is answered, and put the answer in Good to know.
+- **`## Files`** (optional): the spec files and page objects to create,
+  and the cases each one holds, in a code block. Only for a plan that
+  isn't `implemented`: it tells the generator what to write. Once the plan
+  is implemented, remove the section; which spec holds which cases goes in
+  the paragraph above the test case table.
+
+The script reports a `##` heading that isn't one of these, sections out
+of order, a missing required section, a bold header line, a `Status` with
+more than the status, a `Devices:` line (it belongs in `## Mobile`), and
+a `## Files` section in an `implemented` plan.
+
+### Rule 9: Links to other plans
+
+A link to another plan has no text: `[](smoke-ckeditor.md)`, or
+`[](../events/functional-events-scheduling.md#login)` for a plan in another
+suite or one of its sections. The dashboard puts the plan's suite and
+title in it ("Smoke - CKEditor 5", "Events - Scheduling"), so the text
+always matches the plan, even after it is renamed. A link to anything else (a ticket, the README, a prompt file, a
+section of the same plan) keeps its text.
+
+The script reports a link to a plan that has text, and a link with no
+text to a file that isn't a plan.
 
 ### Checking a plan
 
@@ -590,8 +687,8 @@ Conventions:
   | JS-1 | Job Search loads | … | | Yes |
   | SS-1 | Save a search | … | `jobseeker` | No: saves a search on the job seeker account |
 - **Devices:** a new area runs on desktop and phone. If it's an admin or
-  editor area, add it to `DESKTOP_ONLY_SMOKE_AREAS` and put
-  `Devices: desktop only` in the plan's header.
+  editor area, add it to `DESKTOP_ONLY_SMOKE_AREAS` and say so in the
+  plan's `## Mobile` section.
 
 Adding a new smoke plan:
 

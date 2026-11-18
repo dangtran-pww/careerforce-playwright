@@ -69,7 +69,7 @@ the bug is fixed.
 
 ## 3. Browse the site
 
-The browser is the main source of facts for "What the site has". Record
+The browser is the main source of facts for "Good to know". Record
 what you saw, not what you expect.
 
 1. Call `planner_setup_page` once, with `seedFile: "tests/seed.spec.ts"`,
@@ -106,29 +106,29 @@ Rules while browsing:
 - Prefer `browser_snapshot` to screenshots. Use `browser_evaluate` to read
   things like `drupalSettings` or element attributes when a snapshot
   doesn't show them.
-- Note the date, the environment and the role you checked with. "What the
-  site has" opens with a line like "Checked on QA with the admin session on
+- Note the date, the environment and the role you checked with. "Good to
+  know" opens with a line like "Checked on QA with the admin session on
   2026-11-12, without saving anything." Facts you got only from the
   source go in their own list, marked as such.
 
 ## 4. Write the plan
 
 Put it in `test-suites/<suite>/<plan>.md`. The file name is the slug; it
-must be unique across all suites (`ls test-suites/*/`). Follow the model
-plans' sections:
+must be unique across all suites (`ls test-suites/*/`). Use the sections
+of Rule 8 in `test-suites/README.md`, in its order:
 
 - Title (`# [Smoke] - <Area> - Test Plan`; in another suite, its type,
   e.g. `# [Functional] - Search - Test Plan`, without the suite's name,
-  which the dashboard already shows), then the header lines:
+  which the dashboard already shows), then the plain header lines:
   `Status: ready to generate`, `Implemented test: —`, and when they apply
   `Prod: No: <reason>`, `Parallel: yes`.
-- An overview paragraph (Rule 7): what the plan tests, for whom, and why.
-- Then, when it applies, `Devices: desktop only. …`, and where the cases
-  come from (checklist item, ticket) in a sentence or two.
-- **Scope**, **Login and test data**,
-  **What the site has**, the **case tables** (Test cases, then Prompt
-  cases if any), **Not covered**, **Open
-  questions**, **Suggested files**.
+- `## Overview`: what the plan tests, for whom, and why (Rule 7), then
+  where the cases come from (checklist item, ticket) in a sentence or two.
+- `## Login` (roles by case prefix, and Accounts touched), optionally
+  `## Checked in every case`, `## Test cases`, `## Prompt cases` if any,
+  `## Test data`, `## Good to know` (what you saw on the site), `## Mobile`
+  (which cases run on a phone; desktop only says so here, never in a
+  `Devices:` line), `## Not covered`, `## Open questions`, `## Files`.
 
 Case tables:
 
@@ -141,7 +141,7 @@ Case tables:
   each other, and put notes they share (spec file, login, tag) in a short
   paragraph above the table.
 - Steps and Expected result follow Rule 1 exactly: one action or check is
-  plain text; several are `1. … 2. …` and `**1.** … **2.** …`, expected
+  plain text; several are numbered `1. … 2. …` in both (no bold numbers), expected
   item N is the result of step N, preconditions go before `1.`,
   `**Cleanup:** …` goes last, numbers run with no gaps.
 - A check that needs judgement (layout compared with another site, "does

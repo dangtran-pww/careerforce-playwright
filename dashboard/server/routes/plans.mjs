@@ -4,7 +4,12 @@
 import { readFile } from 'node:fs/promises';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { loadPlan, loadPlans } from '../catalog/plans.mjs';
+import {
+  fillPlanLinks,
+  loadPlan,
+  loadPlans,
+  planTitles,
+} from '../catalog/plans.mjs';
 import { explainCase, savedExplanation } from '../claude/explain.mjs';
 import { latestReview, reviewCase } from '../claude/review.mjs';
 import { compareParam, envParam, publicEnv } from '../environments.mjs';
@@ -68,12 +73,15 @@ planRoutes.get(PLAN, async (c) => {
 });
 
 // GET /api/plans/:slug/markdown — the plan's whole Markdown file, for
-// reading it in full.
+// reading it in full. Links to other plans get their titles.
 planRoutes.get(`${PLAN}/markdown`, async (c) => {
   const plan = await planOf(c);
   return c.json({
     file: plan.file,
-    markdown: await readFile(fromRoot(plan.file), 'utf8'),
+    markdown: fillPlanLinks(
+      await readFile(fromRoot(plan.file), 'utf8'),
+      await planTitles(),
+    ),
   });
 });
 

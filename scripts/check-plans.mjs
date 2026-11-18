@@ -14,16 +14,11 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { PROMPTS_FOLDER, duplicateSlugs, planFiles, promptFiles } from './lib/layout.mjs';
+import { tableCells } from './lib/markdown.mjs';
 import { PROMPT_COLUMN, parallelValue, parsePrompt, promptSlugInCell } from './lib/prompts.mjs';
 
 // ---- Reading a plan --------------------------------------------------------
 
-function cells(line) {
-  return line
-    .replace(/^\|\s?/, '')
-    .replace(/\s?\|\s*$/, '')
-    .split(' | ');
-}
 
 // The plan's text and lines, and every row of its case tables (tables with
 // an ID column) as { line, id, table, section, prompt, cells: { <column
@@ -40,7 +35,7 @@ function readPlan(file) {
   lines.forEach((l, i) => {
     if (/^## /.test(l)) section = l.slice(3).trim();
     if (!l.startsWith('|')) return void (header = null);
-    const row = cells(l);
+    const row = tableCells(l);
     if (!header) return void ((header = row[0] === 'ID' ? row : []), (table = i + 1));
     if (!header.length || /^\|[\s:|-]+$/.test(l)) return; // the |---|---| row
     const byColumn = Object.fromEntries(header.map((h, c) => [h, row[c] ?? '']));
@@ -55,6 +50,24 @@ const PROMPT_CASES = 'Prompt cases';
 // A prompt case row is only its ID, title and prompt file (and Prod when the
 // plan needs it); the rest is in the prompt file.
 const PROMPT_CASE_COLUMNS = ['ID', 'Test', PROMPT_COLUMN, 'Prod'];
+
+// Rule 8: a plan's "## " sections, in order, and the ones every plan has.
+const SECTIONS = [
+  'Overview',
+  'Login',
+  'Checked in every case',
+  TEST_CASES,
+  PROMPT_CASES,
+  'Test data',
+  'Good to know',
+  'Mobile',
+  'Not covered',
+  'Open questions',
+  'Files',
+];
+const REQUIRED_SECTIONS = ['Overview', 'Login', TEST_CASES, 'Mobile'];
+const TEST_CASE_COLUMNS = ['ID', 'Test', 'Page', 'Steps', 'Expected result', 'Required login', 'Prod'];
+const STATUSES = ['ready to generate', 'partially implemented', 'needs update', 'implemented'];
 
 // ---- Helpers for the rules -------------------------------------------------
 
@@ -119,7 +132,9 @@ const RULES = [
             'Steps: more than one sentence and no numbers. Number the actions "1. … 2. …", or move a note to the Expected result.',
           );
         if (!e.count && !e.error && sentences(expected).length > 1)
-          add('Expected result: more than one sentence and no numbers. Number the checks "**1.** … **2.** …".');
+          add('Expected result: more than one sentence and no numbers. Number the checks "1. … 2. …".');
+        for (const [column, text] of [['Steps', steps], ['Expected result', expected]])
+          if (/\*\*\d+\.\*\*/.test(text)) add(`${column}: bold numbers ("**1.**"). Write them plain: "1. … 2. …".`);
         if (s.count > 1 && e.count > 1 && s.count !== e.count && !/\bsteps?\b/i.test(expected))
           add(
             `${s.count} steps but ${e.count} expected items. Match them by step, or say which step the checks follow ("After step 2, …").`,
@@ -253,7 +268,7 @@ const RULES = [
     check(plan) {
       const problems = [];
       plan.lines.forEach((l, i) => {
-        if (/password gate|basic auth|BASIC_AUTH/i.test(l))
+        if (/password gate|gate password|basic auth|BASIC_AUTH/i.test(l))
           problems.push({ line: i + 1, message: 'Mentions the site password gate. Remove it: the README\'s one-time setup covers it for every plan.' });
       });
       return problems;
@@ -277,16 +292,93 @@ const RULES = [
       const first = rest[0];
       if (!first || /^#/.test(first.text))
         return [{ line: first?.line ?? 1, message: 'The plan has no overview. After the header lines, start with a paragraph on what the plan tests and why.' }];
-      if (/^devices\b/i.test(plain(first.text)))
-        return [{ line: first.line, message: 'Starts with the Devices note. Put an overview of the plan first, and the Devices note after it.' }];
       if (/^[-*|>]|^\d+\./.test(first.text))
         return [{ line: first.line, message: 'Starts with a list or table. Put an overview paragraph of the plan first.' }];
       return [];
     },
   },
+  {
+    id: 8,
+    name: 'Plan sections',
+    check(plan) {
+      const problems = [];
+      const add = (line, message) => problems.push({ line, message });
+      // Header lines: plain "Name: value", and a Status that is only the status.
+      plan.lines.slice(0, 25).forEach((l, i) => {
+        if (/^## /.test(l)) return;
+        if (/^\*\*(Status|Implemented tests?|Pending cases|Updated cases|No-prod cases|Prod|Parallel)\b/.test(l))
+          add(i + 1, `"${l.trim()}" is bold. Write header lines plain: "Status: implemented".`);
+        const status = /^\**Status:\**\s*(.*)$/.exec(l);
+        if (status && !STATUSES.includes(status[1].replace(/\*\*/g, '').replace(/\.$/, '').trim()))
+          add(i + 1, `Status is "${status[1].trim()}". It is only one of: ${STATUSES.join(', ')}. Put anything more in the Overview.`);
+      });
+      // No table starts with an empty header row ("| | |").
+      plan.lines.forEach((l, i) => {
+        if (/^\|[\s|]*\|$/.test(l.trim()) && /^\|[\s:|-]+$/.test(plan.lines[i + 1] ?? '') && !/^\|/.test(plan.lines[i - 1] ?? ''))
+          add(i + 1, 'A table starts with an empty header row ("| | |"). Remove it: the first row is the header row.');
+      });
+      // Sections: known names, in order, the required ones present.
+      let last = -1;
+      const seen = new Set();
+      plan.lines.forEach((l, i) => {
+        if (/^\**Devices:/i.test(l))
+          add(i + 1, 'A "Devices:" line. Say which devices the plan runs on in "## Mobile".');
+        if (!/^## /.test(l)) return;
+        const name = l.slice(3).trim();
+        const at = SECTIONS.indexOf(name);
+        if (at < 0) return add(i + 1, `"## ${name}" is not a plan section. Use one of: ${SECTIONS.join(', ')}.`);
+        if (seen.has(name)) return add(i + 1, `A second "## ${name}". Merge them.`);
+        if (at < last) add(i + 1, `"## ${name}" comes after "## ${SECTIONS[last]}". The order is: ${SECTIONS.join(', ')}.`);
+        seen.add(name);
+        last = Math.max(last, at);
+      });
+      for (const name of REQUIRED_SECTIONS)
+        if (!seen.has(name)) add(1, `No "## ${name}" section. Every plan has ${REQUIRED_SECTIONS.join(', ')}.`);
+      // Files is for a plan still to be generated.
+      const status = plan.lines.slice(0, 25).find((l) => /^\**Status:/.test(l));
+      const implemented = /^\**Status:\**\s*implemented\.?\s*$/i.test((status ?? '').replace(/\*\*/g, ''));
+      const files = plan.lines.findIndex((l) => /^## Files\s*$/.test(l));
+      if (implemented && files >= 0)
+        add(files + 1, 'The plan is implemented, so it has no "## Files". Remove it, and say which spec holds which cases above the test case table.');
+      // Test case table columns.
+      const tc = plan.cases.find((c) => !c.prompt);
+      if (tc) {
+        const extra = Object.keys(tc.cells).filter((h) => !TEST_CASE_COLUMNS.includes(h));
+        const missing = TEST_CASE_COLUMNS.slice(0, 5).filter((h) => !(h in tc.cells));
+        if (extra.length || missing.length)
+          add(
+            tc.table,
+            `The test case table's columns are ${TEST_CASE_COLUMNS.slice(0, 5).join(' | ')} (+ Required login, Prod when needed)${extra.length ? `; it has ${extra.map((h) => `"${h}"`).join(', ')}` : ''}${missing.length ? `; it lacks ${missing.map((h) => `"${h}"`).join(', ')}` : ''}.`,
+          );
+      }
+      return problems;
+    },
+  },
+  {
+    id: 9,
+    name: 'Links to other plans',
+    check(plan) {
+      const problems = [];
+      plan.lines.forEach((l, i) => {
+        for (const m of l.matchAll(/\[([^\]]*)\]\(([^)\s]+)\)/g)) {
+          const [, text, href] = m;
+          const slug = /^(?:[^#]*\/)?([\w-]+)\.md(?:#|$)/.exec(href)?.[1];
+          const isPlan = slug && PLAN_SLUGS.has(slug);
+          if (isPlan && text)
+            problems.push({ line: i + 1, message: `The link "[${text}](${href})" to a plan has text. Write it "[](${href})": the dashboard shows the plan's title.` });
+          else if (!isPlan && !text)
+            problems.push({ line: i + 1, message: `The link "[](${href})" has no text, but isn't to a plan. Give it text.` });
+        }
+      });
+      return problems;
+    },
+  },
 ];
 
 // ---- Running ---------------------------------------------------------------
+
+// Rule 9: which .md file names are plans.
+const PLAN_SLUGS = new Set((await planFiles()).map((p) => p.slug));
 
 const all = !process.argv.slice(2).length;
 const files = all ? (await planFiles()).map((p) => p.file) : process.argv.slice(2);

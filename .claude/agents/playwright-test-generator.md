@@ -29,8 +29,11 @@ Test plans for this project live in their suite's folder,
   `Implemented test: <path to the .spec.ts file>`: back to `implemented`
   if all pending and updated cases are done, otherwise the remaining
   `partially implemented` or `needs update` status with its remaining
-  list. Do not edit the plan file yourself — you do not have an edit
-  tool; the caller applies that status change.
+  list. When the plan becomes `implemented`, also report that its
+  `## Files` section is to be removed, and which spec file holds which
+  cases, for the paragraph above its test case table (Rule 8). Do not edit
+  the plan file yourself — you do not have an edit tool; the caller
+  applies that status change.
 
 Generate only the cases in the plan's `## Test cases` table. Skip the
 `## Prompt cases` table (Rule 2 in `test-suites/README.md`): Claude runs
