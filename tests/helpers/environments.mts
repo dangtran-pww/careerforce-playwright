@@ -210,6 +210,7 @@ export const ROLES = [
   'platform-manager',
   'event-manager',
   'content-manager',
+  'job-service-manager',
 ] as const;
 
 /**
@@ -227,13 +228,14 @@ export const ROLE_PROFILE_TYPES: Record<string, string> = {
  * (/admin/people) shows it. An account can't see its own roles, so checking
  * one needs the saved admin or platform manager login for the same
  * environment (PEOPLE_LIST_ROLES in scripts/lib/account.mjs). Machine names:
- * site_admin, event_manager, content_moderator. A role not listed here isn't
- * checked for one.
+ * site_admin, event_manager, content_moderator, job_services_administrator.
+ * A role not listed here isn't checked for one.
  */
 export const ROLE_DRUPAL_ROLES: Record<string, string> = {
   'platform-manager': 'Platform Manager',
   'event-manager': 'Event Manager',
   'content-manager': 'Content Manager',
+  'job-service-manager': 'Job Service Manager',
 };
 
 /**

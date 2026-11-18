@@ -75,6 +75,7 @@ profile. CareerForce's roles:
 - `platform-manager`
 - `event-manager`
 - `content-manager`
+- `job-service-manager`
 - `admin`
 
 ```bash
@@ -113,10 +114,10 @@ still works and belongs to the right kind of account: `jobseeker` and
 `partner` must have `drupalSettings.user.profile_type` of `career_seeker` and
 `partner` (`ROLE_PROFILE_TYPES` in `tests/helpers/environments.mts`),
 `admin` must be able to open the status report, and `platform-manager`,
-`event-manager` and `content-manager` must have the Drupal role of that name
+`event-manager`, `content-manager` and `job-service-manager` must have the Drupal role of that name
 (`ROLE_DRUPAL_ROLES`). A platform manager's role is checked on its own
 `/user/<uid>/account-settings`, which must open with "Platform Manager"
-checked. Event and content managers can't see their own roles, so their check
+checked. Event, content and job service managers can't see their own roles, so their check
 reads the People list with the saved admin or platform manager login for the
 same environment: it needs one of those sessions to work too. If it doesn't, the tests fail
 with the `npm run login:manual` command to fix it. See `tests/smoke/admin-reports/admin-reports.spec.ts` for
@@ -272,7 +273,7 @@ A local page for seeing and running the tests:
   (`tests/helpers/roles.ts`) does, because Drupal can end a session (autologout after
   inactivity) long before the cookie's expiry date. It also checks the
   account's profile type (jobseeker, partner), admin access, or Drupal role
-  (the manager roles; event and content managers need a working admin or
+  (the manager roles; event, content and job service managers need a working admin or
   platform manager session for it), and shows
   "Wrong account" when it doesn't match, or "Invalid" when a platform
   manager's account settings page doesn't open or show its roles. If the session has
