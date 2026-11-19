@@ -59,7 +59,7 @@ export function LoginsMenu() {
     if (!panel || !button) return;
     // Matches .logins-panel's width in styles/logins-menu.css.
     const place = () => {
-      const width = Math.min(880, window.innerWidth - 32);
+      const width = Math.min(980, window.innerWidth - 32);
       const left = Math.max(
         16,
         Math.min(
