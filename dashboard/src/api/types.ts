@@ -44,6 +44,13 @@ export interface Session {
   // the admin session. When the roles can't be read, detailsNote says why.
   profileType?: string;
   roles?: string[];
+  // A staff or partner account's groups (Group/Organization) and primary
+  // locations ([] for none), from the Staff & Partner search
+  // (/admin/people/search-users/partners-staff) via the admin or platform
+  // manager session. Not looked up for jobseeker sessions or other profile
+  // types; detailsNote says why when they can't be read.
+  groups?: string[];
+  locations?: string[];
   detailsNote?: string;
   message?: string;
   loginCommand?: string;

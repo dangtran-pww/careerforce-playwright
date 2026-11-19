@@ -22,6 +22,7 @@ import {
   siteRequest,
 } from '../../scripts/lib/site.mjs';
 import {
+  accountGroups,
   accountInfo,
   accountRoles,
   ownRoles,
@@ -148,13 +149,30 @@ async function checkSession(role, env) {
               status: 'no-access',
               message: `Logged in, but this account doesn't have the ${drupalRole} role${roles.roles.length ? ` (it has: ${roles.roles.join(', ')})` : ''}.`,
             };
+    // Staff and partner accounts (any role but jobseeker) belong to groups
+    // (Group/Organization) and primary locations, shown in the details.
+    let groups;
+    if (
+      role !== 'jobseeker' &&
+      GROUP_PROFILE_TYPES.includes(profileTypeId) &&
+      email
+    ) {
+      groups = groupsCache.get(key);
+      if (groups?.savedMs !== savedMs) {
+        groups = await accountGroups(email, role, env, ctx);
+        if (groups.groups) groupsCache.set(key, { savedMs, ...groups });
+      }
+    }
+    const notes = [roles.detailsNote, groups?.detailsNote].filter(Boolean);
     return {
       ...result,
       ...answer,
       email,
       profileType,
       roles: roles.roles,
-      detailsNote: roles.detailsNote,
+      groups: groups?.groups,
+      locations: groups?.locations,
+      detailsNote: notes.length ? notes.join(' ') : undefined,
     };
   };
   try {
@@ -233,15 +251,28 @@ async function checkSession(role, env) {
 // A role id as it reads in a sentence, with its article:
 // "jobseeker" → "a job seeker", "event-manager" → "an event manager".
 function roleName(role) {
-  const words = role === 'jobseeker' ? 'job seeker' : role.replace(/-/g, ' ');
+  const words = ROLE_WORDS[role] ?? role.replace(/-/g, ' ');
   return `${/^[aeiou]/.test(words) ? 'an' : 'a'} ${words}`;
 }
 
+// Roles whose id doesn't read well in a sentence (the dashboard's
+// ROLE_LABELS in SessionRow.tsx, lower-cased).
+const ROLE_WORDS = {
+  jobseeker: 'job seeker',
+  'job-service-admin': 'job service / location admin',
+};
+
 // What was last read for each saved session, by `${env}:${role}`, with the
-// session file's mtime (savedMs): { savedMs, email, profileType }, and
-// { savedMs, roles } (kept only when the roles lookup worked).
+// session file's mtime (savedMs): { savedMs, email, profileType },
+// { savedMs, roles } and { savedMs, groups, locations } (the last two kept
+// only when their lookup worked).
 const infoCache = new Map();
 const rolesCache = new Map();
+const groupsCache = new Map();
+
+// The profile types (drupalSettings.user.profile_type) whose accounts are
+// looked up in the Staff & Partner search for their groups and locations.
+const GROUP_PROFILE_TYPES = ['staff', 'partner'];
 
 // One check per role and environment at a time: a second request while one
 // is running shares its answer instead of hitting the site again.

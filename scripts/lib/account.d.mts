@@ -17,6 +17,13 @@ export function accountRoles(
   ctx: APIRequestContext,
 ): Promise<{ roles?: string[]; detailsNote?: string }>;
 
+export function accountGroups(
+  email: string,
+  role: string,
+  env: { id: string; baseURL: string },
+  ctx: APIRequestContext,
+): Promise<{ groups?: string[]; locations?: string[]; detailsNote?: string }>;
+
 export function ownRoles(
   ctx: APIRequestContext,
   userPage?: string,

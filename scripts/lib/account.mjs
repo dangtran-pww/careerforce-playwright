@@ -1,6 +1,8 @@
 // What can be read about the account behind a saved login session: its
-// email and profile type (from its own edit form) and its Drupal roles
-// (from the People list, with the saved admin session). Shared by the
+// email and profile type (from its own edit form), its Drupal roles (from
+// the People list) and, for staff and partners, its groups and primary
+// locations (from the Staff & Partner search), the last two with the saved
+// admin or platform manager session. Shared by the
 // dashboard's Login Sessions check (dashboard/server/sessions.mjs) and
 // useRole (tests/helpers/roles.ts).
 //
@@ -84,20 +86,17 @@ export const PROFILE_TYPES = {
 // How far past the "change email" link the email is looked for.
 const EMAIL_WINDOW = 20_000;
 
-// The roles whose saved sessions can open the People list, in the order
-// they're tried.
+// The roles whose saved sessions can open the People list and the Staff &
+// Partner search, in the order they're tried.
 export const PEOPLE_LIST_ROLES = ['admin', 'platform-manager'];
 
-// The account's roles, read from its row in the People list
-// (/admin/people?user=<email>). Most accounts can't see their own roles,
-// and only admins and platform managers can open that list, so the lookup
-// uses the first saved session of those (PEOPLE_LIST_ROLES) for the same
-// environment that can open it. When the role being checked is one of them,
-// its own context (`ctx`) is tried first.
-//
-// Returns { roles } with the names the site shows ([] for none), or
-// { detailsNote } saying why they couldn't be read. Never throws.
-export async function accountRoles(email, role, env, ctx) {
+// Runs `read(viewerCtx)` with the first saved session of PEOPLE_LIST_ROLES
+// for the same environment that can open `path` (an admin page), and returns
+// what it returns, given the page's HTML. When the role being checked is one
+// of them, its own context (`ctx`) is tried first. `what` names what is read,
+// for the notes. Returns { detailsNote } when no session can open the page.
+// Never throws.
+async function withAdminPage(path, what, role, env, ctx, read) {
   const viewers = PEOPLE_LIST_ROLES.includes(role)
     ? [role, ...PEOPLE_LIST_ROLES.filter((r) => r !== role)]
     : PEOPLE_LIST_ROLES;
@@ -113,42 +112,97 @@ export async function accountRoles(email, role, env, ctx) {
         }
         viewerCtx = await siteRequest(state, env);
       }
-      const res = await viewerCtx.get(
-        `/admin/people?user=${encodeURIComponent(email)}`,
-        { maxRedirects: 0 },
-      );
-      // Logged out, or can't open the list: try the next session.
+      const res = await viewerCtx.get(path, { maxRedirects: 0 });
+      // Logged out, or can't open the page: try the next session.
       if ((res.status() >= 300 && res.status() < 400) || res.status() === 403)
         continue;
       if (res.status() !== 200)
         return {
-          detailsNote: `Couldn't read roles: the People list answered HTTP ${res.status()}.`,
+          detailsNote: `Couldn't read ${what}: ${path.split('?')[0]} answered HTTP ${res.status()}.`,
         };
-      const row = peopleRows(await res.text()).find(
-        (cells) =>
-          cells.name?.toLowerCase() === email.toLowerCase() ||
-          cells.mail?.toLowerCase() === email.toLowerCase(),
-      );
-      if (!row)
-        return {
-          detailsNote: `${email} wasn't found in the People list, so its roles are unknown.`,
-        };
-      return { roles: row.roles };
+      return read(await res.text());
     } catch {
-      return { detailsNote: `Couldn't read the account's roles.` };
+      return { detailsNote: `Couldn't read ${what}.` };
     } finally {
       if (viewerCtx && viewerCtx !== ctx) await viewerCtx.dispose();
     }
   }
-  return { detailsNote: NO_VIEWER_NOTE };
+  return {
+    detailsNote: `${capitalize(what)} are read with the admin or platform manager session, and neither is logged in here. Log in as one of them to see them.`,
+  };
 }
 
-const NO_VIEWER_NOTE =
-  'Roles are read from the People list with the admin or platform manager session, and neither is logged in here. Log in as one of them to see them.';
+// The table row whose name or email cell is `email`, if any.
+function rowFor(html, email) {
+  return tableRows(html).find(
+    (cells) =>
+      cells.name?.toLowerCase() === email.toLowerCase() ||
+      cells.mail?.toLowerCase() === email.toLowerCase(),
+  );
+}
 
-// The rows of the People list's table, each as { name, mail, roles }. Cells are found by their Views class (views-field-<field id>);
-// roles are the items of the cell's list.
-function peopleRows(html) {
+// The account's roles, read from its row in the People list
+// (/admin/people?user=<email>). Most accounts can't see their own roles,
+// and only admins and platform managers can open that list, so the lookup
+// uses their saved sessions (withAdminPage).
+//
+// Returns { roles } with the names the site shows ([] for none), or
+// { detailsNote } saying why they couldn't be read. Never throws.
+export function accountRoles(email, role, env, ctx) {
+  return withAdminPage(
+    `/admin/people?user=${encodeURIComponent(email)}`,
+    'roles',
+    role,
+    env,
+    ctx,
+    (html) => {
+      const row = rowFor(html, email);
+      if (!row)
+        return {
+          detailsNote: `${email} wasn't found in the People list, so its roles are unknown.`,
+        };
+      return { roles: row.items['roles-target-id'] ?? [] };
+    },
+  );
+}
+
+// A staff or partner account's groups (Group/Organization) and primary
+// locations, read from its row in the Staff & Partner search
+// (/admin/people/search-users/partners-staff?k=<email>), which only admins,
+// platform managers and account managers can open. Uses the admin or
+// platform manager session like accountRoles.
+//
+// Returns { groups, locations } with the names the site shows ([] for
+// none), or { detailsNote } saying why they couldn't be read. Never throws.
+export function accountGroups(email, role, env, ctx) {
+  return withAdminPage(
+    `/admin/people/search-users/partners-staff?k=${encodeURIComponent(email)}`,
+    'groups and locations',
+    role,
+    env,
+    ctx,
+    (html) => {
+      const row = rowFor(html, email);
+      if (!row)
+        return {
+          detailsNote: `${email} wasn't found in the Staff & Partner search, so its group and location are unknown.`,
+        };
+      return {
+        groups: row.items['civiserv-provider'] ?? [],
+        locations: row.items['civiserv-location__field-primary-location'] ?? [],
+      };
+    },
+  );
+}
+
+const capitalize = (text) => text[0].toUpperCase() + text.slice(1);
+
+// The rows of an admin Views table (the People list, the Staff & Partner
+// search), each as { name, mail, items }. Cells are found by their Views
+// class (views-field-<field id>, e.g. roles-target-id, civiserv-provider).
+// `items` has each cell's values by field id: the items of its list, or the
+// comma-separated parts of its text ([] when empty).
+function tableRows(html) {
   const body = html.match(/<tbody[^>]*>([\s\S]*?)<\/tbody>/)?.[1] ?? '';
   return body
     .split(/<tr\b/)
@@ -156,23 +210,24 @@ function peopleRows(html) {
     .map((tr) => {
       const cells = {};
       for (const [, field, inner] of tr.matchAll(
-        /<td\b[^>]*\bclass="[^"]*\bviews-field-([a-z0-9-]+)[^"]*"[^>]*>([\s\S]*?)<\/td>/g,
+        /<td\b[^>]*\bclass="[^"]*\bviews-field-([a-z0-9_-]+)[^"]*"[^>]*>([\s\S]*?)<\/td>/g,
       ))
         cells[field] = inner;
-      const items = (cells['roles-target-id'] ?? '')
-        .split(/<li\b[^>]*>/)
-        .slice(1)
-        .map(cellText)
-        .filter(Boolean);
+      const items = {};
+      for (const [field, inner] of Object.entries(cells)) {
+        const listed = inner
+          .split(/<li\b[^>]*>/)
+          .slice(1)
+          .map(cellText)
+          .filter(Boolean);
+        items[field] = listed.length
+          ? listed
+          : cellText(inner).split(/\s*,\s*/).filter(Boolean);
+      }
       return {
         name: cells.name && cellText(cells.name),
         mail: cells.mail && cellText(cells.mail),
-        roles:
-          items.length || !cells['roles-target-id']
-            ? items
-            : cellText(cells['roles-target-id'])
-                .split(/\s*,\s*/)
-                .filter(Boolean),
+        items,
       };
     });
 }

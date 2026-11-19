@@ -17,7 +17,7 @@ export const NEEDS_LOGIN = ['expired', 'missing', 'no-access', 'invalid'];
 //
 // The row shows the account's email when the session works, or the command
 // to log in when it doesn't. ▸ opens the rest: the site's message, profile
-// type, roles, and when it was checked and saved. Its cells sit in the
+// type, roles, group and primary location (staff and partners), and when it was checked and saved. Its cells sit in the
 // panel's grid (subgrid), so the columns line up from row to row.
 //
 // `onStatus` hears the row's status ('checking' while it checks), for the
@@ -110,6 +110,14 @@ export function SessionRow({
                   ? session.roles.join(', ')
                   : 'Authenticated user',
               ],
+              session.groups && [
+                'Group/Organization',
+                session.groups.join(', ') || 'None',
+              ],
+              session.locations && [
+                'Primary location',
+                session.locations.join(', ') || 'None',
+              ],
               ['Checked', <TimeAgo iso={session.checkedAt} />],
               ['Session saved', <TimeAgo iso={session.savedAt} />],
             ]}
@@ -121,7 +129,12 @@ export function SessionRow({
 }
 
 // Roles whose id doesn't read well as a name.
-const ROLE_LABELS: Record<string, string> = { jobseeker: 'Job Seeker' };
+const ROLE_LABELS: Record<string, string> = {
+  jobseeker: 'Job Seeker',
+  // Its account is both a Job Service Administrator and a Location
+  // Administrator.
+  'job-service-admin': 'Job Service / Location Admin',
+};
 
 // "platform-manager" → "Platform manager", "jobseeker" → "Job Seeker".
 function roleLabel(role: string) {
