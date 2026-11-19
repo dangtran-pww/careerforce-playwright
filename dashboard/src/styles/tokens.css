@@ -47,43 +47,6 @@
   --fs-2xl: 1.875rem; /* 30px: tile numbers */
 }
 
-/* Dark mode, when the system asks for it. Same roles as above; the text
-   colours keep 4.5:1 on --surface and --bg, and --on-accent is dark,
-   because the dark --accent is a light blue. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --bg: #15171a;
-    --surface: #1e2125;
-    --border: #33373d;
-    --control-border: #8a9099;
-    --text: #e8e8e8;
-    --muted: #a8adb5;
-    --accent: #5aa9ff;
-    --accent-hover: #8cc4ff;
-    --brand-blue: #4a9be8;
-    --brand-green: #5cb84a;
-    --good-bg: #1d3a19;
-    --good-fg: #9be08a;
-    --bad-bg: #4a1f19;
-    --bad-fg: #ffa08f;
-    --bad-hover: #ffc2b6;
-    --focus-ring: #5aa9ff;
-    --warn-bg: #40330f;
-    --warn-fg: #f2cc70;
-    --neutral-bg: #23303f;
-    --track-bg: #3c5170;
-    --neutral-fg: #d2d6dc;
-    --code-bg: #2a2e33;
-    --on-accent: #0b1a2b;
-  }
-
-  /* The site logo's dark blue is lost on a dark bar. */
-  .brand-logo {
-    filter: brightness(1.8) saturate(0.9);
-  }
-}
-
 * {
   box-sizing: border-box;
 }
