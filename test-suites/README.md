@@ -590,8 +590,8 @@ Prod: No: <reason>
 - **`## Prompt cases`** (optional): [Rule 2](#rule-2-prompt-cases).
 - **`## Test data`** (optional): what the cases create or depend on: the
   synthetic values, `Playwright test <timestamp>` names, cleanup, and
-  lists the cases go through, each under its own `###` (`### Location
-  pages for LV-1`).
+  lists the cases go through, each under its own `###` (`### Decision
+  Tree for HP-4`).
 - **`## Good to know`** (optional): how the site behaves, and why a case
   checks what it checks, as bullets that start with a bold point. What
   the planner saw on the site goes here, starting with a line like

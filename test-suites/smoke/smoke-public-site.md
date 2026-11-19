@@ -72,7 +72,7 @@ after the site name, for example `/programs-services` means
 | SR-3 | Career page opens | `/explore/careers` | 1. Search for "Nursing" and click the "Registered Nurses" result. It opens in a new tab. 2. Click "Find current job openings in this occupation". | 1. The career page `/explore/careers/29-1141.00` shows the title "Registered Nurses" and the sections "Also known as", "Daily Work Activities", "Data By Region", and "Qualifications". 2. Job Search opens for "Registered Nurses" with at least 1 job. |
 | SR-4 | Homepage Explore Careers box runs a career search | `/` | On the homepage, type "Nursing" in the Explore Careers box and click "Search". | The box is its own form, separate from the career search page, so this checks that it sends the search there; HP-1 only checks its heading. 1. The box opens `/explore/careers?otitle=Nursing`. 2. At least 1 result is listed. |
 | SR-5 | Header search box runs a site search | `/` | On the homepage, type "networking" in the header's "Search CareerForce" box and press Enter (on a phone, tap the header's "Search" button first). | The header box is its own form, separate from the site search page, so this checks that it sends the search there. 1. The box opens `/search?k=networking`. 2. At least 1 result is listed. |
-| LV-1 | Location pages load | see the list below | Open each of the 4 location pages. | 1. Each page shows its title ("CareerForce in Aitkin", …, "CareerForce from Anywhere") and a "Programs and Services" section. 2. The 3 offices also show "Location Details" with Address, Phone (a link to call), Email (a link to email), Hours (at least 1 day with a time), and a map. 3. "CareerForce from Anywhere" is virtual: no Location Details, but a phone link and an email link. |
+| LV-1 | Location pages load | `/careerforce-location/careerforce-aitkin`, `/careerforce-location/careerforce-bloomington`, `/careerforce-location/careerforce-brooklyn-center`, `/anywhere` | Open each of the 4 location pages. | 1. Each page shows its title ("CareerForce in Aitkin", …, "CareerForce from Anywhere") and a "Programs and Services" section. 2. The 3 offices also show "Location Details" with Address, Phone (a link to call), Email (a link to email), Hours (at least 1 day with a time), and a map. 3. "CareerForce from Anywhere" is virtual: no Location Details, but a phone link and an email link. |
 | LV-3 | Programs and Services page lists services | `/programs-services` | 1. Open the page. 2. Open the first 2 programs. | 1. The page title "Programs and Services" shows, with at least 1 program or service listed below it. 2. Each opened program's page has the same title as its card. |
 | MB-1 | Mobile menu opens (phones only) | `/` | 1. On a phone, tap the menu button (☰) in the header. 2. Tap the arrow next to "Find a Job". 3. Tap the menu button again. | 1. The menu opens and shows "Find a Job", "Job Loss Resources", "Job Search Tools", "Education and Training", and "Resources for". 2. The "Find a Job" sub-menu opens with "Job Search", "Job Fairs and Networking Events", "Explore Careers", and "Explore Industries". 3. The menu closes. |
 | FL-4 | Programs and Services: two keywords | `/programs-services` | 1. Open the page with no keyword. 2. Search "veterans". 3. Search "youth". | See [Filters](#filters). 1. At least 1 service is listed. 2. "veterans" stays in the box, there are no more services than in step 1, and "Veterans Employment Services" is listed. 3. "youth" stays in the box, there are no more services than in step 1, "Youth Employment" is listed, and the results differ from step 2's. |
@@ -93,15 +93,6 @@ A prompt case has no test code: Claude follows its prompt file in a browser and 
 | HP-5 | Homepage layout matches the comparison site | [homepage-compare](prompts/homepage-compare.md) |
 
 ## Test data
-
-### Location pages for LV-1
-
-| Location | Page |
-|---|---|
-| Aitkin | `/careerforce-location/careerforce-aitkin` |
-| Bloomington | `/careerforce-location/careerforce-bloomington` |
-| Brooklyn Center | `/careerforce-location/careerforce-brooklyn-center` |
-| CareerForce from Anywhere | `/anywhere` |
 
 ### Decision Tree for HP-4
 
