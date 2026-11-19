@@ -33,8 +33,9 @@ test-suites/
 - `smoke/` is every smoke plan, QA and Stage only. `job-search/` holds the
   four functional Job Search plans. `events/` holds the
   functional Events plans, and `appointments/` the functional Appointments
-  plans. `jobseeker-registration/` and `resume-builder/` are placeholders
-  with no plans yet.
+  plans. `site-wide/` holds the site-wide functional plans.
+  `jobseeker-registration/` and `resume-builder/` are placeholders with no
+  plans yet.
 
 ## Suites
 
@@ -67,7 +68,8 @@ Text between a heading and its table is for people and is ignored.
 
 - **Order:** where the suite sits on the Suites page, lowest first. Suites
   without it come last, by name. Today: Smoke 1, Job Search 2, Job Seeker
-  Registration 3, Events 4, Appointments 5, Resume Builder 6.
+  Registration 3, Events 4, Appointments 5, Resume Builder 6,
+  Site-wide 7.
 - **Plans:** the plans the suite runs, in order. `Plan` is the slug of a plan
   in the same folder. `Projects` is a comma-separated list of Playwright
   projects, or `(default)` for the plan's default ones (every device project

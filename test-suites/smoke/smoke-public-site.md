@@ -26,8 +26,7 @@ use:
   layout or styling difference ([prompts/homepage-compare.md](prompts/homepage-compare.md)).
 - **Site-wide:** an unknown address shows the "Page Not Found" page, the
   footer has its contact details and links, the 5 main menu pages open,
-  "Skip to main content" works from the keyboard, and the main pages load
-  without JavaScript errors.
+  and the main pages load without JavaScript errors.
 - **On a phone:** the same checks again in an emulated Android phone
   browser, plus the header menu button (MB-1) and a check that no page
   scrolls sideways ([Mobile](#mobile)).
@@ -40,6 +39,8 @@ their cases moved there:
 - [](smoke-events.md): LV-2 (now EP-4), and FL-1 to FL-3 (now EP-5 to
   EP-7).
 - [](smoke-jobseeker-tools.md): CT-1 to CT-3 (now JT-6 to JT-8).
+- [](../site-wide/functional-site-wide-header-navigation.md): GN-4 (now
+  HN-1).
 
 The checks never log in, and they don't create, edit, or delete any site
 content. The only things they do besides viewing pages are what any visitor
@@ -81,7 +82,6 @@ after the site name, for example `/programs-services` means
 | GN-1 | Page Not Found page answers 404 and links back | an address that doesn't exist, e.g. `/pww-smoke-test-no-such-page` | Open it. | 1. The site answers "not found" (HTTP 404). 2. The title "Page Not Found" shows. 3. The links to the homepage (`/`), search (`/search`), and events (`/events`, which opens the Events page) work. |
 | GN-2 | Footer shows its contact details and links | `/` | Look at the footer. | 1. "Contact CareerForce" with a phone number and an email link. 2. Links to CareerForce Locations, Connect to Our Services, Our Partners, Blog, About CareerForce, Your Right to Fair Treatment, and Site Index. 3. Facebook, X, LinkedIn, YouTube, and Instagram links that open in a new tab. |
 | GN-3 | Main menu pages open | see the list below | For each of the 5 main menu items: 1. Check the homepage header has the menu link. 2. Open its page. | 1. The header has the link. 2. The page opens, and its title starts with the menu item's name. |
-| GN-4 | Skip to main content | `/` | 1. Press Tab once. 2. Press Enter. 3. Press Tab again. | 1. The "Skip to main content" link shows. 2. The page goes to the main content (`#main-content`). 3. Focus lands inside the main content, not in the header menu. |
 | GN-5 | No JavaScript errors | see the list below | Open each page. | No JavaScript error. |
 
 ## Prompt cases

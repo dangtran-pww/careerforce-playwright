@@ -2,12 +2,13 @@ import { test, expect } from '../../helpers/fixtures';
 import { HomePage } from '../../pages/home.page';
 import { SiteFooter } from '../../pages/site-footer.page';
 
-// [Smoke] - Public Site - General - Test Plan, GN-1 to GN-5.
+// [Smoke] - Public Site - General - Test Plan, GN-1 to GN-3 and GN-5.
 // See test-suites/smoke/smoke-public-site.md.
 //
 // Site-wide basics that every page relies on: the "page not found" page,
-// the footer, the main menu's pages, the "Skip to main content" link, and
-// no JavaScript errors on the main public pages.
+// the footer, the main menu's pages, and no JavaScript errors on the main
+// public pages. GN-4 ("Skip to main content") is now HN-1 in
+// test-suites/site-wide/functional-site-wide-header-navigation.md.
 
 test('GN-1: Page Not Found page answers 404 and links back', async ({ page }) => {
   const response = await page.goto('/pww-smoke-test-no-such-page');
@@ -96,32 +97,6 @@ for (const [name, href] of MAIN_MENU) {
     await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toContainText(name);
   });
 }
-
-test('GN-4: "Skip to main content" moves keyboard focus past the header', async ({
-  page,
-}) => {
-  const home = new HomePage(page);
-  await home.goto();
-  const skipLink = page.getByRole('link', { name: 'Skip to main content' });
-  await expect(skipLink).toHaveAttribute('href', '#main-content');
-  await expect(page.locator('#main-content')).toBeAttached();
-
-  // It's hidden until focused; the first Tab focuses it and shows it.
-  await page.keyboard.press('Tab');
-  await expect(skipLink).toBeFocused();
-  await expect
-    .poll(async () => (await skipLink.boundingBox())?.width ?? 0, {
-      message: 'the skip link should show at full size once focused',
-    })
-    .toBeGreaterThan(10);
-
-  // Following it, the next Tab lands inside the main content, not in the
-  // header menu.
-  await page.keyboard.press('Enter');
-  await expect(page).toHaveURL(/#main-content$/);
-  await page.keyboard.press('Tab');
-  await expect(page.locator('#main-content :focus')).toHaveCount(1);
-});
 
 // Uncaught JavaScript errors only. Console messages are not checked: the
 // tests block analytics and the AWS WAF script on purpose, and those
