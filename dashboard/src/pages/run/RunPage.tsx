@@ -7,7 +7,7 @@ import {
   useState,
 } from 'react';
 import { useParams } from 'react-router';
-import type { Run } from '../../api/types';
+import type { Run, TestStats } from '../../api/types';
 import { A11yJourney } from '../../components/A11yJourney';
 import { ErrorBox, Loading } from '../../components/Callouts';
 import { BackLink } from '../../components/PageTitle';
@@ -64,7 +64,7 @@ export function RunPage() {
             <div>
               <RunHead run={run} />
             </div>
-            <div>
+            <div className="run-results">
               <RunResults run={run} />
             </div>
           </div>
@@ -100,7 +100,7 @@ const RunResults = memo(function RunResults({ run }: { run: Run }) {
     return (
       <>
         {run.status !== 'running' &&
-          run.steps?.some((s) => s.kind === 'plan' && s.stats) && (
+          run.steps?.some((s) => s.kind === 'plan' && hasFailures(s.stats)) && (
             <RunSummary runId={run.id} />
           )}
         <SuiteSteps run={run} />
@@ -116,14 +116,23 @@ const RunResults = memo(function RunResults({ run }: { run: Run }) {
   );
 });
 
+// Summarizing the failures only makes sense when a test failed or was
+// flaky, so the Summary card is left out of a run where everything passed.
+function hasFailures(stats: TestStats | null | undefined): boolean {
+  return Boolean(stats && stats.unexpected + stats.flaky > 0);
+}
+
 // A plan run's Playwright results (none when only prompt cases ran).
 function RunTests({ run }: { run: Run }) {
   if (run.command === null) return null;
   if (run.stats)
     return (
       <>
-        {run.status !== 'running' && <RunSummary runId={run.id} />}
+        {run.status !== 'running' && hasFailures(run.stats) && (
+          <RunSummary runId={run.id} />
+        )}
         <TestResults
+          tiles={false}
           runId={run.id}
           planSlug={run.plan}
           stats={run.stats}
@@ -164,7 +173,14 @@ function Log({ text }: { text: string }) {
         follow.current = el.scrollTop + el.clientHeight >= el.scrollHeight - 30;
       }}
     >
-      {text}
+      {/* One element per line, so a wrapped line hangs indented under its
+          start (side-panels.css). */}
+      {text.split('\n').map((line, i) => (
+        <span key={i} className="log-line">
+          {line}
+          {'\n'}
+        </span>
+      ))}
     </pre>
   );
 }

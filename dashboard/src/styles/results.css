@@ -25,6 +25,14 @@
   color: var(--warn-fg);
 }
 
+/* A count of zero: just an outline, so "nothing here" reads as empty and
+   the counts that matter stand out. */
+.tile.tile-empty {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--border);
+  color: var(--muted);
+}
+
 .tile-value {
   font-size: var(--fs-2xl);
   font-weight: 700;
@@ -91,4 +99,69 @@ pre.error {
 .command button {
   flex-shrink: 0;
   white-space: nowrap;
+}
+
+/* A plan run's table of tests comes right after the actions (or the
+   Summary card); its tiles are up under the title (RunHead). */
+.run-results > .table-wrap {
+  margin-top: 24px;
+}
+
+/* A test's file with its buttons on the same line. */
+.test-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px 12px;
+}
+
+.test-meta .rerun-case {
+  margin-top: 0;
+}
+
+/* A test's tags run on after its title, as quiet text. */
+.test-title .tags {
+  display: inline;
+  margin-left: 6px;
+}
+
+.test-title .tag {
+  margin-right: 4px;
+}
+
+/* A passed or skipped test's buttons stay hidden until its rows are hovered
+   or something in them has focus (TestResults), or its case is open in the
+   side panel. They keep their space, so rows don't move. Shown always on
+   touch screens, which can't hover. */
+@media (hover: hover) {
+  tr.test-quiet .test-actions {
+    opacity: 0;
+    transition: opacity 0.1s;
+  }
+
+  tr.test-quiet:is(:hover, :focus-within) .test-actions,
+  tr.test-quiet:is(:hover, :focus-within) + tr.row-below .test-actions,
+  tr.test-quiet:has(+ tr.row-below:is(:hover, :focus-within)) .test-actions,
+  tr.test-quiet .test-actions[aria-expanded='true'] {
+    opacity: 1;
+  }
+}
+
+/* The run page's table of tests keeps its header row in view, under the
+   top bar, while the page scrolls. The wrapper can't be a scroll box for
+   that, so it clips instead; on phones it scrolls sideways as before. */
+@media (min-width: 561px) {
+  .run-results .table-wrap {
+    overflow: clip;
+  }
+
+  .run-results .table-wrap thead th {
+    position: sticky;
+    top: var(--topbar-height, 0px);
+    z-index: 1;
+    background: var(--surface);
+    /* Collapsed borders don't move with a sticky cell; this line does. */
+    box-shadow: inset 0 -1px var(--border);
+  }
 }

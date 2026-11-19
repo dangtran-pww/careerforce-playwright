@@ -8,6 +8,7 @@ import { Command } from '../../components/Command';
 import { EnvTag } from '../../components/EnvTag';
 import { Facts } from '../../components/Facts';
 import { RerunButton } from '../../components/RerunButton';
+import { TestTiles } from '../../components/TestResults';
 import { TitleRow } from '../../components/PageTitle';
 import { TimeAgo } from '../../components/TimeAgo';
 import { UiModeButton } from '../../components/UiModeButton';
@@ -37,6 +38,9 @@ export const RunHead = memo(function RunHead({ run }: { run: Run }) {
           busy={running}
         />
       </TitleRow>
+      {/* The outcome first: the counts sit under the title, above the facts
+          and actions. A suite run shows them per step instead. */}
+      {!isSuite && run.stats && <TestTiles stats={run.stats} />}
       <div className="card intro-card">
         <Facts
           items={[
@@ -89,24 +93,21 @@ export const RunHead = memo(function RunHead({ run }: { run: Run }) {
               a11y: run.a11yScan,
             }}
           >
-            {run.cases.length
-              ? `Run ${run.cases.join(', ')} again`
-              : 'Run again'}
+            {`Run ${casesLabel(run.cases)} again`}
           </RerunButton>
         )}
         {!running && !isSuite && !isJourney && (
           <UiModeButton
+            className="ghost"
             planSlug={run.plan}
             body={{ projects: run.projects, cases: run.cases }}
           >
-            {run.cases.length
-              ? `Open ${run.cases.join(', ')} in UI mode`
-              : 'Open in UI mode'}
+            {`Open ${casesLabel(run.cases)} in UI mode`}
           </UiModeButton>
         )}
         {!running && run.stats && !isSuite && (
           <a
-            className="button"
+            className="button ghost"
             href={`/runs/${run.id}/report/`}
             target="_blank"
             rel="noopener"
@@ -114,21 +115,29 @@ export const RunHead = memo(function RunHead({ run }: { run: Run }) {
             Open Playwright report
           </a>
         )}
-        {!running && (
+        {/* A plan run has its own run buttons, and the link above the title
+            goes back to the plan; a suite or journey run has no run button
+            here, so it gets a way back to start one. */}
+        {!running && (isSuite || isJourney) && (
           <Link className="button ghost" to={runOwnerPath(run)}>
             {isSuite
               ? 'Back to the suite to run again'
-              : isJourney
-                ? 'Back to start another journey'
-                : run.suite
-                  ? 'Back to the plan to pick what to run'
-                  : 'Back to the suites'}
+              : 'Back to start another journey'}
           </Link>
         )}
       </div>
     </>
   );
 });
+
+// What the run and UI mode buttons name: the case itself when there is
+// one, a count when there are more (the Cases fact above lists them), so
+// the label stays short however many cases ran.
+function casesLabel(cases: string[]): string {
+  if (cases.length === 0) return 'all cases';
+  if (cases.length === 1) return cases[0];
+  return `these ${cases.length} cases`;
+}
 
 // "running for 1m 12s", counting up each second while the run goes, or
 // "took 3m 4s" once it has ended.

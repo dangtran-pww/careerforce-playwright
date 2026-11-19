@@ -122,6 +122,12 @@ a.button:focus-visible,
   margin-top: 16px;
 }
 
+/* A ghost button in a row of actions is as tall as the filled one beside
+   it (a ghost link already is). */
+.actions button.ghost {
+  padding: 7px 14px;
+}
+
 /* Why an AsyncButton's action failed, beside the button. */
 .async-error {
   align-self: center;

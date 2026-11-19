@@ -90,12 +90,13 @@ button.small {
 /* The run page's right column: the output, with a case's details above it
    while one is open. It stays in view while the results on the left scroll
    and is never taller than the window; the case and the output scroll
-   together inside it. */
+   together inside it. It sits under the sticky top bar, like the plan
+   panel above. */
 .run-side {
   position: sticky;
-  top: 16px;
+  top: calc(var(--topbar-height, 0px) + 16px);
   min-width: 0;
-  max-height: calc(100vh - 32px);
+  max-height: calc(100vh - var(--topbar-height, 0px) - 32px);
   overflow: auto;
 }
 
@@ -113,8 +114,18 @@ button.small {
 }
 
 .output-panel .log {
-  max-height: calc(100vh - 80px);
+  /* Fits the column under the top bar (.run-side), so the column itself
+     doesn't scroll too. */
+  max-height: calc(100vh - var(--topbar-height, 0px) - 80px);
   margin: 0;
+}
+
+/* A long line wraps with its later lines indented, so each line of output
+   starts at the left edge and is easy to pick out. */
+.output-panel .log-line {
+  display: block;
+  padding-left: 4ch;
+  text-indent: -4ch;
 }
 
 @media (max-width: 960px) {

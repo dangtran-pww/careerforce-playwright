@@ -48,6 +48,7 @@ export interface Column<T> {
 // the keyboard, screen readers and opening in a new tab.
 //
 // `rowId` gives a row an id, so a link elsewhere on the page can find it.
+// `rowClass` adds classes to a row and to its `below` row.
 //
 // `initialOpen` lists the keys of rows that start opened. `highlight` is the
 // key of a row to scroll into view and mark briefly when the table mounts
@@ -57,6 +58,7 @@ export function Table<T>({
   rows,
   rowKey,
   rowId,
+  rowClass: rowClassOf,
   rowLink,
   expand,
   expandLabel = () => 'Details',
@@ -69,6 +71,7 @@ export function Table<T>({
   rows: T[];
   rowKey: (row: T) => string;
   rowId?: (row: T) => string;
+  rowClass?: (row: T) => string | undefined;
   rowLink?: (row: T) => string;
   expand?: (row: T) => ReactNode;
   expandLabel?: (row: T) => string;
@@ -158,7 +161,9 @@ export function Table<T>({
             // Columns before `belowFrom`, counting the expand toggle.
             const lead = belowFrom + (expand ? 1 : 0);
             const link = !expandable && rowLink?.(row);
+            const own = rowClassOf?.(row);
             const rowClass = [
+              own,
               expandable && 'row-expandable',
               link && 'row-link',
               (details || extra) && 'row-open',
@@ -190,7 +195,11 @@ export function Table<T>({
                   ))}
                 </tr>
                 {extra && (
-                  <tr className={details ? 'row-below row-open' : 'row-below'}>
+                  <tr
+                    className={[own, 'row-below', details && 'row-open']
+                      .filter(Boolean)
+                      .join(' ')}
+                  >
                     {lead > 0 && <td className="below-lead" colSpan={lead} />}
                     <td colSpan={cols.length - lead}>{extra}</td>
                   </tr>

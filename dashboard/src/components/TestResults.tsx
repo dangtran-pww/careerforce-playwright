@@ -26,7 +26,8 @@ import { UiModeButton } from './UiModeButton';
 const ORDER = { unexpected: 0, flaky: 1, expected: 2, skipped: 3 };
 
 // Playwright results: count tiles and a table of tests, failures first.
-// Used for a plan run and for each plan step of a suite run (`step` is its
+// The plan run page shows the tiles itself, under the title (RunHead), and
+// passes tiles={false}. Used for a plan run and for each plan step of a suite run (`step` is its
 // number). A failed or flaky test can ask Claude why it failed, and a test
 // whose title starts with a case ID can run that case again, or open it in
 // the run page's side panel to see what the plan expects and what the code
@@ -38,6 +39,7 @@ export function TestResults({
   stats,
   results = [],
   errors,
+  tiles = true,
 }: {
   runId: string;
   step?: number | null;
@@ -45,8 +47,8 @@ export function TestResults({
   stats: TestStats;
   results?: TestResult[];
   errors?: string[];
+  tiles?: boolean;
 }) {
-  const { expected, unexpected, flaky, skipped } = stats;
   const plan = useRerun()?.planBySlug(planSlug);
   const rows = [...results].sort((a, b) => ORDER[a.outcome] - ORDER[b.outcome]);
   const saved = useApi<FailureExplanationsResponse>(
@@ -70,20 +72,7 @@ export function TestResults({
     );
   return (
     <>
-      <div className="tiles">
-        <Tile
-          label="Passed"
-          value={expected}
-          tone={expected ? 'good' : 'neutral'}
-        />
-        <Tile
-          label="Failed"
-          value={unexpected}
-          tone={unexpected ? 'bad' : 'neutral'}
-        />
-        <Tile label="Flaky" value={flaky} tone={flaky ? 'warn' : 'neutral'} />
-        <Tile label="Skipped" value={skipped} tone="neutral" />
-      </div>
+      {tiles && <TestTiles stats={stats} />}
       {errors?.map((e, i) => (
         <ErrorBox key={i}>{e}</ErrorBox>
       ))}
@@ -91,6 +80,13 @@ export function TestResults({
         rows={rows}
         rowKey={(r) => `${r.project}:${r.file}:${r.line}:${r.title}`}
         rowId={(r) => testRowId(step, r)}
+        // A passed or skipped test's buttons show on hover and focus only
+        // (results.css), so a long run of passes reads as a list.
+        rowClass={(r) =>
+          r.outcome === 'expected' || r.outcome === 'skipped'
+            ? 'test-quiet'
+            : undefined
+        }
         columns={[
           {
             head: 'Result',
@@ -108,10 +104,10 @@ export function TestResults({
             // The rest of the test (file, rerun buttons, error) is in the
             // row below, where it has the width of four columns.
             cell: (r) => (
-              <>
+              <span className="test-title">
                 {r.title}
                 <Tags tags={r.tags} />
-              </>
+              </span>
             ),
           },
           { head: 'Project', wideOnly: true, cell: (r) => r.project },
@@ -150,10 +146,10 @@ export function TestResults({
   );
 }
 
-// Under a test's title: its file, the Project and Took values on phones
-// (those columns are hidden there), its error, its buttons (run its case
-// again, open it in UI mode and, for a failure, "Why did it fail?") and
-// Claude's answer.
+// Under a test's title: its file with its buttons beside it (run its case
+// again, open it in UI mode and, for a failure, "Why did it fail?"), the
+// Project and Took values on phones (those columns are hidden there), its
+// error and Claude's answer.
 function TestDetails({
   test: r,
   planSlug,
@@ -176,8 +172,41 @@ function TestDetails({
   const showExplainButton = failed && !explain.explanation;
   return (
     <>
-      <div className="note small mono test-file">
-        {r.file}:{r.line}
+      {/* The file, with the test's buttons on the same line. */}
+      <div className="test-meta">
+        <span className="note small mono test-file">
+          {r.file}:{r.line}
+        </span>
+        {(caseId || showExplainButton) && (
+          <div className="rerun-case test-actions">
+            {caseId && (
+              <>
+                <RerunButton
+                  planSlug={planSlug}
+                  className="ghost small"
+                  body={{ cases: [caseId], projects: [r.project] }}
+                >
+                  {/* The row names the case and project; screen readers,
+                      which may reach the button on its own, hear them. */}
+                  Run
+                  <VisuallyHidden>
+                    {' '}
+                    {caseId} ({r.project})
+                  </VisuallyHidden>{' '}
+                  again
+                </RerunButton>
+                <UiModeButton
+                  planSlug={planSlug}
+                  className="ghost small"
+                  body={{ cases: [caseId], projects: [r.project] }}
+                >
+                  <VisuallyHidden>Open {caseId} in </VisuallyHidden>UI mode
+                </UiModeButton>
+              </>
+            )}
+            {showExplainButton && <FailureExplainButton explain={explain} />}
+          </div>
+        )}
       </div>
       <div className="note small narrow-only">
         {r.project} · {duration(r.duration)}
@@ -187,29 +216,6 @@ function TestDetails({
           <summary>Error</summary>
           <pre className="error">{r.error}</pre>
         </details>
-      )}
-      {(caseId || showExplainButton) && (
-        <div className="rerun-case">
-          {caseId && (
-            <>
-              <RerunButton
-                planSlug={planSlug}
-                className="ghost small"
-                body={{ cases: [caseId], projects: [r.project] }}
-              >
-                Run {caseId} ({r.project}) again
-              </RerunButton>
-              <UiModeButton
-                planSlug={planSlug}
-                className="ghost small"
-                body={{ cases: [caseId], projects: [r.project] }}
-              >
-                Open {caseId} in UI mode
-              </UiModeButton>
-            </>
-          )}
-          {showExplainButton && <FailureExplainButton explain={explain} />}
-        </div>
       )}
       {failed && <FailureExplainPanel explain={explain} />}
     </>
@@ -232,13 +238,34 @@ function ExplainCase({
   return (
     <button
       type="button"
-      className={open ? 'small' : 'ghost small'}
+      className={open ? 'small test-actions' : 'ghost small test-actions'}
       aria-expanded={open}
       aria-controls={CASE_PANEL_ID}
       onClick={() => panel.show(open ? null : me)}
     >
       Explain {caseId}
     </button>
+  );
+}
+
+// How many tests passed, failed, were flaky and were skipped.
+export function TestTiles({ stats }: { stats: TestStats }) {
+  const { expected, unexpected, flaky, skipped } = stats;
+  return (
+    <div className="tiles">
+      <Tile
+        label="Passed"
+        value={expected}
+        tone={expected ? 'good' : 'neutral'}
+      />
+      <Tile
+        label="Failed"
+        value={unexpected}
+        tone={unexpected ? 'bad' : 'neutral'}
+      />
+      <Tile label="Flaky" value={flaky} tone={flaky ? 'warn' : 'neutral'} />
+      <Tile label="Skipped" value={skipped} tone="neutral" />
+    </div>
   );
 }
 
@@ -253,7 +280,7 @@ function Tile({
   tone: Tone;
 }) {
   return (
-    <div className={`tile tile-${tone}`}>
+    <div className={`tile tile-${tone}${value === 0 ? ' tile-empty' : ''}`}>
       <div className="tile-value">{value}</div>
       <div className="tile-label">{label}</div>
     </div>
