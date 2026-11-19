@@ -73,6 +73,7 @@ profile. CareerForce's roles:
   only be logged in to on a local DDEV site (`--env local`)
 - `jobseeker`
 - `platform-manager`
+- `account-manager`
 - `event-manager`
 - `content-manager`
 - `job-service-manager`
@@ -115,14 +116,14 @@ still works and belongs to the right kind of account: `jobseeker` and
 `partner` must have `drupalSettings.user.profile_type` of `career_seeker` and
 `partner` (`ROLE_PROFILE_TYPES` in `tests/helpers/environments.mts`),
 `admin` must be able to open the status report, and `platform-manager`,
-`event-manager`, `content-manager`, `job-service-manager` and
-`job-service-admin` (Job Service Administrator) must have the Drupal role of that name
+`event-manager`, `content-manager`, `job-service-manager`,
+`job-service-admin` (Job Service Administrator) and `account-manager` must have the Drupal role of that name
 (`ROLE_DRUPAL_ROLES`). A platform manager's role is checked on its own
 `/user/<uid>/account-settings`, which must open with "Platform Manager"
-checked. Event, content and job service managers and job service administrators
-can't see their own roles, so their check
-reads the People list with the saved admin or platform manager login for the
-same environment: it needs one of those sessions to work too. If it doesn't, the tests fail
+checked. The others' check reads the People list with the saved admin,
+platform manager or account manager login for the same environment (an
+account manager's own session first, since it can open that list): it needs
+one of those sessions to work too. If it doesn't, the tests fail
 with the `npm run login:manual` command to fix it. See `tests/smoke/admin-reports/admin-reports.spec.ts` for
 a real example:
 
@@ -277,13 +278,13 @@ A local page for seeing and running the tests:
   inactivity) long before the cookie's expiry date. It also checks the
   account's profile type (jobseeker, partner), admin access, or Drupal role
   (the manager and administrator roles; all but the platform manager need a
-  working admin or platform manager session for it), and shows
+  working admin, platform manager or account manager session for it), and shows
   "Wrong account" when it doesn't match, or "Invalid" when a platform
   manager's account settings page doesn't open or show its roles. For every
   role but jobseeker whose account's profile type is staff or partner, the
   details also show its Group/Organization and Primary Location, read from
-  `/admin/people/search-users/partners-staff` with the admin or platform
-  manager session. If the session has
+  `/admin/people/search-users/partners-staff` with the admin, platform
+  manager or account manager session. If the session has
   expired, its card shows the `npm run login:manual -- <role> --env <env>`
   command to fix it. Press "Check again" afterwards.
 - **Suites:** each suite is a folder in `test-suites/` with a `suite.md`

@@ -126,7 +126,8 @@ async function checkSession(role, env) {
     }
     // Manager sessions must belong to an account with that Drupal role:
     // checked on a platform manager's own account settings, and in the
-    // People list with the admin or platform manager session for the others.
+    // People list with the admin, platform manager or account manager
+    // session for the others.
     const drupalRole = ROLE_DRUPAL_ROLES[role];
     if (drupalRole && answer.status === 'valid')
       answer = !roles.roles
@@ -138,8 +139,9 @@ async function checkSession(role, env) {
               message: `Logged in, but this account doesn't have the ${drupalRole} role.`,
             }
           : {
-              // No admin or platform manager login to read the People
-              // list: the session may be fine, so it's only unchecked.
+              // No admin, platform manager or account manager login to read
+              // the People list: the session may be fine, so it's only
+              // unchecked.
               status: 'error',
               message: `Logged in, but couldn't check that the account has the ${drupalRole} role: ${roles.detailsNote}`,
             }

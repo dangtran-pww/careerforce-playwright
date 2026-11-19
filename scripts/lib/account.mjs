@@ -2,7 +2,7 @@
 // email and profile type (from its own edit form), its Drupal roles (from
 // the People list) and, for staff and partners, its groups and primary
 // locations (from the Staff & Partner search), the last two with the saved
-// admin or platform manager session. Shared by the
+// admin, platform manager or account manager session. Shared by the
 // dashboard's Login Sessions check (dashboard/server/sessions.mjs) and
 // useRole (tests/helpers/roles.ts).
 //
@@ -88,7 +88,11 @@ const EMAIL_WINDOW = 20_000;
 
 // The roles whose saved sessions can open the People list and the Staff &
 // Partner search, in the order they're tried.
-export const PEOPLE_LIST_ROLES = ['admin', 'platform-manager'];
+export const PEOPLE_LIST_ROLES = [
+  'admin',
+  'platform-manager',
+  'account-manager',
+];
 
 // Runs `read(viewerCtx)` with the first saved session of PEOPLE_LIST_ROLES
 // for the same environment that can open `path` (an admin page), and returns
@@ -128,7 +132,7 @@ async function withAdminPage(path, what, role, env, ctx, read) {
     }
   }
   return {
-    detailsNote: `${capitalize(what)} are read with the admin or platform manager session, and neither is logged in here. Log in as one of them to see them.`,
+    detailsNote: `${capitalize(what)} are read with the admin, platform manager or account manager session, and none of them is logged in here. Log in as one of them to see them.`,
   };
 }
 
@@ -143,8 +147,8 @@ function rowFor(html, email) {
 
 // The account's roles, read from its row in the People list
 // (/admin/people?user=<email>). Most accounts can't see their own roles,
-// and only admins and platform managers can open that list, so the lookup
-// uses their saved sessions (withAdminPage).
+// and only admins, platform managers and account managers can open that
+// list, so the lookup uses their saved sessions (withAdminPage).
 //
 // Returns { roles } with the names the site shows ([] for none), or
 // { detailsNote } saying why they couldn't be read. Never throws.
@@ -169,8 +173,8 @@ export function accountRoles(email, role, env, ctx) {
 // A staff or partner account's groups (Group/Organization) and primary
 // locations, read from its row in the Staff & Partner search
 // (/admin/people/search-users/partners-staff?k=<email>), which only admins,
-// platform managers and account managers can open. Uses the admin or
-// platform manager session like accountRoles.
+// platform managers and account managers can open. Uses their saved
+// sessions like accountRoles.
 //
 // Returns { groups, locations } with the names the site shows ([] for
 // none), or { detailsNote } saying why they couldn't be read. Never throws.
@@ -222,7 +226,9 @@ function tableRows(html) {
           .filter(Boolean);
         items[field] = listed.length
           ? listed
-          : cellText(inner).split(/\s*,\s*/).filter(Boolean);
+          : cellText(inner)
+              .split(/\s*,\s*/)
+              .filter(Boolean);
       }
       return {
         name: cells.name && cellText(cells.name),

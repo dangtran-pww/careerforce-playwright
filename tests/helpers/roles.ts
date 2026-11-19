@@ -37,8 +37,8 @@ import { accountInfo, accountRoles } from '../../scripts/lib/account.mjs';
 // Manager roles (ROLE_DRUPAL_ROLES) must have their Drupal role. Platform
 // managers can see theirs, checked, on their own /user/<uid>/account-settings
 // (ROLES_CHECKED_ON_ACCOUNT_SETTINGS). The others can't see their own roles,
-// so that check reads the People list with the saved admin or platform
-// manager login, and fails if neither works.
+// so that check reads the People list with the saved admin, platform manager or account manager
+// login (an account manager's own first), and fails if none of them works.
 
 const checked = new Set<string>();
 
@@ -143,8 +143,8 @@ export function useRole(role: string): void {
 }
 
 // Fails unless the account behind `file` (a saved session) has the Drupal
-// role `drupalRole`, as the People list shows it to the saved admin or
-// platform manager login (accountRoles).
+// role `drupalRole`, as the People list shows it to the saved admin,
+// platform manager or account manager login (accountRoles).
 async function expectDrupalRole(
   role: string,
   drupalRole: string,

@@ -208,6 +208,7 @@ export const ROLES = [
   'staff',
   'admin',
   'platform-manager',
+  'account-manager',
   'event-manager',
   'content-manager',
   'job-service-manager',
@@ -226,11 +227,12 @@ export const ROLE_PROFILE_TYPES: Record<string, string> = {
 
 /**
  * The Drupal role each role's account must have, as the People list
- * (/admin/people) shows it. An account can't see its own roles, so checking
- * one needs the saved admin or platform manager login for the same
+ * (/admin/people) shows it. Most accounts can't see their own roles, so
+ * checking one needs the saved admin, platform manager or account manager login for the same
  * environment (PEOPLE_LIST_ROLES in scripts/lib/account.mjs). Machine names:
  * site_admin, event_manager, content_moderator, job_services_administrator,
- * job_services_admin. A role not listed here isn't checked for one.
+ * job_services_admin, user_manager. A role not listed here isn't checked
+ * for one.
  */
 export const ROLE_DRUPAL_ROLES: Record<string, string> = {
   'platform-manager': 'Platform Manager',
@@ -238,13 +240,15 @@ export const ROLE_DRUPAL_ROLES: Record<string, string> = {
   'content-manager': 'Content Manager',
   'job-service-manager': 'Job Service Manager',
   'job-service-admin': 'Job Service Administrator',
+  'account-manager': 'Account Manager',
 };
 
 /**
  * Roles (from ROLE_DRUPAL_ROLES) whose accounts can open their own
  * /user/<uid>/account-settings, whose form shows their roles as checkboxes.
  * Their Drupal role is checked there, with no other login. The others are
- * looked up in the People list with the admin or platform manager login.
+ * looked up in the People list with the admin, platform manager or account
+ * manager login.
  */
 export const ROLES_CHECKED_ON_ACCOUNT_SETTINGS: readonly string[] = [
   'platform-manager',
