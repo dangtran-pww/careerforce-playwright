@@ -4,6 +4,7 @@ import type {
   ReviewVerdict,
 } from '../api/types';
 import { ClaudeUsageNote } from './ClaudeUsageNote';
+import { InfoTip } from './InfoTip';
 
 // `about` says what each one means, for the "How the review works" tip
 // (ReviewHelp).
@@ -59,9 +60,14 @@ export function CaseReviewResult({ review }: { review: CaseReview }) {
   const verdict = VERDICT[review.verdict];
   return (
     <div className="case-review" aria-label="Review against the plan">
-      <h5 className={`case-review-verdict tone-${verdict.tone}`}>
-        {verdict.label}
-      </h5>
+      <div className="case-review-head">
+        <h5 className={`case-review-verdict tone-${verdict.tone}`}>
+          {verdict.label}
+        </h5>
+        <InfoTip label="How the review works" align="start">
+          <ReviewHelp />
+        </InfoTip>
+      </div>
       {review.stale && (
         <p className="callout callout-warn">
           The test code changed after this review. Review again for an

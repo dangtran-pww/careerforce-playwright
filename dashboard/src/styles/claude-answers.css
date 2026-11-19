@@ -38,6 +38,12 @@
   border-top: 1px solid var(--border);
 }
 
+.case-review-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .case-review-verdict {
   display: inline-block;
   margin: 0;

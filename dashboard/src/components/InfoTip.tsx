@@ -37,7 +37,7 @@ function bounds(el: HTMLElement) {
 // (the default) opens it towards the left, "start" towards the right, for a
 // button near the left edge of its container. A bubble that would be cut
 // off (by the window or a panel that clips it) is narrowed if need be and
-// moved to line up with that area's other edge instead. A small arrow on
+// moved in just far enough to fit that area. A small arrow on
 // its top edge always points at the button.
 export function InfoTip({
   label,
@@ -67,13 +67,13 @@ export function InfoTip({
       if (b.getBoundingClientRect().width > room)
         b.style.maxWidth = `${room}px`;
       const { left, right } = b.getBoundingClientRect();
-      // Too far right: line its left edge up with the area's. Too far left:
-      // line its right edge up with the area's.
+      // Cut off on one side: move it in just far enough to fit, so it stays
+      // as close to the button as it can.
       const dx =
         right > area.right
-          ? area.left - left
+          ? area.right - right
           : left < area.left
-            ? area.right - right
+            ? area.left - left
             : 0;
       if (dx) b.style.translate = `${dx}px 0`;
       const button = buttonRef.current!.getBoundingClientRect();
