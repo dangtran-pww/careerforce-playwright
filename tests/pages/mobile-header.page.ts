@@ -5,10 +5,16 @@ import { type Locator, type Page } from '@playwright/test';
 // the main menu lives in #page__masthead-mobile and stays hidden until the
 // toggle opens it. The header is the same on every page, so this isn't tied
 // to the homepage.
+//
+// Each top-level item is a list item in the menu's first list, with its link,
+// a "Sub-menu for <name>" arrow button and its own list of links. Editors can
+// change the items' text and links, so they are found by position, not by
+// name (as in MainMenu).
 export class MobileHeader {
   readonly page: Page;
   readonly menuToggle: Locator;
   readonly mainNavigation: Locator;
+  readonly items: Locator;
 
   constructor(page: Page) {
     this.page = page;
@@ -16,25 +22,18 @@ export class MobileHeader {
     this.mainNavigation = page
       .locator('#page__masthead-mobile')
       .getByRole('navigation', { name: 'Main navigation' });
+    this.items = this.mainNavigation.getByRole('list').first().locator(':scope > li');
   }
 
-  topLevelLink(name: string): Locator {
-    return this.mainNavigation.getByRole('link', { name, exact: true });
+  topLevelLink(index: number): Locator {
+    return this.items.nth(index).getByRole('link').first();
   }
 
-  // Each top-level item has a "Sub-menu for <name>" button next to its link,
-  // which shows that item's own list of links.
-  subMenuButton(name: string): Locator {
-    return this.mainNavigation.getByRole('button', { name: `Sub-menu for ${name}` });
+  subMenuButton(index: number): Locator {
+    return this.items.nth(index).getByRole('button', { name: /^Sub-menu for / });
   }
 
-  subMenuLinks(name: string): Locator {
-    return this.mainNavigation
-      .getByRole('listitem')
-      // `has` is searched inside each list item, so it must not start from
-      // the navigation again.
-      .filter({ has: this.page.getByRole('button', { name: `Sub-menu for ${name}` }) })
-      .getByRole('list')
-      .getByRole('link');
+  subMenuLinks(index: number): Locator {
+    return this.items.nth(index).getByRole('list').getByRole('link');
   }
 }
