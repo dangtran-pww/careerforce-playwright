@@ -43,23 +43,23 @@ test-suites/                # one folder per suite: suite.md, its human-readable
 ```bash
 npm install
 npx playwright install chromium
-
-# Smoke suite — every prod-safe smoke test:
 cp .env.example .env   # fill in BASIC_AUTH_USER/PASSWORD for QA's Basic Auth gate
-npm run login:manual -- admin   # once per session expiry; admin-reports needs it
-                                # (logs in to BASE_URL's environment; add --env stage for Stage)
-npx playwright test tests/smoke                     # desktop and phone
-npx playwright test tests/smoke --project=desktop   # desktop only
-# On QA/Stage these also run the @no-prod tests; add --grep-invert @no-prod to skip them.
-
-# Logged-in tests: log in by hand once per role (auth is SSO, so this step
-# can't be automated — and Google blocks sign-in from Playwright's own
-# automated Chromium). This saves the session for later use.
-npm run login:manual -- admin   # opens a plain Chromium window — log in; it saves the session itself, then close the window
-
-# Best way to watch and debug a test:
-BASE_URL=https://qa.careerforce.link npx playwright test --ui
+npm run dashboard      # opens the test dashboard in a Chromium window
 ```
+
+In the dashboard:
+
+1. Pick the environment at the top right (QA by default).
+2. Open **Login Sessions** in the header. Each role a plan needs has to be
+   logged in once (auth is SSO, so this can't be automated). For a role
+   that shows as missing or expired, run the command its card shows, e.g.
+   `npm run login:manual -- admin --env qa`, log in by hand in the window
+   that opens, then close it and press **Check again**.
+3. Open a suite (e.g. Smoke), press **Details** on a plan, and press
+   **Run plan on &lt;environment&gt;**. The run's page shows the output live,
+   then each test's result and a link to its Playwright HTML report.
+
+See "Test dashboard" below for everything else it does.
 
 ## Testing with more than one role
 
@@ -159,7 +159,8 @@ under `tests/`; a path picks the suite:
 | Functional | `tests/functional/<feature>/` | `npx playwright test tests/functional` |
 
 `npx playwright test` with no path runs both suites. Add `--project=desktop`
-or `--project=mobile` for one device.
+or `--project=mobile` for one device. The run uses `.env`'s `BASE_URL`.
+To watch and debug tests step by step, use `npx playwright test --ui`.
 
 - **Tests that must not run on production** are tagged `@no-prod`, in
   either suite: every test of a no-prod plan (`Prod: No` in its header), or
