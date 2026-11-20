@@ -154,6 +154,18 @@
   margin: 6px 0;
 }
 
+/* The plan step a code step carries out ("Step 2", "Setup"). */
+.case-explain-plan-step {
+  margin-right: 6px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--neutral-bg);
+  color: var(--neutral-fg);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .case-explain-steps ul {
   margin: 4px 0 0;
   padding-left: 0;

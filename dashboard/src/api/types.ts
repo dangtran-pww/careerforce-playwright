@@ -143,7 +143,9 @@ export interface CaseExplanation {
   plan: string;
   case: string;
   summary: string;
-  steps: { action: string; checks: string[] }[];
+  // planStep: the plan step it carries out ("Step 2", "Setup", "Not in
+  // plan"). Left out of explanations saved before it was asked for.
+  steps: { planStep?: string; action: string; checks: string[] }[];
   files: string[];
   createdAt: string;
   // Left out of explanations saved before these were recorded.

@@ -26,8 +26,13 @@ const SCHEMA = {
       type: 'array',
       items: {
         type: 'object',
-        required: ['action', 'checks'],
+        required: ['planStep', 'action', 'checks'],
         properties: {
+          planStep: {
+            type: 'string',
+            description:
+              'The plan step this carries out, as a short label: "Step 2", "Steps 2–3", or "Step" when the plan gives one unnumbered step. "Setup" for preparation the plan leaves out (logging in, opening a page first), "Not in plan" for anything else the plan does not ask for.',
+          },
           action: {
             type: 'string',
             description: 'What the test does, as a person would on the site.',
@@ -55,6 +60,8 @@ Its code:
 ${where}
 
 Read those tests, and the helpers, fixtures and page objects they call (under tests/), so you know what really happens. Then explain the steps the test performs, in order, as actions on the site ("Opens /user/login", "Clicks 'DEED Staff Member'") and, for each, what it checks. Name the real pages, buttons, texts and values from the code. If there are several tests or the test loops over data, say what varies. Do not quote code or name functions.
+
+Follow the plan's Steps: give each step the plan step it carries out (planStep), in the plan's numbering, and keep to the plan's order where the code does. Where a check carries out a numbered item of the plan's Expected result, start it with that number ("2. The submenu closes."). Do not invent a match: code the plan does not ask for is "Setup" or "Not in plan", and a plan step the code skips gets its own step saying the code does not do it, with no checks.
 
 Answer only with the JSON the schema asks for.`;
 }

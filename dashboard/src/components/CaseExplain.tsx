@@ -6,7 +6,8 @@ import { Spinner } from './Spinner';
 import { ToggleButton } from './ToggleButton';
 
 // "What the code does": Claude's plain-words account of a case's test code,
-// step by step. Shows the saved one if there is one; the button asks Claude
+// step by step, each step tagged with the plan step it carries out ("Step
+// 2", "Setup", "Not in plan"). Shows the saved one if there is one; the button asks Claude
 // (claude -p, read-only) to read the code and explain it, which takes about
 // a minute. The heading folds the section open and closed, and so does a
 // "Show less" button at the bottom, so a long account folds from either end.
@@ -107,6 +108,9 @@ export function CaseExplain({
             <ol className="case-explain-steps">
               {explanation.steps.map((s, i) => (
                 <li key={i}>
+                  {s.planStep && (
+                    <span className="case-explain-plan-step">{s.planStep}</span>
+                  )}
                   {s.action}
                   {s.checks.length > 0 && (
                     <ul>
