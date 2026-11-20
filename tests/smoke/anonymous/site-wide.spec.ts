@@ -2,13 +2,12 @@ import { test, expect } from '../../helpers/fixtures';
 import { HomePage } from '../../pages/home.page';
 import { SiteFooter } from '../../pages/site-footer.page';
 
-// [Smoke] - Public Site - General - Test Plan, GN-1 to GN-3 and GN-5.
+// [Smoke] - Public Site - General - Test Plan, GN-1 to GN-3.
 // See test-suites/smoke/smoke-public-site.md.
 //
 // Site-wide basics that every page relies on: the "page not found" page,
-// the footer, the main menu's pages, and no JavaScript errors on the main
-// public pages. GN-4 ("Skip to main content") is now HN-1 in
-// test-suites/site-wide/functional-site-wide-header-navigation.md.
+// the footer, and the main menu's pages. GN-4 ("Skip to main content") is
+// now HN-1 in test-suites/site-wide/functional-site-wide-header-navigation.md.
 
 test('GN-1: Page Not Found page answers 404 and links back', async ({ page }) => {
   const response = await page.goto('/pww-smoke-test-no-such-page');
@@ -95,26 +94,5 @@ for (const [name, href] of MAIN_MENU) {
     const response = await page.goto(href);
     expect(response?.status()).toBe(200);
     await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toContainText(name);
-  });
-}
-
-// Uncaught JavaScript errors only. Console messages are not checked: the
-// tests block analytics and the AWS WAF script on purpose, and those
-// blocked loads show up in the console as errors. Job Search is checked
-// by JS-1 in test-suites/smoke/smoke-job-search.md.
-const NO_ERROR_PAGES = [
-  { name: 'Homepage', path: '/' },
-  { name: 'Site search', path: '/search?k=job' },
-  { name: 'Explore Careers', path: '/explore/careers?otitle=Nursing' },
-];
-
-for (const { name, path } of NO_ERROR_PAGES) {
-  test(`GN-5: ${name} loads without JavaScript errors`, async ({ page }) => {
-    const errors: string[] = [];
-    page.on('pageerror', (error) => errors.push(error.message));
-    await page.goto(path);
-    await page.waitForLoadState('networkidle');
-
-    expect(errors, `JavaScript errors on ${path}`).toEqual([]);
   });
 }

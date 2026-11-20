@@ -20,9 +20,9 @@ const DISTANCES = [5, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map(
 
 test.describe('Search and results', () => {
   // JS-1 runs first: if Job Search doesn't load, nothing else here can pass.
-  // Uncaught JavaScript errors only, as in GN-5 (test-suites/smoke/smoke-public-site.md):
-  // the tests block analytics and the AWS WAF script on purpose, and those
-  // blocked loads show up in the console as errors.
+  // Uncaught JavaScript errors only: the tests block analytics and the AWS
+  // WAF script on purpose, and those blocked loads show up in the console as
+  // errors.
   test('JS-1: Job Search loads, and its search form works', async ({ page }) => {
     const jobs = new JobSearchPage(page);
     const main = page.getByRole('main');
@@ -105,8 +105,7 @@ test.describe('Search and results', () => {
 
   // JS-2 checks only that the homepage block hands its search over to Job
   // Search. That Job Search itself loads, lists jobs and has no JavaScript
-  // errors is JS-1; the homepage's JavaScript errors are GN-5 in
-  // test-suites/smoke/smoke-public-site.md.
+  // errors is JS-1.
   test('JS-2: Homepage Job Search hands over the search', async ({ page }) => {
     const home = new HomePage(page);
     const jobs = new JobSearchPage(page);

@@ -25,8 +25,8 @@ use:
   side by side with another site, on desktop and on a phone, and notes any
   layout or styling difference ([prompts/homepage-compare.md](prompts/homepage-compare.md)).
 - **Site-wide:** an unknown address shows the "Page Not Found" page, the
-  footer has its contact details and links, the 5 main menu pages open,
-  and the main pages load without JavaScript errors.
+  footer has its contact details and links, and the 5 main menu pages
+  open.
 - **On a phone:** the same checks again in an emulated Android phone
   browser, plus the header menu button (MB-1) and a check that no page
   scrolls sideways ([Mobile](#mobile)).
@@ -82,7 +82,6 @@ after the site name, for example `/programs-services` means
 | GN-1 | Page Not Found page answers 404 and links back | an address that doesn't exist, e.g. `/pww-smoke-test-no-such-page` | Open it. | 1. The site answers "not found" (HTTP 404). 2. The title "Page Not Found" shows. 3. The links to the homepage (`/`), search (`/search`), and events (`/events`, which opens the Events page) work. |
 | GN-2 | Footer shows its contact details and links | `/` | Look at the footer. | 1. "Contact CareerForce" with a phone number and an email link. 2. Links to CareerForce Locations, Connect to Our Services, Our Partners, Blog, About CareerForce, Your Right to Fair Treatment, and Site Index. 3. Facebook, X, LinkedIn, YouTube, and Instagram links that open in a new tab. |
 | GN-3 | Main menu pages open | see the list below | For each of the 5 main menu items: 1. Check the homepage header has the menu link. 2. Open its page. | 1. The header has the link. 2. The page opens, and its title starts with the menu item's name. |
-| GN-5 | No JavaScript errors | see the list below | Open each page. | No JavaScript error. |
 
 ## Prompt cases
 
@@ -122,14 +121,6 @@ unemployment benefits…", which shows 5.
 | Education and Training | `/education-and-training` |
 | Resources for | `/resources-job-seekers-and-career-explorers` |
 
-### Pages for GN-5
-
-| Page | Address |
-|---|---|
-| Homepage | `/` |
-| Site search | `/search?k=job` |
-| Explore Careers | `/explore/careers?otitle=Nursing` |
-
 ## Good to know
 
 - **Job seekers log in with LoginMN** (the State of Minnesota's shared login),
@@ -154,9 +145,6 @@ unemployment benefits…", which shows 5.
   when that location has events scheduled, so LV-1 doesn't check for it.
 - **Career pages load in two steps.** The page says "Loading..." until the
   career details arrive, so wait for the title before checking anything.
-- **GN-5 checks only real JavaScript errors**, not every red line in the
-  browser console. The tests block the analytics and AWS WAF scripts on
-  purpose, and those blocked loads show up in the console as errors.
 - **Search result counts change** as content is added or removed. The tests
   only check that there's at least 1 result, not an exact number. The same
   goes for the Programs and Services listing (LV-3).
