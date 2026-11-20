@@ -89,30 +89,30 @@ button.info-tip-button {
    a column on the left with what each means beside it. */
 /* Wider than other bubbles, so the descriptions beside the badges get
    room for a line or two. */
-.info-tip-bubble:has(.plan-status-list) {
+.info-tip-bubble:has(.status-help-list) {
   max-width: min(520px, calc(100vw - 32px));
 }
 
-.info-tip-bubble .plan-status-intro {
+.info-tip-bubble .status-help-intro {
   font-weight: 600;
 }
 
-.plan-status-list {
+.status-help-list {
   display: grid;
   grid-template-columns: max-content 1fr;
   gap: 8px 10px;
   margin: 8px 0 0;
 }
 
-.plan-status-list > div {
+.status-help-list > div {
   display: contents;
 }
 
-.plan-status-list dt {
+.status-help-list dt {
   justify-self: start;
 }
 
-.plan-status-list dd {
+.status-help-list dd {
   margin: 0;
 }
 

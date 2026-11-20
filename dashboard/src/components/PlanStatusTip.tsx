@@ -27,10 +27,10 @@ const STATUS_HELP: { status: string; text: string }[] = [
 export function PlanStatusTip() {
   return (
     <InfoTip label="About plan statuses" align="start">
-      <p className="plan-status-intro">
+      <p className="status-help-intro">
         Does the test file match the plan? If not, what work is needed?
       </p>
-      <dl className="plan-status-list">
+      <dl className="status-help-list">
         {STATUS_HELP.map(({ status, text }) => (
           <div key={status}>
             <dt>
