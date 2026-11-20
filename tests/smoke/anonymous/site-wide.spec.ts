@@ -1,6 +1,7 @@
 import { test, expect } from '../../helpers/fixtures';
 import { HomePage } from '../../pages/home.page';
 import { SiteFooter } from '../../pages/site-footer.page';
+import { MainMenu } from '../../pages/main-menu.page';
 
 // [Smoke] - Public Site - General - Test Plan, GN-1 to GN-3.
 // See test-suites/smoke/smoke-public-site.md.
@@ -71,28 +72,61 @@ test('GN-2: Footer shows its contact details and links', async ({ page }) => {
   });
 });
 
-// The 5 top-level items of the main menu. Each page's title starts with
-// the menu item's name (e.g. "Resources for" → "Resources for Job Seekers
-// and Career Explorers").
-const MAIN_MENU = [
-  ['Find a Job', '/find-job'],
-  ['Job Loss Resources', '/job-loss-resources'],
-  ['Job Search Tools', '/job-search-tools'],
-  ['Education and Training', '/education-and-training'],
-  ['Resources for', '/resources-job-seekers-and-career-explorers'],
-] as const;
+// The main menu's items, their text, links and submenus are editor content
+// that can change, so GN-3 reads them from the page rather than a fixed list
+// (see "Main menu for GN-3" in the plan for what QA showed). It expects at
+// least 1 item, at least 1 visible link per submenu, and each item's page to
+// open; it doesn't open the submenu links.
+test('GN-3: main menu submenus show on hover and the menu pages open', async ({
+  page,
+  isMobile,
+}) => {
+  const menu = new MainMenu(page);
+  await page.goto('/');
+  // On a phone the desktop menu is hidden but still in the page, with the
+  // same items as the ☰ menu, so it is read there too.
+  const items = await menu.readItems();
+  expect(items.length, 'the main menu has at least 1 item').toBeGreaterThan(0);
 
-for (const [name, href] of MAIN_MENU) {
-  test(`GN-3: main menu "${name}" page opens`, async ({ page }) => {
-    // The menu link is on every page (shown on desktop, inside the ☰ menu
-    // on a phone), so check it's there before opening its page.
-    await page.goto('/');
-    await expect(
-      page.getByRole('banner').locator(`a[href="${href}"]`).first(),
-    ).toBeAttached();
+  for (const [index, { name, href }] of items.entries()) {
+    await test.step(`"${name}" (${href})`, async () => {
+      expect(href, `"${name}" links to a page`).not.toBe('');
+      // Back to the homepage after the previous item's page.
+      if (index > 0) await page.goto('/');
 
-    const response = await page.goto(href);
-    expect(response?.status()).toBe(200);
-    await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toContainText(name);
-  });
-}
+      // On a phone there is no hover and the desktop menu is hidden (the ☰
+      // menu is MB-1's job), so steps 1 and 2 run on desktop only.
+      if (!isMobile) {
+        const subMenuLinks = menu.subMenuLinks(index);
+
+        await test.step('1. hover the item: its submenu shows, alone', async () => {
+          await expect(menu.subMenu(index)).toBeHidden();
+          await menu.hover(index);
+          await expect(menu.subMenu(index)).toBeVisible();
+          const count = await subMenuLinks.count();
+          expect(count, `the "${name}" submenu has at least 1 link`).toBeGreaterThan(0);
+          for (let i = 0; i < count; i++) {
+            await expect(subMenuLinks.nth(i)).toBeVisible();
+          }
+          for (const [other, { name: otherName }] of items.entries()) {
+            if (other === index) continue;
+            await expect(
+              menu.subMenu(other),
+              `the "${otherName}" submenu stays closed`,
+            ).toBeHidden();
+          }
+        });
+
+        await test.step('2. move the mouse off the menu: the submenu closes', async () => {
+          await menu.moveMouseAway();
+          await expect(menu.subMenu(index)).toBeHidden();
+        });
+      }
+
+      await test.step("3. the item's own page opens", async () => {
+        const response = await page.goto(href);
+        expect(response?.status()).toBe(200);
+      });
+    });
+  }
+});

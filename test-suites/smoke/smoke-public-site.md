@@ -25,8 +25,8 @@ use:
   side by side with another site, on desktop and on a phone, and notes any
   layout or styling difference ([prompts/homepage-compare.md](prompts/homepage-compare.md)).
 - **Site-wide:** an unknown address shows the "Page Not Found" page, the
-  footer has its contact details and links, and the 5 main menu pages
-  open.
+  footer has its contact details and links, and each main menu item
+  shows its submenu when the mouse is on it and opens its page.
 - **On a phone:** the same checks again in an emulated Android phone
   browser, plus the header menu button (MB-1) and a check that no page
   scrolls sideways ([Mobile](#mobile)).
@@ -81,7 +81,7 @@ after the site name, for example `/programs-services` means
 | FL-8 | Training Programs: virtual vs not | `/training-programs` | 1. Open the page with no filter. 2. Set Virtual/Hybrid to "True". 3. Set it to "False". | See [Filters](#filters). 1. At least 1 program is listed. 2. The dropdown shows "True", with no more programs than in step 1. 3. The dropdown shows "False", with no more programs than in step 1, and the results differ from step 2's. |
 | GN-1 | Page Not Found page answers 404 and links back | an address that doesn't exist, e.g. `/pww-smoke-test-no-such-page` | Open it. | 1. The site answers "not found" (HTTP 404). 2. The title "Page Not Found" shows. 3. The links to the homepage (`/`), search (`/search`), and events (`/events`, which opens the Events page) work. |
 | GN-2 | Footer shows its contact details and links | `/` | Look at the footer. | 1. "Contact CareerForce" with a phone number and an email link. 2. Links to CareerForce Locations, Connect to Our Services, Our Partners, Blog, About CareerForce, Your Right to Fair Treatment, and Site Index. 3. Facebook, X, LinkedIn, YouTube, and Instagram links that open in a new tab. |
-| GN-3 | Main menu pages open | see the list below | For each of the 5 main menu items: 1. Check the homepage header has the menu link. 2. Open its page. | 1. The header has the link. 2. The page opens, and its title starts with the menu item's name. |
+| GN-3 | Main menu submenus show on hover and the menu pages open | `/`, then the pages in [Main menu for GN-3](#main-menu-for-gn-3) | Read the main menu's items from the homepage (text and links aren't fixed). For each item, one at a time, starting on the homepage: 1. Move the mouse onto the item. 2. Move the mouse off the menu. 3. Open the item's own page. | The menu has at least 1 item. 1. Its submenu shows below it with at least 1 link, every link visible, and no other item's submenu shows. 2. The submenu closes. 3. The page opens with HTTP 200. |
 
 ## Prompt cases
 
@@ -111,15 +111,24 @@ Before any choice, the cards are Find a Job, Connect With CareerForce and Job
 Loss Resources. Every answer shows 3 cards, except "I am receiving
 unemployment benefits…", which shows 5.
 
-### Main menu pages for GN-3
+### Main menu for GN-3
 
-| Menu item | Page |
-|---|---|
-| Find a Job | `/find-job` |
-| Job Loss Resources | `/job-loss-resources` |
-| Job Search Tools | `/job-search-tools` |
-| Education and Training | `/education-and-training` |
-| Resources for | `/resources-job-seekers-and-career-explorers` |
+The main menu items, their pages, and the links in their submenus, as QA
+showed them on 2026-11-19. GN-3 doesn't check any of this wording or these
+links: it reads the items from the page, expects at least 1 item and at
+least 1 visible link per submenu, opens each item's page, and doesn't open
+the submenu links (see [Good to know](#good-to-know)).
+
+| Menu item | Page | Submenu links |
+|---|---|---|
+| Find a Job | `/find-job` | Job Search (`/job-search`); Job Fairs and Networking Events (`/jobfairs`); Explore Careers (`/explore/careers`); Explore Industries (`/industry/all-industries-careerseekers`, which redirects to `/industry/all-industries`) |
+| Job Loss Resources | `/job-loss-resources` | CareerForce Services Overview (`/careerforce-services-overview`); Dislocated Worker (`/dislocatedworker`) |
+| Job Search Tools | `/job-search-tools` | Employment Readiness Assessment (`/employment-readiness/take`); Compare Skills (`/occupations/compare-skills`); Interest Assessment (`/occupations/interest_profiler`); Skills Matcher (`/occupations/skills_matcher`); Resumes (`/resumes`); Cover Letters (`/cover-letter`); Applications (`/applications`); Interviews (`/interviews`); Networking (`/networking`) |
+| Education and Training | `/education-and-training` | Events (`/education-and-training/events`); Training Program Finder (`/training-programs`); Creative Job Search (`/CreativeJobSearch`); Adult Basic Education (`/minnesota-adult-basic-education`); Education and Training Options (`/education-and-training-options`) |
+| Resources for | `/resources-job-seekers-and-career-explorers` | Veterans (`/veterans-resources`); Job Seekers with Disabilities (`/disability-resources`); Job Seekers Over 55 (`/finding-employment-after-55`); Youth (`/youth-resources`); Justice-Involved (`/JusticeInvolved`); Migrant and Seasonal Farmworkers (`/migrant-and-seasonal-farmworker-services`); New Americans (`/resources-new-americans`) |
+
+All 27 submenu links answered HTTP 200 on QA on 2026-11-19 (Explore
+Industries after its redirect).
 
 ## Good to know
 
@@ -154,6 +163,49 @@ unemployment benefits…", which shows 5.
 - **The footer phone number is plain text**, not a link you can tap to call,
   so GN-2 checks the text only.
 
+The main menu (GN-3), checked on QA at desktop width (1280 and 1366 pixels
+wide) as a visitor on 2026-11-19, without clicking any menu link:
+
+- **A submenu opens on mouse hover only.** It shows as soon as the mouse is
+  on the item (its name or the space around it), with no delay or
+  animation to wait for, and it stays open while the mouse moves down into
+  it. Only the hovered item's submenu shows, and it closes as soon as the
+  mouse leaves the item and its submenu.
+- **Hovering doesn't change any attribute.** Each item has a small arrow
+  button next to it ("Sub-menu for Find a Job", …) with `aria-expanded`,
+  but hovering leaves it at `"false"`. A test checks that the submenu list
+  is visible, not the attribute.
+- **Keyboard users open a submenu with the arrow button,** not by tabbing to
+  the item's name: focusing the name doesn't open it. Tab moves from the
+  name to its arrow button, and clicking it (or Enter) opens the submenu
+  and sets `aria-expanded="true"`; clicking again closes it. GN-3 doesn't
+  check this; it belongs in [](../site-wide/functional-site-wide-header-navigation.md).
+- **A submenu opened with its arrow stays open while another is hovered,**
+  so two submenus can show at once. GN-3 only hovers, so it never opens one
+  with the arrow.
+- **GN-3 doesn't check the menu's wording, links or number of items.**
+  Editors change the main menu (both the top-level items and their
+  submenus) from the admin pages, and Production may differ from QA, so a
+  fixed list would fail on content changes rather than on a broken menu.
+  GN-3 reads the top-level items from the page each run. "At least 1 item"
+  catches an empty menu, "at least 1 visible link per submenu" an empty
+  submenu, and opening each item's page a broken top-level link.
+- **GN-3 doesn't open the submenu links.** It checks that the menu works:
+  each submenu shows on hover and each top-level page opens. The pages the
+  submenu links lead to are covered by their own features' plans.
+- **The desktop menu shows from 1024 pixels wide.** Narrower windows show
+  the ☰ menu button instead (MB-1), with the same links.
+
+From the app source (careerforce_skin theme), not seen on the site:
+
+- The hover is plain CSS (`.menu-item:hover .menu` shows the submenu from
+  the medium breakpoint up); the arrow buttons are added by the theme's
+  JavaScript (`es6/global_styles.es6.js`), which also closes other
+  arrow-opened submenus and closes one when focus leaves it.
+- The menu is Drupal's "Main navigation" menu, placed twice (the desktop
+  menu and the phone menu) with 2 levels. Its links are menu content
+  editors can change, not site configuration.
+
 ### Filters
 
 The FL cases check that a filter actually filters. Each one opens the listing
@@ -187,6 +239,9 @@ On the phone:
   checking them once on desktop is enough.
 - **MB-1 runs only on phones.** On desktop the menu is always shown, so there
   is no menu button.
+- **GN-3 skips steps 1 and 2 on the phone.** A phone has no mouse to hover
+  with, and the desktop menu is hidden; the ☰ menu and its sub-menus are
+  MB-1's job. Step 3 still runs: each item's own page opens.
 - **No page may scroll sideways.** After each case, the test also checks that
   the page fits the screen width. If something sticks out past the right edge,
   the test fails and names the widest element.
