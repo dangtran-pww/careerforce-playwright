@@ -28,6 +28,12 @@ Events", "Explore Careers", "Upcoming Training Programs", the "create an
 account" section, "Connect to our Services", "CareerForce Blog" and the
 footer.
 
+"Upcoming Events" and "Upcoming Training Programs" can be empty on either
+site when that environment has no upcoming events or training programs. An
+empty section is not a layout problem: note it, check that what is left of
+the section (its heading, any message or link) still looks right, and
+compare the rest of the page as usual.
+
 Note every layout or styling difference between the two sites, and anything
 on the site under test that looks broken, overlapping, cut off or unstyled.
 Don't click anything that leaves the homepage.
@@ -38,5 +44,7 @@ Don't click anything that leaves the homepage.
    reordered sections, no broken spacing, fonts, colours or images, and
    nothing cut off, overlapping or scrolling sideways.
 2. Differences that are only content (other jobs, events, posts or dates) are
-   listed as notes and don't fail the case.
+   listed as notes and don't fail the case. So is an empty "Upcoming Events"
+   or "Upcoming Training Programs" section on either site, as long as what is
+   left of it isn't broken.
 3. Paired screenshots of each section at each size are saved with the result.
