@@ -18,17 +18,17 @@ yet" and skipped.
 |---|---|
 | smoke-public-site | desktop, mobile |
 | smoke-job-search | desktop, mobile |
+| smoke-jobseeker-tools | desktop, mobile |
+| smoke-profile | desktop |
+| smoke-events | desktop, mobile |
+| smoke-appointments | (default) |
+| smoke-resume-builder | (default) |
 | smoke-admin-reports | desktop |
 | smoke-admin-maintenance | desktop |
 | smoke-block-placement | desktop |
 | smoke-ckeditor | desktop |
 | smoke-content-lifecycle | desktop |
-| smoke-events | desktop, mobile |
 | smoke-external-events | desktop, mobile |
 | smoke-alerts | desktop |
-| smoke-appointments | (default) |
 | smoke-auto-logout | desktop |
-| smoke-jobseeker-tools | desktop, mobile |
 | smoke-media | desktop |
-| smoke-profile | desktop |
-| smoke-resume-builder | (default) |
