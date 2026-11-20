@@ -39,7 +39,7 @@ Each test removes what it added, even when it fails.
 | **JS, JF and JL cases** | Visitor, not logged in |
 |---|---|
 | **SS and MD cases** | Job seeker role |
-| **Accounts touched** | SS and MD add saved searches and bookmarks to the job seeker account and remove them again. They never remove anything they didn't add. |
+| **Accounts touched** | SS and MD add saved searches and bookmarks to the job seeker account and remove them again. They never remove anything else they didn't add, except saved searches when the account has no room (see "Limits" under Good to know). |
 
 ## Test cases
 
@@ -113,6 +113,9 @@ A prompt case has no test code: Claude follows its prompt file in a browser and 
   message.
 - **The result count stops at 500** ("Showing 500 jobs"), so a narrower
   search can show the same total as a wider one.
+- **No dedicated job seeker test account for now.** SS and MD use the
+  shared `jobseeker` login on QA and Stage, which testers also use by hand,
+  so they may find saved searches and bookmarks already on it.
 - **Limits:** a job seeker can have up to 5 saved searches and 15 bookmarked
   jobs. SS and MD need at least 1 free saved search and 1 free bookmark on the
   account. If the saved searches are full, SS-1, SS-2, MD-2 and MD-3 remove
@@ -153,11 +156,5 @@ drawer, not behind it.
 - **The employer's posting and applying.** They are on other sites.
 - **An expired bookmarked job** (greyed out on its own page). It can't be set
   up on purpose.
-
-## Open questions
-
-1. **A dedicated job seeker test account** on QA and Stage, so SS and MD
-   never touch a real tester's saved searches and bookmarks. It needs fewer
-   than 5 saved searches and fewer than 15 bookmarks.
-2. **MD-1 could join the post-deploy smoke run** (it changes nothing) if
-   there's a job seeker account that may be used on Production.
+- **MD-1 on Production.** It changes nothing, but it stays out of the
+  post-deploy smoke run for now; that may be revisited later.
