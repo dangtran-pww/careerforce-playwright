@@ -53,7 +53,11 @@ address `/user` goes to. After a section's "Save", the site goes to
 - **The email is managed by LoginMN**, so it is read-only on My Profile.
   PF-4 reads it there to find the account in People.
 - **Only harmless fields are edited:** ones that don't change the account's
-  role, tier or login. The phone numbers are synthetic `555-01xx` numbers.
+  role, tier or login. Every field in Demographic Information, Education and
+  Employment, Equal Opportunity, Military and Veterans, and Income and Public
+  Assistance is harmless to edit: none triggers re-verification, emails or a
+  tier change. Account Information is not on that list. The phone numbers are
+  synthetic `555-01xx` numbers.
 - **Leaving a section with unsaved changes** asks "Leave site?". The tests
   accept it, so a case that stops mid-edit can still put the value back.
 
@@ -67,8 +71,3 @@ tagged `@desktop-only`, and a phone run would make the same changes again.
 - **Auto-population fields, the match dialog and "enter manually" links:**
   Phase 4, synthetic data only.
 - **Tier 2 registration:** Phase 3, with event registration.
-
-## Open questions
-
-1. Which other fields are harmless to edit (don't trigger re-verification,
-   emails or tier changes)?
