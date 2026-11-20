@@ -41,12 +41,20 @@
 }
 
 .prompt-body p,
-.prompt-body ul {
+.prompt-body ul,
+.prompt-body ol {
   margin: 0 0 8px;
 }
 
-.prompt-body ul {
+.prompt-body ul,
+.prompt-body ol {
   padding-left: 1.25em;
+}
+
+.prompt-body ol {
+  display: grid;
+  gap: 4px;
+  padding-left: 1.5em;
 }
 
 .prompt-body > :last-child {

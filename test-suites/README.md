@@ -385,7 +385,7 @@ is an example.
     never a difference.
   - `## Expected result` says what passes and what fails: one check as
     plain text, several as a numbered list. Claude gets it after the
-    prompt, and the dashboard shows it as "Passes when".
+    prompt, and the dashboard shows it as "Expected Result".
 - **Status:** a prompt case counts as implemented once its prompt file
   exists. The test generator skips it.
 - **Running it:** the dashboard runs prompt cases after the plan's tests, or

@@ -51,9 +51,9 @@ export function PromptCaseDetails({
         )}
         {p?.expected && (
           <div>
-            <dt>Passes when</dt>
+            <dt>Expected Result</dt>
             <dd>
-              <PromptBody text={p.expected} />
+              <PromptBody text={p.expected} numbered />
             </dd>
           </div>
         )}
