@@ -2,7 +2,7 @@
 
 Status: implemented
 Implemented test: tests/smoke/alerts/alerts.spec.ts
-Prod: No: places an alert and a notification that every visitor sees on every page; the checklist also says not to test this on Production during prime time.
+Prod: No: places an alert and a notification that every visitor sees on every page, so it mustn't be tested on Production during prime time.
 
 ## Overview
 
@@ -123,7 +123,7 @@ From the mn-careerforce source at commit `fda433001`.
   entities that location and account managers add per group or location
   under `/group/{group}/announcement`, shown in the Status region of group
   and location pages only, with start and end dates. They are not managed
-  in `admin/structure/block`, which is what the checklist item names.
+  in `admin/structure/block`, where this plan's blocks are.
 
 ## Mobile
 
@@ -151,7 +151,7 @@ would repeat the desktop checks while placing the blocks a second time.
 
 ## Open questions
 
-1. Does the checklist's "notifications" mean the Notification type of this
+1. Should the smoke run's "notifications" be the Notification type of this
    block, as assumed here, or location announcements? If it is
    announcements, they need their own plan.
 2. Is Page Pre Top for alerts and Notifications for notifications still how

@@ -10,8 +10,8 @@ A quick check after each deploy that the CKEditor 5 editor still works for
 editors: each text format's toolbar, headings, lists with sub-items, tables,
 media embeds, and bold, italic and links, all on a throwaway page.
 
-The toolbar check compares each format with a saved baseline (the
-checklist asks for the toolbars to be consistent with Live). The other
+The toolbar check compares each format with a saved baseline, so the
+toolbars stay consistent with Production. The other
 cases check the saved page, not the editor's markup, so they test what
 visitors would see. Every case but CK-1 creates a page, so the plan runs on
 QA and Stage only.
@@ -32,7 +32,7 @@ Save" below means the form's "Save" button.
 |---|---|---|---|---|
 | CK-1 | The toolbar of each text format is as expected | `/node/add/page` | Choose each of the 7 formats in the Body's "Text format" select, in turn, without typing anything or saving. | 1. The select offers exactly the 7 formats in [Toolbars](#toolbars). For each CKEditor 5 format, the toolbar has exactly the buttons in that table, in that order. 2. For HTML with embeds, Content HTML and Email HTML, there is no toolbar, only a plain text box. 3. No JavaScript error. |
 | CK-2 | Headings | `/node/add/page` | 1. In the Body, type three lines and set them to Heading 2, Heading 3 and Heading 4 from the Heading dropdown. 2. Click Save. **Cleanup:** delete the page. | 1. The Heading dropdown shows each line's heading as it is selected. 2. A status message confirms the save, and the page has an `h2`, an `h3` and an `h4` with those texts. |
-| CK-3 | Bulleted and numbered lists with sub-items | `/node/add/page` | 1. Add a bulleted list of two items, and make the second a sub-item with "Increase indent". 2. Add a numbered list the same way. 3. Click Save. **Cleanup:** delete the page. | 1. The editor shows the sub-item indented under the first bullet. 2. The editor shows the sub-item indented under item 1. 3. The page has a nested bulleted list (`ul li ul`) and a nested numbered list (`ol li ol`) with those texts. Only the structure is checked: the checklist notes that sub-bullet and sub-number styling is minimal. |
+| CK-3 | Bulleted and numbered lists with sub-items | `/node/add/page` | 1. Add a bulleted list of two items, and make the second a sub-item with "Increase indent". 2. Add a numbered list the same way. 3. Click Save. **Cleanup:** delete the page. | 1. The editor shows the sub-item indented under the first bullet. 2. The editor shows the sub-item indented under item 1. 3. The page has a nested bulleted list (`ul li ul`) and a nested numbered list (`ol li ol`) with those texts. Only the structure is checked: sub-bullet and sub-number styling is minimal. |
 | CK-4 | Table | `/node/add/page` | 1. Click "Insert table" and pick a 2 × 2 grid. 2. Type a different text in each of the 4 cells and click Save. **Cleanup:** delete the page. | 1. A 2 × 2 table appears in the editor. 2. The page has a table with those 4 texts, 2 per row. |
 | CK-5 | Media embed | `/node/add/page` | 1. Click "Insert Media". 2. Pick an existing image and insert it. 3. Click Save. **Cleanup:** delete the page. | 1. The media library dialog opens and lists images. 2. The image shows in the editor. 3. The page shows the image inside the embedded media, and it has loaded (its natural width is above 0). |
 | CK-6 | Bold, italic and a link | `/node/add/page` | 1. Type a sentence, and make one word bold and another italic (with the keyboard shortcuts). 2. Select a third word, click "Link", enter `/education-and-training/events` and confirm. 3. Click Save. **Cleanup:** delete the page. | 1. The two words show bold and italic in the editor. 2. The third word is a link in the editor. 3. The page has a `strong` and an `em` with those words, and a link to `/education-and-training/events` with the third word. |
@@ -51,8 +51,7 @@ Save" below means the form's "Save" button.
 
 Checked on QA with the admin session on 2026-11-12, without saving anything.
 
-- **The admin can use every text format**, and the source checklist is done
-  as an admin.
+- **The admin can use every text format**, so the cases run as the admin.
 - **Click into the editor** (`.ck-editor__editable`) before typing (see the
   README troubleshooting section).
 - **Changing the format while the Body is empty** switches the editor
@@ -113,8 +112,8 @@ Desktop only. Admin and editor screens are not tested on a phone
   only.
 - **File Embed, Accordion Item, Jump Link, Styles and Source editing:** on
   the toolbar (checked by CK-1) but not used.
-- **Comparing with Production:** the checklist compares the toolbars with
-  Live, which needs an admin login on Production. CK-1 compares with the
+- **Comparing with Production:** comparing the toolbars with Production
+  live needs an admin login there. CK-1 compares with the
   [Toolbars](#toolbars) table instead.
 
 ## Open questions

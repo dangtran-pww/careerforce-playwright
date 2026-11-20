@@ -14,12 +14,9 @@ The cases only open pages, answer the warning and read settings, and the
 logout requests are blocked, so they are marked prod-safe (see
 [Open questions](#open-questions)).
 
-The team's post-deploy checklist on Confluence ("Prod DEED Smoke Testing
-11/05/2026") asks, per
-[MNDEED-8448](https://portland-webworks.atlassian.net/browse/MNDEED-8448),
-that every role is logged out after 15 minutes of inactivity, with a
-warning before that ("5 min warning given at 11 min"). Testers checked it
-as system admin and as job seeker. The warning is meant to come at **11
+[MNDEED-8448](https://portland-webworks.atlassian.net/browse/MNDEED-8448)
+asks that every role is logged out after 15 minutes of inactivity, with a
+warning before that. The warning is meant to come at **11
 minutes** of inactivity, with the logout at **15 minutes** (decided
 2026-11-12). QA is configured for a warning at 10 minutes (see
 [Good to know](#good-to-know)), so AO-1 to AO-5 fail there until the
@@ -159,8 +156,8 @@ phone run would use the shared sessions again (`auto-logout` is in
 
 ## Not covered
 
-- **The real logout after 15 idle minutes** stays a manual check, as in
-  the team's checklist (decided 2026-11-12): log in as each role, leave the
+- **The real logout after 15 idle minutes** stays a manual check
+  (decided 2026-11-12): log in as each role, leave the
   page alone, see the warning at 11 minutes, and at 15 minutes land on the
   login page with "You have been logged out due to inactivity." A test
   can't do it without ending a shared session, which needs a new login by

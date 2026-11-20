@@ -5,18 +5,17 @@ import { currentUid } from '../../pages/my-events.page';
 import { expectNoErrors } from '../../pages/node-form.page';
 import { displayedPhone, ProfilePage, SECTIONS } from '../../pages/profile.page';
 
-// [Smoke] - Profile - Test Plan, PF-4 and PF-5: an admin (standing in for
-// customer support) finds the job seeker test account, views its profile and
-// edits it. See test-suites/smoke/smoke-profile.md.
+// [Smoke] - Profile - Test Plan, PF-4 and PF-5: an account manager finds the
+// job seeker test account, views its profile and edits it. See test-suites/smoke/smoke-profile.md.
 //
 // QA and Stage only: it edits the job seeker test account, and puts the
-// field back in `finally`. The test's own page is the admin; the job seeker
+// field back in `finally`. The test's own page is the account manager; the job seeker
 // gets a page of their own, which is also how the test finds the account.
 
-useRole('admin');
+useRole('account-manager');
 
-test.describe('profile: an admin views and edits a job seeker', { tag: ['@no-prod', '@desktop-only'] }, () => {
-  test('PF-4: Admin views another user\'s profile', async ({ page, browser }, testInfo) => {
+test.describe('profile: an account manager views and edits a job seeker', { tag: ['@no-prod', '@desktop-only'] }, () => {
+  test('PF-4: Account manager views another user\'s profile', async ({ page, browser }, testInfo) => {
     const seeker = await rolePage(browser, testInfo, 'jobseeker');
     let uid = '';
     let email = '';
@@ -50,23 +49,23 @@ test.describe('profile: an admin views and edits a job seeker', { tag: ['@no-pro
     });
   });
 
-  test('PF-5: Admin edits another user\'s profile', async ({ page, browser }, testInfo) => {
-    const admin = new ProfilePage(page);
+  test('PF-5: Account manager edits another user\'s profile', async ({ page, browser }, testInfo) => {
+    const manager = new ProfilePage(page);
     const seekerPage = await rolePage(browser, testInfo, 'jobseeker');
     const seeker = new ProfilePage(seekerPage);
     try {
       const uid = await currentUid(seekerPage);
-      await admin.openSection(uid, 'demographic');
-      const original = await admin.alternatePhone.inputValue();
+      await manager.openSection(uid, 'demographic');
+      const original = await manager.alternatePhone.inputValue();
       const value = original === '651-555-0105' ? '651-555-0106' : '651-555-0105';
 
       try {
-        await test.step('1. as admin, change the alternate phone and save', async () => {
-          await admin.alternatePhone.fill(value);
-          await admin.save(uid);
+        await test.step('1. as the account manager, change the alternate phone and save', async () => {
+          await manager.alternatePhone.fill(value);
+          await manager.save(uid);
           await expectNoErrors(page);
           await expect(page.getByRole('heading', { level: 1, name: 'View Profile' })).toBeVisible();
-          await expect(admin.viewSection(SECTIONS.demographic)).toContainText(
+          await expect(manager.viewSection(SECTIONS.demographic)).toContainText(
             displayedPhone(value),
           );
         });
@@ -76,7 +75,7 @@ test.describe('profile: an admin views and edits a job seeker', { tag: ['@no-pro
           await expect(seeker.alternatePhone).toHaveValue(value);
         });
       } finally {
-        await admin.setAlternatePhone(uid, original);
+        await manager.setAlternatePhone(uid, original);
       }
     } finally {
       await seekerPage.context().close();

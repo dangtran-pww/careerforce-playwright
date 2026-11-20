@@ -15,8 +15,7 @@ The AP cases only read, so they run on QA, Stage and **Production**. The
 AA, AB and AS cases create, book and cancel appointments visitors could
 book, so they run on QA and Stage only.
 
-The cases come from the team's manual post-deploy checklist on Confluence,
-"Prod DEED Smoke Testing 11/05/2026" (appointments section). The in-depth
+The in-depth
 versions are the functional plans in
 [test-suites/appointments/](../appointments/suite.md): so far
 [](../appointments/functional-appointments-search.md); the scheduling,
@@ -284,12 +283,12 @@ enough. Every other case logs in, changes data and is tagged
   written): Resend Confirmation, late attendees on ended slots, "Cancel
   Registrations" in bulk, Admin View Registrations, statuses, permissions
   by role.
-- **Staff dashboard block.** The checklist expects the appointment on the
+- **Staff dashboard block.** The appointment should show on the
   admin or staff dashboard. That block lists only slots whose Staff Member
   is the logged-in user, and the admin account isn't offered as a Staff
   Member at Aitkin, so it stays a manual check until there is a staff
   login that is (see [Open questions](#open-questions)).
-- **Emails.** The checklist expects an email when a job seeker books
+- **Emails.** An email should be sent when a job seeker books
   (AB-1), when they cancel (AB-2), when an admin cancels a registration
   (AS-1) and when an admin cancels a booked slot. The cancelled-slot email
   must refer to the appointment, not an event

@@ -91,7 +91,6 @@ Desktop only. Admin and editor screens are not tested on a phone
 ## Not covered
 
 - **Alerts and notifications** (the Alert & Notification block type, placed
-  in Page Pre Top or Notifications), from the checklist's
-  "Notifications/alerts as applicable" item: [](smoke-alerts.md).
+  in Page Pre Top or Notifications): [](smoke-alerts.md).
 - **Layout Builder:** not used on this site.
 - **Block Visibility Groups and the other visibility tabs** beyond Pages.

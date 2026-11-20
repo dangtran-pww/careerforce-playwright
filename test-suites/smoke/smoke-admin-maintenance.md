@@ -67,8 +67,7 @@ ahead): if no day in the date strip has a slot, it fails.
 Checked on QA on 2026-10-29 (the search pages), and with the admin session
 on 2026-11-12 (AM-1 and AM-2's pages and buttons, without clicking them).
 
-- **AM-1 comes from the source checklist:** the rebuild "should complete
-  successfully with no errors/issues".
+- **AM-1 expects the rebuild to complete with no errors.**
 - **The buttons:** "Rebuild permissions" and "Cancel" on the permissions
   page; "Index now", "Queue all items for reindexing", "Clear all indexed
   data" and "Rebuild tracking information" on each index page; "Confirm"
@@ -104,8 +103,7 @@ on 2026-11-12 (AM-1 and AM-2's pages and buttons, without clicking them).
 ### Index counts on QA
 
 Counts on QA on 2026-11-12 (not checked by the tests: they change with
-content). The Confluence checklist still lists General 4351 and Occupations
-26471, which are out of date. Each index page shows the overall progress,
+content). Each index page shows the overall progress,
 one line per datasource, and "There are N items indexed on the server"; the
 server count is lower than the tracked count on every index except
 Occupations.

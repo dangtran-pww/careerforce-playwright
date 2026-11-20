@@ -13,9 +13,7 @@ The visitor cases (EP) only read, so they run on QA, Stage and Production.
 The admin, registration and attendance cases (EA, ER, ES) create events and
 registrations, so they run on QA and Stage only.
 
-The cases come from the team's manual post-deploy checklist on Confluence,
-"Prod DEED Smoke Testing 11/05/2026" (events section), and the online-only
-card check from
+The online-only card check comes from
 [MNDEED-9620](https://portland-webworks.atlassian.net/browse/MNDEED-9620)
 (open). The in-depth versions are the functional Events plans in
 [test-suites/events/](../events/suite.md).
@@ -233,8 +231,8 @@ again.
   functional-events-registration (to be written).
 - **The Attendees tab in depth:** functional-events-attendees (to be
   written).
-- **Emails.** The checklist expects an email for a registration and a
-  cancellation. The Registration API sends them and the tests have no
+- **Emails.** A registration and a cancellation should each send an
+  email. The Registration API sends them and the tests have no
   mailbox to read, so they stay a manual check after ER-1 and ER-2 until
   there is one (see [Open questions](#open-questions)).
 - **Appointments:** [](smoke-appointments.md).

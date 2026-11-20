@@ -50,7 +50,7 @@ second, logged-out browser. **Cleanup** in every case: delete the page
 
 Checked on QA with the admin session on 2026-11-12, without saving anything.
 
-- **The checklist is done as an admin**, so the cases run as the admin
+- **The cases run as the admin**
   (see [Open questions](#open-questions)).
 - **Moderation.** Pages use the "Content Review" workflow
   (`/admin/config/workflow/workflows/manage/editorial`), not a Published
@@ -80,7 +80,7 @@ Checked on QA with the admin session on 2026-11-12, without saving anything.
 - **Deleting a translation** (CL-5 step 4) is where
   [MNDEED-8191](https://portland-webworks.atlassian.net/browse/MNDEED-8191)
   ("Deleting translation throws PHP error") showed. It's Done, so the case
-  expects no error, as in the checklist's "Translate a page" item.
+  expects no error.
 - **Search.** The General site content index has "Index items immediately"
   on, so a saved page is searchable without cron. The site search is
   `/search?k=<keywords>`. CL-6 still retries the search for up to a minute,

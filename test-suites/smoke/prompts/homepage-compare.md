@@ -6,10 +6,9 @@
 **Screenshots:** 16
 **Parallel:** yes
 
-HP-5 in test-suites/smoke/smoke-public-site.md. From the DEED smoke checklist:
-"Review the Homepage for layout/styling issues. Comparison to be done with the
-Live (qa based on new changes) site/side-by-side. Review both desktop and
-responsive. Note any discrepancies."
+HP-5 in test-suites/smoke/smoke-public-site.md. Review the homepage for
+layout and styling issues side by side with the comparison site, on desktop
+and on a phone, and note any differences.
 
 "default" compares Local, QA and Sandbox with Stage and Production, and Stage
 with Production. On Production it

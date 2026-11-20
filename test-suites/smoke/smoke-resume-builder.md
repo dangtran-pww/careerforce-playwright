@@ -69,10 +69,7 @@ All synthetic: no real names, employers or contact details.
   shows in the dialog; "Save" adds it to My Resume Center.
 - **Resume-upload file type display:** see
   [MNDEED-8325](https://portland-webworks.atlassian.net/browse/MNDEED-8325).
-- **RB-7 comes from the Appointments part of the source checklist.** The
-  dashboard has no resume block, only this Quick Links link.
-- **"Add and edit experiences and duties"** (RB-2, RB-3) is called out in
-  the source checklist.
+- **RB-7:** the dashboard has no resume block, only this Quick Links link.
 
 ## Mobile
 
@@ -83,4 +80,4 @@ phone run would make the same changes again.
 ## Not covered
 
 - **Resume content quality and PDF export layout:** visual, checked by hand.
-- **Staff viewing a job seeker's resumes:** not in the source checklist.
+- **Staff viewing a job seeker's resumes:** not part of the smoke run.
