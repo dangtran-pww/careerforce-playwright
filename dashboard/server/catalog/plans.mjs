@@ -449,12 +449,15 @@ async function fromFile(file, compute) {
     (s) => s.mtimeMs,
     () => null,
   );
-  const hit = fileCache.get(file);
+  // Keyed by the function's name too, so a file read in two ways (rolesIn
+  // and roleScopesIn) keeps both. Inline `(t) => t` readers have no name.
+  const key = `${compute.name}:${file}`;
+  const hit = fileCache.get(key);
   if (hit && hit.mtimeMs === mtimeMs) return hit.value;
   const text =
     mtimeMs === null ? '' : await readFile(file, 'utf8').catch(() => '');
   const value = compute(text);
-  fileCache.set(file, { mtimeMs, value });
+  fileCache.set(key, { mtimeMs, value });
   return value;
 }
 
@@ -472,6 +475,50 @@ async function rolesFor(files) {
   const roles = new Set();
   for (const file of files)
     for (const role of await fromFile(file, rolesIn)) roles.add(role);
+  return [...roles];
+}
+
+// Each role call in a spec file with the lines of the block it's in
+// (`test.describe(..., () => { useRole('admin'); ... })`), so a file with an
+// admin describe and a job seeker describe gives each test only its own
+// role. A call outside any block covers the whole file. Braces are counted
+// as written, which is enough for spec files.
+function roleScopesIn(text) {
+  const re =
+    /(?:useRole|authFile)\(\s*['"]([a-z-]+)['"]|playwright\/\.auth\/([a-z-]+)\.json/g;
+  const lineAt = (i) => text.slice(0, i).split('\n').length;
+  return [...text.matchAll(re)].map((m) => {
+    let open = -1;
+    for (let i = m.index - 1, depth = 0; i >= 0; i--) {
+      if (text[i] === '}') depth++;
+      else if (text[i] === '{' && depth-- === 0) {
+        open = i;
+        break;
+      }
+    }
+    let close = text.length;
+    if (open >= 0)
+      for (let i = open + 1, depth = 0; i < text.length; i++) {
+        if (text[i] === '{') depth++;
+        else if (text[i] === '}' && depth-- === 0) {
+          close = i;
+          break;
+        }
+      }
+    return {
+      role: m[1] ?? m[2],
+      from: open >= 0 ? lineAt(open) : 1,
+      to: lineAt(close),
+    };
+  });
+}
+
+// Roles the tests at these locations ({ file, line }) log in as.
+async function rolesAt(locations) {
+  const roles = new Set();
+  for (const { file, line } of locations)
+    for (const s of await fromFile(file, roleScopesIn))
+      if (line >= s.from && line <= s.to) roles.add(s.role);
   return [...roles];
 }
 
@@ -525,18 +572,15 @@ export async function loadPlans({ refresh = false } = {}) {
         prompts,
       );
       plan.roles = await rolesFor(plan.files);
-      // Each case's logins: the roles in the spec files its tests are in, or
-      // its prompt file's Role. Per file, so a file that mixes visitor and
-      // logged-in tests marks all of its cases.
+      // Each case's logins: the roles in scope where its tests are (see
+      // roleScopesIn), or its prompt file's Role.
       for (const c of plan.cases)
         c.roles =
           c.kind === 'prompt'
             ? c.prompt?.role
               ? [c.prompt.role]
               : []
-            : await rolesFor([
-                ...new Set((c.locations ?? []).map((l) => l.file)),
-              ]);
+            : await rolesAt(c.locations ?? []);
       // role → the cases that log in as it, for the plan's "Login" label.
       plan.roleCases = [...new Set(plan.cases.flatMap((c) => c.roles))].map(
         (role) => ({
