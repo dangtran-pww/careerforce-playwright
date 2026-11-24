@@ -11,8 +11,8 @@ import { ToggleButton } from './ToggleButton';
 // (claude -p, read-only) to read the code and explain it, which takes about
 // a minute. The heading folds the section open and closed, and so does a
 // "Show less" button at the bottom, so a long account folds from either end.
-// Once there is an explanation, "Review against plan" asks Claude to compare
-// the code with the plan's row for the case. Reviews are not written to
+// "Review code against plan" asks Claude to compare the code with the plan's row
+// for the case; it doesn't need an explanation first. Reviews are not written to
 // disk: the server keeps the latest one in memory, so it is shown again on
 // coming back to the page, and each click asks Claude again.
 export function CaseExplain({
@@ -90,10 +90,10 @@ export function CaseExplain({
           </p>
         )}
         {error && <p className="callout callout-bad">{error}</p>}
-        {!explanation && !busy && !error && (
+        {!explanation && !busy && !error && !review && !reviewBusy && (
           <p className="note small">
             Ask Claude to read this case's test code and explain each step it
-            performs and what it checks.
+            performs and what it checks, or to review it against the plan.
           </p>
         )}
         {explanation && (
@@ -123,41 +123,41 @@ export function CaseExplain({
               ))}
             </ol>
             <ClaudeUsageNote usage={explanation} verb="Explained" />
-            {reviewBusy && (
-              <p className="note small" role="status">
-                Claude is comparing the test code with the plan. This takes
-                about a minute.
-              </p>
-            )}
-            {reviewError && (
-              <p className="callout callout-bad">{reviewError}</p>
-            )}
-            {review && <CaseReviewResult review={review} />}
-            <div className="case-review-actions">
-              <button
-                type="button"
-                className="ghost small"
-                disabled={reviewBusy}
-                onClick={() => {
-                  setOpen(true);
-                  runReview();
-                }}
-              >
-                {reviewBusy ? (
-                  <>
-                    <Spinner /> Reviewing…
-                  </>
-                ) : review ? (
-                  'Review again'
-                ) : (
-                  'Review against plan'
-                )}
-              </button>
-            </div>
-            <ToggleButton open controls={bodyId} onToggle={foldFromBottom}>
-              Show less
-            </ToggleButton>
           </>
+        )}
+        {reviewBusy && (
+          <p className="note small" role="status">
+            Claude is comparing the test code with the plan. This takes about a
+            minute.
+          </p>
+        )}
+        {reviewError && <p className="callout callout-bad">{reviewError}</p>}
+        {review && <CaseReviewResult review={review} />}
+        <div className="case-review-actions">
+          <button
+            type="button"
+            className="ghost small"
+            disabled={reviewBusy}
+            onClick={() => {
+              setOpen(true);
+              runReview();
+            }}
+          >
+            {reviewBusy ? (
+              <>
+                <Spinner /> Reviewing…
+              </>
+            ) : review ? (
+              'Review again'
+            ) : (
+              'Review code against plan'
+            )}
+          </button>
+        </div>
+        {(explanation || review) && (
+          <ToggleButton open controls={bodyId} onToggle={foldFromBottom}>
+            Show less
+          </ToggleButton>
         )}
       </div>
     </section>
