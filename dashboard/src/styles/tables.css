@@ -35,6 +35,51 @@ tbody tr:last-child td {
   white-space: nowrap;
 }
 
+/* A case's Run button and, while its row is open, the refresh icon before
+   it (CaseRefreshButton). */
+.case-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+/* Icon only and borderless until hovered, so it stays quieter than Run;
+   as tall as the small Run button beside it. */
+button.case-refresh {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 3px;
+  line-height: 0;
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+}
+
+tr.row-open button.case-refresh {
+  display: inline-flex;
+}
+
+button.case-refresh:hover:not(:disabled) {
+  border-color: var(--control-border);
+  color: var(--accent);
+}
+
+button.case-refresh svg {
+  display: block;
+}
+
+button.case-refresh[aria-busy='true'] svg {
+  animation: spinner-turn 0.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button.case-refresh[aria-busy='true'] svg {
+    animation-duration: 2.4s;
+  }
+}
+
 /* A short value that reads as one phrase, kept on one line. */
 .cell-nowrap {
   white-space: nowrap;

@@ -1,6 +1,10 @@
 import type { ReactNode } from 'react';
 import type { Plan, PlanCase } from '../../api/types';
 import { CaseDetails } from '../../components/CaseDetails';
+import {
+  CaseRefreshButton,
+  type CaseRefresh,
+} from '../../components/CaseRefreshButton';
 import { CaseProjects } from '../../components/CaseProjects';
 import { CaseLogins } from '../../components/LoginBadges';
 import { LoginsNote } from '../../components/LoginsNote';
@@ -23,6 +27,7 @@ import { HeadedOption, runBody, useRunOptions } from './runOptions';
 interface Props {
   plan: Plan;
   openCase?: string | null; // a case whose row starts opened and highlighted
+  refresh?: CaseRefresh; // reloads the plan, from an icon on each opened case
 }
 
 // The suite page's plan panel: the plan's test cases, then its prompt cases
@@ -31,14 +36,19 @@ interface Props {
 // plan in). When the plan has both kinds of case, a button under each table
 // runs just the cases of that table. How they run comes from the panel
 // (useRunOptions).
-export function PanelCases({ plan, openCase }: Props) {
+export function PanelCases({ plan, openCase, refresh }: Props) {
   const { testCases, promptCases, testIds, promptIds, bothKinds } =
     caseKinds(plan);
   return (
     <>
       <h3 className="side-panel-title">Cases ({testCases.length})</h3>
       {plan.hasTests && <TestCountNote projects={plan.projects} />}
-      <TestCases plan={plan} cases={testCases} openCase={openCase} />
+      <TestCases
+        plan={plan}
+        cases={testCases}
+        openCase={openCase}
+        refresh={refresh}
+      />
       {bothKinds && (
         <RunKindButton
           plan={plan}
@@ -56,7 +66,12 @@ export function PanelCases({ plan, openCase }: Props) {
           <p className="note">
             Checked by Claude in a browser, after the tests.
           </p>
-          <PromptCases plan={plan} cases={promptCases} openCase={openCase} />
+          <PromptCases
+            plan={plan}
+            cases={promptCases}
+            openCase={openCase}
+            refresh={refresh}
+          />
           {bothKinds && (
             <RunKindButton
               plan={plan}
@@ -91,7 +106,7 @@ export function runsTestsOnly(plan: Plan) {
 
 type TableProps = Props & { cases: PlanCase[] };
 
-function TestCases({ plan, cases, openCase }: TableProps) {
+function TestCases({ plan, cases, openCase, refresh }: TableProps) {
   const { currentEnv } = useEnv();
   const { projects, headed } = useRunOptions();
   const hasTests = plan.hasTests ?? plan.runnable;
@@ -135,13 +150,13 @@ function TestCases({ plan, cases, openCase }: TableProps) {
             ? (c) => <CaseProjects testCase={c} only={projects} />
             : undefined,
         ),
-        hasTests && runColumn(plan),
+        (hasTests || refresh) && runColumn(plan, hasTests, refresh),
       ]}
     />
   );
 }
 
-function PromptCases({ plan, cases, openCase }: TableProps) {
+function PromptCases({ plan, cases, openCase, refresh }: TableProps) {
   const { currentEnv, envById } = useEnv();
   return (
     <Table
@@ -170,7 +185,7 @@ function PromptCases({ plan, cases, openCase }: TableProps) {
               : 'Broken prompt file'}
           </div>
         )),
-        runColumn(plan),
+        runColumn(plan, true, refresh),
       ]}
     />
   );
@@ -210,11 +225,22 @@ const caseColumn = (
   ),
 });
 
-// The Run button of one case, in the projects the suite runs the plan in.
-const runColumn = (plan: Plan): Column<PlanCase> => ({
+// A case's actions: its Run button (when `runs`), in the projects the suite
+// runs the plan in, and the refresh icon before it. CSS shows the icon only
+// while the case's row is open.
+const runColumn = (
+  plan: Plan,
+  runs: boolean,
+  refresh?: CaseRefresh,
+): Column<PlanCase> => ({
   head: <VisuallyHidden>Actions</VisuallyHidden>,
   className: 'cell-action',
-  cell: (c) => <RunCase plan={plan} testCase={c} />,
+  cell: (c) => (
+    <div className="case-actions">
+      {refresh && <CaseRefreshButton refresh={refresh} caseId={c.id} />}
+      {runs && <RunCase plan={plan} testCase={c} />}
+    </div>
+  ),
 });
 
 function RunCase({ plan, testCase: c }: { plan: Plan; testCase: PlanCase }) {

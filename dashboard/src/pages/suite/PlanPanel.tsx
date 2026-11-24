@@ -59,7 +59,7 @@ export function PlanPanel({
   openFull?: boolean; // start with the whole plan open (a link from another plan)
 }) {
   const { currentEnv } = useEnv();
-  const { data, error } = useApi<PlanResponse>(
+  const { data, error, loading, reload } = useApi<PlanResponse>(
     `/api/plans/${slug}?env=${currentEnv.id}`,
   );
   const ref = useRef<HTMLElement>(null);
@@ -214,7 +214,11 @@ export function PlanPanel({
                 </p>
               </>
             )}
-            <PanelCases plan={plan} openCase={openCase} />
+            <PanelCases
+              plan={plan}
+              openCase={openCase}
+              refresh={{ onRefresh: reload, refreshing: loading }}
+            />
           </RunOptionsContext.Provider>
         </>
       )}
