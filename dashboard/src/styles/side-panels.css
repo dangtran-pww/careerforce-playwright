@@ -227,6 +227,7 @@ button.small {
   height: 32px;
 }
 
-.side-panel > .card-head .card-head-actions .close-button {
+.side-panel > .card-head .card-head-actions .close-button,
+.side-panel > .card-head .card-head-actions .refresh-button {
   width: 32px;
 }

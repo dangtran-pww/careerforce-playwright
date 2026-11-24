@@ -1,10 +1,7 @@
 import type { ReactNode } from 'react';
 import type { Plan, PlanCase } from '../../api/types';
 import { CaseDetails } from '../../components/CaseDetails';
-import {
-  CaseRefreshButton,
-  type CaseRefresh,
-} from '../../components/CaseRefreshButton';
+import { RefreshButton, type Refresh } from '../../components/RefreshButton';
 import { CaseProjects } from '../../components/CaseProjects';
 import { CaseLogins } from '../../components/LoginBadges';
 import { LoginsNote } from '../../components/LoginsNote';
@@ -27,7 +24,7 @@ import { HeadedOption, runBody, useRunOptions } from './runOptions';
 interface Props {
   plan: Plan;
   openCase?: string | null; // a case whose row starts opened and highlighted
-  refresh?: CaseRefresh; // reloads the plan, from an icon on each opened case
+  refresh?: Refresh; // reloads the plan, from an icon on each opened case
 }
 
 // The suite page's plan panel: the plan's test cases, then its prompt cases
@@ -231,13 +228,15 @@ const caseColumn = (
 const runColumn = (
   plan: Plan,
   runs: boolean,
-  refresh?: CaseRefresh,
+  refresh?: Refresh,
 ): Column<PlanCase> => ({
   head: <VisuallyHidden>Actions</VisuallyHidden>,
   className: 'cell-action',
   cell: (c) => (
     <div className="case-actions">
-      {refresh && <CaseRefreshButton refresh={refresh} caseId={c.id} />}
+      {refresh && (
+        <RefreshButton refresh={refresh} what={c.id} className="case-refresh" />
+      )}
       {runs && <RunCase plan={plan} testCase={c} />}
     </div>
   ),

@@ -45,6 +45,40 @@ button.close-button svg {
   display: block;
 }
 
+/* Icon-only refresh button (RefreshButton): borderless until hovered, so
+   it stays quieter than the buttons beside it. The arrow turns while it
+   reloads. */
+button.refresh-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  padding: 5px;
+  line-height: 0;
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+}
+
+button.refresh-button:hover:not(:disabled) {
+  border-color: var(--control-border);
+  color: var(--accent);
+}
+
+button.refresh-button svg {
+  display: block;
+}
+
+button.refresh-button[aria-busy='true'] svg {
+  animation: spinner-turn 0.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button.refresh-button[aria-busy='true'] svg {
+    animation-duration: 2.4s;
+  }
+}
+
 a {
   color: var(--accent);
 }

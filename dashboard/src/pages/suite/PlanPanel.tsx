@@ -13,6 +13,7 @@ import { PlanMarkdown } from '../../components/PlanMarkdown';
 import { PlanOverview } from '../../components/PlanOverview';
 import { PlanRunButton } from '../../components/PlanRunButton';
 import { PlanStatusTip } from '../../components/PlanStatusTip';
+import { RefreshButton, type Refresh } from '../../components/RefreshButton';
 import { ToggleButton } from '../../components/ToggleButton';
 import { useApi } from '../../hooks/useApi';
 import { useEnv } from '../../hooks/useEnv';
@@ -94,6 +95,13 @@ export function PlanPanel({
   );
 
   const plan = data?.plan;
+  // Reloads the panel (the header's icon and each opened case's). The old
+  // plan stays shown while it reloads.
+  const refresh: Refresh = {
+    onRefresh: reload,
+    refreshing: loading,
+    failed: Boolean(error),
+  };
 
   return (
     <aside
@@ -118,6 +126,9 @@ export function PlanPanel({
           )}
         </div>
         <div className="card-head-actions">
+          {(plan || error) && (
+            <RefreshButton refresh={refresh} what={plan ? plan.name : slug} />
+          )}
           {plan && (
             <button
               type="button"
@@ -214,11 +225,7 @@ export function PlanPanel({
                 </p>
               </>
             )}
-            <PanelCases
-              plan={plan}
-              openCase={openCase}
-              refresh={{ onRefresh: reload, refreshing: loading }}
-            />
+            <PanelCases plan={plan} openCase={openCase} refresh={refresh} />
           </RunOptionsContext.Provider>
         </>
       )}

@@ -1,25 +1,29 @@
 import { useEffect, useState } from 'react';
 
-// Reloads a case's plan: its row in the plan file and where its tests are,
-// for watching a case change while it's being worked on.
-export interface CaseRefresh {
+// Reloads a plan: its plan file and where its tests are, for watching a plan
+// or one of its cases change while it's being worked on.
+export interface Refresh {
   onRefresh: () => void;
   refreshing: boolean; // a reload is in flight
+  failed?: boolean; // the last reload failed (no tick then)
 }
 
-// A quiet icon button for a case's row, beside its Run button. The arrow
-// turns while it reloads, then a tick shows for a moment, so a reload that
-// found nothing new still says it happened.
-export function CaseRefreshButton({
+// A quiet icon button that reloads `what` (a case's ID, a plan's name). The
+// arrow turns while it reloads, then a tick shows for a moment, so a reload
+// that found nothing new still says it happened. `className` places it: a
+// case row's (case-refresh) or the plan panel's header.
+export function RefreshButton({
   refresh,
-  caseId,
+  what,
+  className,
 }: {
-  refresh: CaseRefresh;
-  caseId: string;
+  refresh: Refresh;
+  what: string;
+  className?: string;
 }) {
-  // This button was pressed (not another case's): it shows the tick.
+  // This button was pressed (not another one on the page): it shows the tick.
   const [pressed, setPressed] = useState(false);
-  const done = pressed && !refresh.refreshing;
+  const done = pressed && !refresh.refreshing && !refresh.failed;
   useEffect(() => {
     if (!done) return;
     const t = setTimeout(() => setPressed(false), 1500);
@@ -27,15 +31,17 @@ export function CaseRefreshButton({
   }, [done]);
 
   const label = refresh.refreshing
-    ? `Refreshing ${caseId}…`
+    ? `Refreshing ${what}…`
     : done
-      ? `${caseId} is up to date`
-      : `Refresh ${caseId}: read the plan file and its tests again`;
+      ? `${what} is up to date`
+      : `Refresh ${what}: read the plan file and its tests again`;
   return (
     <>
       <button
         type="button"
-        className="ghost icon-button case-refresh"
+        className={['ghost refresh-button', className]
+          .filter(Boolean)
+          .join(' ')}
         aria-label={label}
         title={label}
         aria-busy={refresh.refreshing}
@@ -67,7 +73,7 @@ export function CaseRefreshButton({
         </svg>
       </button>
       <span className="visually-hidden" role="status">
-        {done ? `${caseId} refreshed` : ''}
+        {done ? `${what} refreshed` : ''}
       </span>
     </>
   );
