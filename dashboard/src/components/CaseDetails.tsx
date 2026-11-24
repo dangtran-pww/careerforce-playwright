@@ -25,7 +25,7 @@ export function CaseDetails({
   if (testCase.kind === 'prompt')
     return <PromptCaseDetails testCase={testCase} command={command} />;
   const locations = testCase.locations ?? [];
-  const details = withSteps(testCase.details ?? []);
+  const details = withSteps(sortSections(testCase.details ?? []));
   if (!details.length && !locations.length && !command) return null;
   return (
     <div className="case-details">
@@ -77,4 +77,11 @@ function withSteps(details: CaseDetail[]) {
       body: n ? <StepList numbered={n} /> : inline(d.text),
     };
   });
+}
+
+// The details with the "Required login" column moved to the top, so which
+// session a case needs reads first; the rest keep the plan's order.
+function sortSections(details: CaseDetail[]) {
+  const isLogin = (d: CaseDetail) => d.label.toLowerCase() === 'required login';
+  return [...details.filter(isLogin), ...details.filter((d) => !isLogin(d))];
 }
