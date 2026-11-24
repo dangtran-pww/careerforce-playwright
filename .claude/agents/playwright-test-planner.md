@@ -168,7 +168,8 @@ Case tables:
   cases. Put depth in a functional plan instead.
 
 Changing an existing plan: follow "Status on every plan" (new cases →
-`partially implemented` with the pending list; changed implemented cases →
+`partially implemented` with the pending list, each `ready to generate`;
+changed implemented cases →
 `needs update` with what changed; wording only → status unchanged).
 
 ## 5. Check and register

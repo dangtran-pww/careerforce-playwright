@@ -87,6 +87,14 @@ npm run login:manual -- admin --env stage   # qa | stage | prod | sandbox | loca
 npm run login:manual -- staff --env local   # staff: local only
 ```
 
+Before running a test, check that the logins it needs still work (no
+browser; exits 1 and prints the `login:manual` command for any that don't):
+
+```bash
+npm run check:logins -- jobseeker admin
+npm run check:logins -- admin --env stage
+```
+
 A role limited to some environments is set in `ROLE_ENVIRONMENTS`
 (`tests/helpers/environments.mts`). `login:manual` refuses it anywhere
 else, `useRole('<role>')` skips its tests there, and the dashboard's Logins
@@ -141,6 +149,42 @@ test.describe('admin-only settings', () => {
 
 See [Playwright's multiple-roles guide](https://playwright.dev/docs/auth#multiple-signed-in-roles)
 for more on this pattern.
+
+### Logging in with the partner login form
+
+A few cases can't use a saved SSO session, because they end it (for example
+AO-7, the real auto logout in
+[smoke-auto-logout.md](test-suites/smoke/smoke-auto-logout.md)). They log in
+with a dedicated account that has a username and password, through the
+Drupal login form for partners. The account's values go in `.env`, one pair
+per environment, and never in a plan or a spec (see `.env.example`).
+`tests/helpers/form-login.ts` reads the pair (`formAccount('<PREFIX>')`) and
+logs in (`loginWithPartnerForm(page, account)`); it reports "Unrecognized
+username or password" separately so a spec can skip when the account isn't
+there.
+
+The form (checked as a visitor on QA on 2026-11-24):
+
+1. `/user/login` ("Log In or Register") shows the LoginMN button for job
+   seekers and two closed sections, "CareerForce partner organization or a
+   training program provider" and "DEED Staff Member". Opening `/user` as a
+   visitor goes here too.
+2. Opening the partner section shows a "Log In" form (`user-login-form`):
+   "Email address" (placeholder "Enter your email address"), "Password"
+   (placeholder "Enter your password"), a "Forgot your password?" link, a
+   reCAPTCHA checkbox "I'm not a robot", a data-practices notice, and a
+   "Submit" button, with "Don't have an account? Request one today" below.
+3. QA's reCAPTCHA is Google's test one ("This reCAPTCHA is for testing
+   purposes only"), which passes with one click. An environment with a real
+   reCAPTCHA can't be logged in to this way.
+
+From the app source: the form is core's `user_login_form` with the username
+labelled "Email address" and the button "Submit" (`careerforce.module`), and
+a failed login resets the CAPTCHA. With no `destination`, core sends the user
+to `/user/<ID>`; a partner without a partner profile goes to
+`/user/<ID>/partner` to create it (`ProfileUpdateHooks::userLogin`). Drupal's
+error, "Unrecognized username or password", is the same for a missing account
+and a wrong password.
 
 ## Desktop and mobile
 

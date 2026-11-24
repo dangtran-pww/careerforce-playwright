@@ -185,8 +185,15 @@ plan? If not, what kind of work is needed to make it match again?
 has been run against a live site (QA, Stage or Production). It doesn't need
 to have passed: a failing run still counts, and the failure is a result to
 report. A test that was skipped because an earlier case in a serial spec
-failed has not run, so it is not verified. Neither word changes the status:
-a plan can be `implemented` with tests that are not verified yet.
+failed has not run, so it is not verified.
+
+**Done** is the bar a case must reach before its plan can be
+`implemented`: its test has been generated, has run against a live site,
+and either passed or failed only on an expected result the site gets
+wrong. That failure has been looked at and is a site bug (reported, or a
+known one such as a wrong setting), not a mistake in the test. A failure
+caused by the test (a wrong locator, a wrong assumption about the page)
+means the case isn't done: fix the test and run it again.
 
 A [prompt case](#rule-2-prompt-cases) has no test code, and is listed under
 `## Prompt cases`, not in the test case table. It matches the plan once its
@@ -201,15 +208,16 @@ prompt file exists, so adding one doesn't change the plan's status.
   Implemented test: —
   ```
 
-- `partially implemented` — some cases in the plan are implemented, and new
-  cases have been added that are waiting to be generated. List only the
-  pending cases, so the generator generates those and does not regenerate
-  the cases that are already done.
+- `partially implemented` — some cases in the plan aren't done yet: they
+  are waiting to be generated, or they are generated and waiting for a
+  first passing run (see **Done** above). List only those cases, each with
+  what it is waiting for, so the generator generates only the ones marked
+  `ready to generate` and does not regenerate the rest.
 
   ```md
   Status: partially implemented
   Implemented test: tests/smoke/anonymous/listings.spec.ts
-  Pending cases: LV-4, LV-5 — ready to generate
+  Pending cases: LV-4, LV-5 — ready to generate; LV-6 — generated, waiting for a first passing run
   ```
 
 - `needs update` — cases that are already implemented have changed, so
@@ -230,11 +238,11 @@ prompt file exists, so adding one doesn't change the plan's status.
   results — the test does not need to change, and the status stays
   `implemented`.
 
-- `implemented` — every case in the plan has been generated: the test
-  script exists and matches every case. It says nothing about whether the
-  tests pass; a failing test is a result to report, not a reason to hold
-  the status back. List its path so anyone can find the code from the
-  plan. After pending cases are generated, or updated cases are
+- `implemented` — every case in the plan is done: the test script exists,
+  matches every case, and each test has passed on a live site or failed
+  only on a site bug (see **Done** above). A later failure doesn't change
+  the status; it is a result to report. List its path so anyone can find
+  the code from the plan. After pending cases are generated, or updated cases are
   updated, the status returns to `implemented` (or stays
   `partially implemented` / `needs update` if work still remains).
 
@@ -859,11 +867,12 @@ Every plan, by suite folder.
   `jobseeker` logins).
 - `smoke/smoke-auto-logout.md` — Status: implemented.
   Implemented tests: `tests/smoke/auto-logout/*.spec.ts`. The
-  inactivity logout (MNDEED-8448): the 11-minute warning and 15-minute
-  logout settings as `admin` and `jobseeker`, the warning via the page
-  clock with the logout requests blocked, and the visitor's inactivity
-  message (prod-safe). The real 15-minute logout stays manual. Desktop
-  only.
+  inactivity logout (MNDEED-8448): the 10-minute warning and 15-minute
+  logout settings as `jobseeker`, the warning via the page clock with the
+  logout requests blocked, and the visitor's inactivity message
+  (prod-safe); AO-7 waits out a real 15-minute logout with a dedicated
+  partner account logged in through the form (no-prod). The admin cases
+  moved to `site-wide/functional-site-wide-auto-logout.md`. Desktop only.
 - `job-search/functional-job-search-search.md` — Status: implemented.
   Implemented test: `tests/functional/job-search/search.spec.ts`.
   Job Search part 1: keyword, location formats, distance, empty, SOC and
@@ -904,3 +913,11 @@ Every plan, by suite folder.
   together, Reset, empty days), what the search hides, bad values in the
   address, where a time leads for a visitor, the links to the search, phone
   width and accessibility. Prod-safe, visitor only.
+- `site-wide/functional-site-wide-auto-logout.md` — Status: partially
+  implemented (ALO-1 to ALO-3 waiting for a first passing run).
+  Implemented test: `tests/functional/site-wide/auto-logout.spec.ts`. The
+  inactivity logout on admin pages (MNDEED-8448), moved from the Auto
+  Logout smoke plan (ALO-1 to ALO-3 were AO-1, AO-3 and AO-5): the
+  10-minute warning and 15-minute logout settings, the warning via the
+  page clock with the logout requests blocked, Yes, No and no answer.
+  Prod-safe, `admin` login, desktop only.

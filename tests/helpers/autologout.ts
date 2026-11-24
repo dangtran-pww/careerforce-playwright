@@ -33,10 +33,10 @@ export type AutologoutSettings = {
   [key: string]: unknown;
 };
 
-/** The intended settings: warning at 11 minutes, logout 4 minutes later. */
+/** The intended settings: warning at 10 minutes, logout 5 minutes later. */
 export const EXPECTED_SETTINGS = {
-  timeout: 11 * 60_000,
-  timeout_padding: 4 * 60_000,
+  timeout: 10 * 60_000,
+  timeout_padding: 5 * 60_000,
   no_dialog: false,
   disable_buttons: false,
   refresh_only: false,
@@ -159,3 +159,51 @@ export async function openWithClock(page: Page, path: string) {
 }
 
 export const minutes = (m: number, s = 0) => (m * 60 + s) * 1000;
+
+/**
+ * The warning at 10 minutes, then "Yes" keeps the session (smoke AO-4 and
+ * site-wide ALO-2). Opens `path` with the clock, checks no warning at 9:50
+ * and the warning at 10:05, clicks "Yes", then reloads and runs
+ * `pageLoaded` to see the session is still valid.
+ */
+export async function warningThenYes(
+  page: Page,
+  logoutRequests: LogoutRequest[],
+  path: string,
+  pageLoaded: (page: Page) => Promise<void>,
+) {
+  const dialog = warningDialog(page);
+  const clock = await openWithClock(page, path);
+
+  await test.step('1. No warning at 9:50', async () => {
+    await clock.advance(minutes(9, 50));
+    await expect(dialog).toBeHidden();
+    expect(logoutRequests, 'requests to a logout address').toEqual([]);
+  });
+
+  await test.step('2. Warning at 10:05', async () => {
+    await clock.advance(minutes(0, 15));
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toContainText(WARNING_MESSAGE);
+    await expect(dialog.getByRole('button', { name: 'Yes', exact: true })).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'No', exact: true })).toBeVisible();
+    expect(logoutRequests, 'requests to a logout address').toEqual([]);
+  });
+
+  await test.step('3. "Yes" closes the warning and refreshes the session', async () => {
+    const refreshed = page.waitForResponse((response) =>
+      new URL(response.url()).pathname === '/autologout_ajax_set_last',
+    );
+    await dialog.getByRole('button', { name: 'Yes', exact: true }).click();
+    expect((await refreshed).status(), '/autologout_ajax_set_last').toBe(200);
+    await expect(dialog).toBeHidden();
+    expect(logoutRequests, 'requests to a logout address').toEqual([]);
+  });
+
+  await test.step('4. Still logged in after a reload', async () => {
+    await page.reload();
+    expect(new URL(page.url()).pathname, 'not the login page').not.toBe('/user/login');
+    await pageLoaded(page);
+    expect(logoutRequests, 'requests to a logout address').toEqual([]);
+  });
+}

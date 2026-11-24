@@ -27,6 +27,21 @@ ones. QA is the default. To check whether a problem is older than a
 change, compare with Stage or the app's git history. If only Prod can
 answer the question, ask first.
 
+## Check the logins before running a test
+
+Before running a test case, check every login it needs, and don't run it
+if one doesn't work. The roles are in the case's `Required login` column
+and the spec's `useRole(...)` calls; a staff role (platform manager, event
+manager, …) also needs a working admin, platform manager or account
+manager session for its role check. Check them with
+`npm run check:logins -- <role> [<role> ...]`. If any role isn't `valid`,
+don't run the case: tell the user which role failed and the
+`npm run login:manual -- <role> --env <env>` command it prints. Visitor-only
+cases need no check.
+
+Why: a run with a dead session only fails in `useRole`'s check and wastes
+the run.
+
 ## Running Playwright tests
 
 Run `npx playwright test ...` as a single command from the project root:

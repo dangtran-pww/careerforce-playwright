@@ -36,6 +36,7 @@
         "dashboard:dev": "node dashboard/server/index.mjs --dev",
         "format": "prettier --write \"**/*.{ts,md}\"",
         "check:plans": "node scripts/check-plans.mjs",
+        "check:logins": "node scripts/check-logins.mjs",
         "prompt": "node scripts/run-prompt.mjs",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",

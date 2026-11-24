@@ -18,16 +18,22 @@ Test plans for this project live in their suite's folder,
 - Read `test-suites/README.md` and follow its status convention. The status
   tells you what kind of work is needed, and what not to duplicate.
 - `ready to generate`: generate all cases in the plan.
-- `partially implemented`: generate only the cases listed as pending.
-  Do not regenerate cases that are already implemented.
+- `partially implemented`: generate only the pending cases marked
+  `ready to generate`. Do not regenerate cases that are already
+  implemented, or pending cases marked `generated, waiting for a first
+  passing run`.
 - `needs update`: update the existing test file for the cases listed as
   updated. Do not create a second, duplicate test file. If the plan also
   lists pending new cases, generate those as well, in the same existing
   file where they belong.
 - `implemented`: do not regenerate unless the user explicitly asks for it.
 - After the work is done, report back the status change needed, with
-  `Implemented test: <path to the .spec.ts file>`: back to `implemented`
-  if all pending and updated cases are done, otherwise the remaining
+  `Implemented test: <path to the .spec.ts file>`. A case you generated is
+  only done once its test has run on a live site and passed, or failed
+  only on a site bug (**Done** under "Status on every plan" in
+  `test-suites/README.md`); list any that aren't as `generated, waiting
+  for a first passing run`. Back to `implemented` if all pending and
+  updated cases are done, otherwise the remaining
   `partially implemented` or `needs update` status with its remaining
   list. When the plan becomes `implemented`, also report that its
   `## Files` section is to be removed, and which spec file holds which
