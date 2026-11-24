@@ -8,13 +8,14 @@ No-prod cases: AO-7
 
 A quick check after each deploy that inactive users are logged out: job
 seeker pages carry the warning and logout settings, the warning comes at
-10 minutes and Yes keeps the session, visitors get no timer, and a page
-really left alone for 15 minutes ends the session. The admin cases (AO-1,
-AO-3 and AO-5) moved to [](../site-wide/functional-site-wide-auto-logout.md)
-as ALO-1 to ALO-3; their IDs aren't reused here.
+10 minutes and Yes keeps the session, and a page really left alone for
+15 minutes ends the session. The admin cases (AO-1, AO-3 and AO-5) moved
+to [](../site-wide/functional-site-wide-auto-logout.md) as ALO-1 to
+ALO-3, and the visitor case (AO-6) was removed; their IDs aren't reused
+here.
 
-AO-2, AO-4 and AO-6 only open pages, answer the warning and read settings,
-and the logout requests are blocked, so they are marked prod-safe (see
+AO-2 and AO-4 only open pages, answer the warning and read settings, and
+the logout requests are blocked, so they are marked prod-safe (see
 [Open questions](#open-questions)). AO-7 is not: it logs a dedicated
 partner account in through the login form and waits out a real logout,
 so it is `Prod: No` and runs only where that account is set up (see
@@ -30,7 +31,6 @@ inactivity (`timeout` 600 seconds) and the logout 5 minutes later, at
 
 | **AO-2 and AO-4** | Job seeker role |
 |---|---|
-| **AO-6** | Visitor, not logged in |
 | **AO-7** | The dedicated partner account, logged in through the `/user/login` form (see [Test data](#test-data)); no saved session |
 | **Accounts touched** | AO-7 logs the dedicated partner account in and lets it be logged out; nothing on the account is changed. Logging in ends any earlier session of that account (single session is on), which nobody else uses. |
 
@@ -40,8 +40,7 @@ AO-2 only reads the page's settings, in `settings.spec.ts`. AO-4 checks
 the warning, in `warning.spec.ts`: before opening the page,
 the test installs Playwright's clock on it and blocks the logout addresses
 (see [Good to know](#good-to-know)), and doesn't move the mouse or type
-until the warning shows. AO-6 checks what a visitor sees after a logout,
-in `after-logout.spec.ts`. AO-7 waits out a real logout, in
+until the warning shows. AO-7 waits out a real logout, in
 `real-logout.spec.ts`, tagged `@no-prod`: the real clock, no blocked
 logout addresses, and nothing touched on the page after it loads. It
 runs in the normal desktop smoke project, but its spec needs a long
@@ -52,7 +51,6 @@ check).
 |---|---|---|---|---|---|---|
 | AO-2 | The job seeker dashboard carries the logout settings | `/user` | Open the dashboard, read its `drupalSettings.autologout`, then go to `about:blank` straight away. | `timeout` is 600000 (10 minutes), `timeout_padding` is 300000 (5 minutes), `no_dialog` and `disable_buttons` are false, `refresh_only` is false, `title` is "CareerForce Alert", `yes_button` is "Yes", `no_button` is "No", and `redirect_url` starts with `/user/login?` and has `autologout_timeout=1`. | `jobseeker` | Yes |
 | AO-4 | Job seeker: warning at 10 minutes, Yes keeps the session | `/user` | 1. Open the page and advance its clock by 9 minutes 50 seconds. 2. Advance it 15 seconds more (to 10:05), then pause it. 3. Click "Yes". 4. Reload the page. | No request to a logout address is sent at any step. 1. No warning shows. 2. A modal dialog titled "CareerForce Alert" shows the message "We are about to log you out for inactivity. If we do, you will lose any unsaved work. Do you need more time?" with "Yes" and "No" buttons. 3. The dialog closes, and a request to `/autologout_ajax_set_last` succeeds (HTTP 200). 4. The dashboard still shows (no login page). | `jobseeker` | Yes |
-| AO-6 | Visitors: the inactivity message, and no timer | `/user/login` | Don't log in. 1. Open `/user/login`. 2. Open `/user/login?destination=/user&autologout_timeout=1` (the address a logged-out page goes to). | 1. The page has no `drupalSettings.autologout` and shows no "logged out due to inactivity" message. 2. A status message says "You have been logged out due to inactivity.", and the login page shows. | | Yes |
 | AO-7 | A page left alone really logs out at 15 minutes | `/user/login`, `/user` | The case skips when the account isn't set up for the environment, or when step 1's login says the account doesn't exist (see [Test data](#test-data)). From step 2 to step 6 nothing on the page is touched and no other request is made with this account. 1. Log in with the account through the Drupal login form for partners on `/user/login`. 2. Open `/user` and note when it has loaded (T0). 3. Leave the page alone until T0 + 9:30. 4. Wait for the warning, up to T0 + 10:30, and don't answer it. 5. Leave the page alone until T0 + 14:30. 6. Wait for the page to change, up to T0 + 15:45. 7. Open `/user`. | Steps 3 and 4 are soft checks, so a wrong warning time still lets the logout be checked. 1. The login page is left with no error message, on `/user/<its user ID>` or, while its partner profile isn't complete, `/user/<its user ID>/partner`: either means the login worked. Any other login failure fails the case. 2. The page has `drupalSettings.autologout`, and its `redirect_url` has `autologout_timeout=1`. 3. No "CareerForce Alert" dialog shows yet. 4. The "CareerForce Alert" dialog shows, with the message, "Yes" and "No" as in AO-4: at 10 minutes, 30 seconds either side. 5. The page is still the one opened in step 2, with the dialog open: not logged out yet. 6. The page is on `/user/login`, its address has `autologout_timeout=1`, and a status message says "You have been logged out due to inactivity." 7. `/user` goes to the login page ("Log In or Register"), not the account's page: the session really ended on the server. | The dedicated partner account, through the login form | No: logs a real account in and waits 15 minutes for a real logout; no account is set up for Production |
 
 ## Test data
@@ -85,7 +83,7 @@ check).
 - **The shared saved session must survive every case.** The job seeker
   session is used by every other job seeker plan, and login is SSO, so a
   session that gets logged out stays dead until someone logs in by hand.
-  AO-2, AO-4 and AO-6 are built so they can't log anyone out:
+  AO-2 and AO-4 are built so they can't log anyone out:
   - The page's clock is moved forward with Playwright's clock control, so
     the warning shows in seconds. Real time hardly passes, so the server's
     own 15-minute check (see [On the server](#from-the-source)) never fires.
@@ -233,6 +231,6 @@ wait twice) (`auto-logout` is in
 2. **"Use highest role timeout value"** is ticked on QA but off in
    `config/sync/autologout.settings.yml`: config drift. Harmless today
    (every role has the same timeout). Is it meant to be on?
-3. **Production:** AO-2, AO-4 and AO-6 are marked prod-safe (they only
+3. **Production:** AO-2 and AO-4 are marked prod-safe (they only
    read and answer the warning; the logout addresses are blocked). Is there
    a saved job seeker session for Production, and may the tests use it?

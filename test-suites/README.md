@@ -869,8 +869,7 @@ Every plan, by suite folder.
   Implemented tests: `tests/smoke/auto-logout/*.spec.ts`. The
   inactivity logout (MNDEED-8448): the 10-minute warning and 15-minute
   logout settings as `jobseeker`, the warning via the page clock with the
-  logout requests blocked, and the visitor's inactivity message
-  (prod-safe); AO-7 waits out a real 15-minute logout with a dedicated
+  logout requests blocked (prod-safe); AO-7 waits out a real 15-minute logout with a dedicated
   partner account logged in through the form (no-prod). The admin cases
   moved to `site-wide/functional-site-wide-auto-logout.md`. Desktop only.
 - `job-search/functional-job-search-search.md` — Status: implemented.

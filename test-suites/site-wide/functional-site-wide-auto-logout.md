@@ -9,8 +9,8 @@ Pending cases: ALO-1, ALO-2, ALO-3 — generated, waiting for a first passing ru
 This plan tests the inactivity logout for admin pages: they carry the
 warning and logout settings, the warning comes at 10 minutes and Yes keeps
 the session, and No or no answer leads to logging out. The cases moved
-here from [](../smoke/smoke-auto-logout.md), which keeps the job seeker,
-visitor and real-logout checks: ALO-1 was AO-1, ALO-2 was AO-3 and ALO-3
+here from [](../smoke/smoke-auto-logout.md), which keeps the job seeker
+and real-logout checks: ALO-1 was AO-1, ALO-2 was AO-3 and ALO-3
 was AO-5.
 
 The cases only open pages, answer the warning and read settings, and the
